@@ -52,15 +52,27 @@ const Index: React.FC = () => {
       if (storedActiveUser && users.includes(storedActiveUser)) {
         setCurrentActiveUser(storedActiveUser);
         setCurrentScreen('dashboard');
+        loadUserTests(storedActiveUser);
       } else if (users.length > 0) {
         setCurrentActiveUser(users[0]);
         setCurrentScreen('dashboard');
+        loadUserTests(users[0]);
       }
     }
 
     if (storedTheme) setTheme(storedTheme);
     if (storedDuration) setDuration(parseInt(storedDuration, 10));
   }, []);
+
+  // Load user tests
+  const loadUserTests = (username: string) => {
+    const storedTests = localStorage.getItem(`typeRakTests-${username}`);
+    if (storedTests) {
+      setTestResults(JSON.parse(storedTests));
+    } else {
+      setTestResults([]);
+    }
+  };
 
   // Apply theme to body
   useEffect(() => {
@@ -71,6 +83,20 @@ const Index: React.FC = () => {
       document.body.classList.add('cotton-candy-glow');
     }
   }, [theme]);
+
+  // Cheat code system
+  useEffect(() => {
+    const handleCheatCode = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.altKey && e.key === 'Backspace' && testActive) {
+        e.preventDefault();
+        setDuration(prev => prev + 30);
+        showToast("Cheat activated: +30 seconds!");
+      }
+    };
+
+    document.addEventListener('keydown', handleCheatCode);
+    return () => document.removeEventListener('keydown', handleCheatCode);
+  }, [testActive]);
 
   // Helper functions
   const generateWords = (count: number): string => {
@@ -148,6 +174,27 @@ const Index: React.FC = () => {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
+    
+    // Save test results
+    const mins = Math.max(elapsed / 60, 1 / 60);
+    const correctSigns = typedCharacters.filter((char, index) => char === chars[index]?.textContent).length;
+    const speed = Math.round(Math.max(0, (correctSigns / 5) / mins));
+    const accuracyValue = typedCharacters.length > 0 ? ((correctSigns / typedCharacters.length) * 100) : 0;
+    
+    const testResult = {
+      name: currentTestName,
+      date: new Date().toISOString(),
+      wpm: speed,
+      accuracy: parseFloat(accuracyValue.toFixed(2)),
+      errors: totalErrors,
+      time: elapsed,
+      characters: typedCharacters.length
+    };
+    
+    const newResults = [...testResults, testResult];
+    setTestResults(newResults);
+    localStorage.setItem(`typeRakTests-${currentActiveUser}`, JSON.stringify(newResults));
+    
     setCurrentScreen('results');
   };
 
@@ -212,9 +259,17 @@ const Index: React.FC = () => {
     setCurrentActiveUser(username);
     localStorage.setItem("typeRakUsersList", JSON.stringify(newUsers));
     localStorage.setItem("typeRakActiveUser", username);
+    setTestResults([]);
     setCurrentScreen('dashboard');
     showToast(`User "${username}" created successfully!`);
     return true;
+  };
+
+  const switchUser = (username: string) => {
+    setCurrentActiveUser(username);
+    localStorage.setItem("typeRakActiveUser", username);
+    loadUserTests(username);
+    setDeleteConfirmState(false);
   };
 
   const startNewTest = (testName: string) => {
@@ -232,6 +287,13 @@ const Index: React.FC = () => {
       renderText(textToUse);
       adjustCaretPosition();
     }, 100);
+  };
+
+  const continueLastTest = () => {
+    if (testResults.length > 0) {
+      const lastTest = testResults[testResults.length - 1];
+      startNewTest(`${lastTest.name} (Continued)`);
+    }
   };
 
   const applyTheme = (newTheme: string) => {
@@ -262,6 +324,7 @@ const Index: React.FC = () => {
     if (newUsers.length > 0) {
       setCurrentActiveUser(newUsers[0]);
       localStorage.setItem("typeRakActiveUser", newUsers[0]);
+      loadUserTests(newUsers[0]);
       setCurrentScreen('dashboard');
     } else {
       setCurrentActiveUser('');
@@ -284,6 +347,32 @@ const Index: React.FC = () => {
     setShowTestNameMenu(false);
     startNewTest(newTestName);
   };
+
+  const getAverageStats = () => {
+    if (testResults.length === 0) return null;
+    
+    const avgWpm = Math.round(testResults.reduce((sum, test) => sum + test.wpm, 0) / testResults.length);
+    const avgAccuracy = (testResults.reduce((sum, test) => sum + test.accuracy, 0) / testResults.length).toFixed(2);
+    const totalTests = testResults.length;
+    
+    return { avgWpm, avgAccuracy, totalTests };
+  };
+
+  // Get theme-specific button colors
+  const getButtonColor = () => {
+    switch (theme) {
+      case 'cosmic-nebula':
+        return '#b20ff7';
+      case 'midnight-black':
+        return '#6a0dad';
+      case 'cotton-candy-glow':
+        return '#fa02fa';
+      default:
+        return '#b20ff7';
+    }
+  };
+
+  const averageStats = getAverageStats();
 
   return (
     <div style={{
@@ -342,7 +431,7 @@ const Index: React.FC = () => {
               <select 
                 id="user-select"
                 value={currentActiveUser}
-                onChange={(e) => setCurrentActiveUser(e.target.value)}
+                onChange={(e) => switchUser(e.target.value)}
                 style={{
                   background: 'rgba(255, 255, 255, 0.1)',
                   border: '1px solid rgba(255, 255, 255, 0.3)',
@@ -364,7 +453,7 @@ const Index: React.FC = () => {
               <button 
                 onClick={() => setCurrentScreen('create-user')}
                 style={{
-                  background: 'rgba(65, 42, 92, 0.8)',
+                  background: getButtonColor(),
                   color: 'white',
                   border: 'none',
                   padding: '5px 10px',
@@ -445,7 +534,7 @@ const Index: React.FC = () => {
                   onClick={handleConfirmTestName}
                   style={{
                     flex: 1,
-                    background: 'rgba(65, 42, 92, 0.8)',
+                    background: getButtonColor(),
                     color: 'white',
                     border: 'none',
                     padding: '12px',
@@ -493,9 +582,11 @@ const Index: React.FC = () => {
             </p>
             {usersList.length === 0 && (
               <div style={{
-                background: 'rgba(0,0,0,0.1)',
+                background: 'rgba(255, 255, 255, 0.1)',
+                borderRadius: '16px',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
                 padding: '20px',
-                borderRadius: '8px',
                 maxWidth: '400px'
               }}>
                 <label style={{ display: 'block', marginBottom: '10px' }}>Enter username:</label>
@@ -508,9 +599,10 @@ const Index: React.FC = () => {
                     padding: '10px',
                     marginBottom: '15px',
                     borderRadius: '4px',
-                    border: '1px solid #ccc',
+                    border: '1px solid rgba(255, 255, 255, 0.3)',
                     background: 'rgba(255,255,255,0.1)',
-                    color: 'white'
+                    color: 'white',
+                    backdropFilter: 'blur(10px)'
                   }}
                 />
                 <button 
@@ -520,7 +612,7 @@ const Index: React.FC = () => {
                   }}
                   style={{
                     width: '100%',
-                    background: 'rgba(65, 42, 92, 0.8)',
+                    background: getButtonColor(),
                     color: 'white',
                     border: 'none',
                     padding: '12px',
@@ -564,10 +656,11 @@ const Index: React.FC = () => {
                   width: '100%',
                   padding: '10px',
                   marginBottom: '20px',
-                  border: '1px solid #ccc',
+                  border: '1px solid rgba(255, 255, 255, 0.3)',
                   borderRadius: '6px',
-                  background: 'rgba(255, 255, 255, 0.5)',
-                  color: '#333'
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  color: 'white',
+                  backdropFilter: 'blur(10px)'
                 }}
               />
               <label style={{ display: 'block', marginBottom: '10px' }}>Confirm Username:</label>
@@ -579,10 +672,11 @@ const Index: React.FC = () => {
                   width: '100%',
                   padding: '10px',
                   marginBottom: '20px',
-                  border: '1px solid #ccc',
+                  border: '1px solid rgba(255, 255, 255, 0.3)',
                   borderRadius: '6px',
-                  background: 'rgba(255, 255, 255, 0.5)',
-                  color: '#333'
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  color: 'white',
+                  backdropFilter: 'blur(10px)'
                 }}
               />
               <button 
@@ -596,7 +690,7 @@ const Index: React.FC = () => {
                   }
                 }}
                 style={{
-                  background: 'rgba(65, 42, 92, 0.8)',
+                  background: getButtonColor(),
                   color: 'white',
                   border: 'none',
                   padding: '12px 24px',
@@ -638,7 +732,7 @@ const Index: React.FC = () => {
               <button 
                 onClick={handleCreateTestClick}
                 style={{
-                  background: 'rgba(65, 42, 92, 0.8)',
+                  background: getButtonColor(),
                   color: 'white',
                   border: 'none',
                   padding: '12px 24px',
@@ -649,18 +743,95 @@ const Index: React.FC = () => {
               >
                 Create New Test
               </button>
+              {testResults.length > 0 && (
+                <button 
+                  onClick={continueLastTest}
+                  style={{
+                    background: getButtonColor(),
+                    color: 'white',
+                    border: 'none',
+                    padding: '12px 24px',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '1rem'
+                  }}
+                >
+                  Continue Test
+                </button>
+              )}
             </div>
+
+            {averageStats && (
+              <div style={{
+                width: '100%',
+                maxWidth: '700px',
+                background: 'rgba(255, 255, 255, 0.1)',
+                borderRadius: '16px',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                padding: '20px',
+                marginBottom: '20px'
+              }}>
+                <h3 style={{ marginBottom: '15px', textAlign: 'center' }}>Your Average Performance</h3>
+                <div style={{ display: 'flex', justifyContent: 'space-around', textAlign: 'center' }}>
+                  <div>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: getButtonColor() }}>{averageStats.avgWpm}</div>
+                    <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>Avg WPM</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: getButtonColor() }}>{averageStats.avgAccuracy}%</div>
+                    <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>Avg Accuracy</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: getButtonColor() }}>{averageStats.totalTests}</div>
+                    <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>Total Tests</div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div style={{
               width: '100%',
               maxWidth: '700px',
-              background: 'rgba(0,0,0,0.1)',
-              padding: '15px',
-              borderRadius: '6px'
+              background: 'rgba(255, 255, 255, 0.1)',
+              borderRadius: '16px',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              padding: '15px'
             }}>
               <h3 style={{ marginBottom: '10px', borderBottom: '1px solid rgba(255,255,255,0.2)', paddingBottom: '8px' }}>
                 Your Previous Tests:
               </h3>
-              <p>No tests recorded yet.</p>
+              {testResults.length === 0 ? (
+                <p>No tests recorded yet.</p>
+              ) : (
+                <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                  {testResults.slice(-10).reverse().map((test, index) => (
+                    <div key={index} style={{
+                      background: 'rgba(255, 255, 255, 0.1)',
+                      padding: '10px',
+                      borderRadius: '8px',
+                      marginBottom: '8px',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center'
+                    }}>
+                      <div>
+                        <div style={{ fontWeight: 'bold' }}>{test.name}</div>
+                        <div style={{ fontSize: '0.8rem', opacity: 0.8 }}>
+                          {new Date(test.date).toLocaleDateString()}
+                        </div>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <div>{test.wpm} WPM | {test.accuracy}% Accuracy</div>
+                        <div style={{ fontSize: '0.8rem', opacity: 0.8 }}>
+                          {test.errors} errors | {Math.floor(test.time / 60)}:{(test.time % 60).toString().padStart(2, '0')}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -796,7 +967,7 @@ const Index: React.FC = () => {
                   }, 100);
                 }}
                 style={{
-                  background: 'rgba(65, 42, 92, 0.8)',
+                  background: getButtonColor(),
                   color: 'white',
                   border: 'none',
                   padding: '12px 24px',
@@ -845,7 +1016,7 @@ const Index: React.FC = () => {
               <button 
                 onClick={() => setCurrentScreen('dashboard')}
                 style={{
-                  background: 'rgba(65, 42, 92, 0.8)',
+                  background: getButtonColor(),
                   color: 'white',
                   border: 'none',
                   padding: '12px 24px',
@@ -912,6 +1083,49 @@ const Index: React.FC = () => {
                 </button>
               </div>
 
+              {/* User Selection Section */}
+              <div style={{ margin: '1.5rem 0' }}>
+                <label style={{ display: 'block', marginBottom: '0.6rem', fontSize: '0.95em', color: '#d0d0d0' }}>
+                  Select User:
+                </label>
+                <select 
+                  value={currentActiveUser}
+                  onChange={(e) => switchUser(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '0.8rem',
+                    border: '1px solid rgba(255, 255, 255, 0.25)',
+                    borderRadius: '6px',
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    color: '#ffffff',
+                    cursor: 'pointer',
+                    backdropFilter: 'blur(10px)',
+                    marginBottom: '10px'
+                  }}
+                >
+                  {usersList.map(user => (
+                    <option key={user} value={user} style={{ background: 'rgba(0,0,0,0.9)' }}>
+                      {user}
+                    </option>
+                  ))}
+                </select>
+                <button 
+                  onClick={handleDeleteUser}
+                  style={{
+                    backgroundColor: deleteConfirmState ? '#e74c3c' : '#c0392b',
+                    color: 'white',
+                    border: 'none',
+                    padding: '0.8rem 1.5rem',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '1rem',
+                    width: '100%'
+                  }}
+                >
+                  {deleteConfirmState ? 'Confirm Delete?' : 'Delete Current User'}
+                </button>
+              </div>
+
               <div style={{ margin: '1.5rem 0' }}>
                 <label style={{ display: 'block', marginBottom: '0.6rem', fontSize: '0.95em', color: '#d0d0d0' }}>
                   Test Duration:
@@ -975,7 +1189,7 @@ const Index: React.FC = () => {
                   onClick={() => window.open('https://www.reddit.com/user/Rak_the_rock', '_blank')}
                   style={{
                     width: '100%',
-                    backgroundColor: 'rgba(65, 42, 92, 0.8)',
+                    backgroundColor: getButtonColor(),
                     color: 'white',
                     border: 'none',
                     padding: '0.8rem 1.5rem',
@@ -991,7 +1205,7 @@ const Index: React.FC = () => {
                   onClick={() => window.open('mailto:rakshankumaraa@gmail.com', '_blank')}
                   style={{
                     width: '100%',
-                    backgroundColor: 'rgba(65, 42, 92, 0.8)',
+                    backgroundColor: getButtonColor(),
                     color: 'white',
                     border: 'none',
                     padding: '0.8rem 1.5rem',
@@ -1007,7 +1221,7 @@ const Index: React.FC = () => {
                   onClick={() => window.open('https://github.com/Raktherock', '_blank')}
                   style={{
                     width: '100%',
-                    backgroundColor: 'rgba(65, 42, 92, 0.8)',
+                    backgroundColor: getButtonColor(),
                     color: 'white',
                     border: 'none',
                     padding: '0.8rem 1.5rem',
@@ -1020,26 +1234,6 @@ const Index: React.FC = () => {
                   Check This Out
                 </button>
               </div>
-
-              {currentActiveUser && (
-                <div style={{ margin: '1.5rem 0' }}>
-                  <button 
-                    onClick={handleDeleteUser}
-                    style={{
-                      backgroundColor: deleteConfirmState ? '#e74c3c' : '#c0392b',
-                      color: 'white',
-                      border: 'none',
-                      padding: '0.8rem 1.5rem',
-                      borderRadius: '6px',
-                      cursor: 'pointer',
-                      fontSize: '1rem',
-                      width: '100%'
-                    }}
-                  >
-                    {deleteConfirmState ? 'Confirm Delete?' : 'Delete Current User'}
-                  </button>
-                </div>
-              )}
             </div>
           </>
         )}
@@ -1048,20 +1242,20 @@ const Index: React.FC = () => {
         {message && (
           <div style={{
             position: 'fixed',
-            top: '20px',
-            right: '20px',
-            background: theme === 'midnight-black' ? 'rgba(174, 30, 227, 0.9)' :
-                       theme === 'cotton-candy-glow' ? 'rgba(255, 31, 188, 0.9)' :
-                       'rgba(33, 177, 255, 0.9)',
-            color: 'white',
-            padding: '12px 20px',
-            borderRadius: '8px',
-            zIndex: 2000,
-            backdropFilter: 'blur(10px)',
+            top: '50px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            background: 'rgba(255, 255, 255, 0.15)',
+            backdropFilter: 'blur(20px)',
             border: '1px solid rgba(255, 255, 255, 0.3)',
+            color: 'white',
+            padding: '12px 24px',
+            borderRadius: '12px',
+            zIndex: 2000,
             fontSize: '0.9rem',
-            maxWidth: '300px',
-            wordWrap: 'break-word'
+            maxWidth: '400px',
+            textAlign: 'center',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
           }}>
             {message}
           </div>
@@ -1077,12 +1271,136 @@ const Index: React.FC = () => {
           padding: '1.5rem 0',
           zIndex: 5
         }}>
-          <a href="https://www.reddit.com/user/Rak_the_rock" target="_blank" rel="noopener noreferrer" style={{ color: 'white', textDecoration: 'none', fontSize: '0.9rem' }}>Reddit</a>
-          <a href="https://github.com/Raktherock" target="_blank" rel="noopener noreferrer" style={{ color: 'white', textDecoration: 'none', fontSize: '0.9rem' }}>GitHub</a>
-          <a href="https://t.me/RakshanKumaraa" target="_blank" rel="noopener noreferrer" style={{ color: 'white', textDecoration: 'none', fontSize: '0.9rem' }}>Telegram</a>
-          <a href="https://www.linkedin.com/in/rakshan-kumaraa-140049365/" target="_blank" rel="noopener noreferrer" style={{ color: 'white', textDecoration: 'none', fontSize: '0.9rem' }}>LinkedIn</a>
-          <a href="https://wa.me/916369314244" target="_blank" rel="noopener noreferrer" style={{ color: 'white', textDecoration: 'none', fontSize: '0.9rem' }}>WhatsApp</a>
-          <a href="mailto:rakshankumaraa@gmail.com" style={{ color: 'white', textDecoration: 'none', fontSize: '0.9rem' }}>Gmail</a>
+          <a 
+            href="https://www.reddit.com/user/Rak_the_rock" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            style={{ 
+              color: 'white', 
+              textDecoration: 'none', 
+              fontSize: '0.9rem',
+              transition: 'color 0.3s ease'
+            }}
+            onMouseEnter={(e) => {
+              const target = e.target as HTMLElement;
+              target.style.color = theme === 'midnight-black' ? '#c559f7' : 
+                                   theme === 'cotton-candy-glow' ? '#ff59e8' : '#c454f0';
+            }}
+            onMouseLeave={(e) => {
+              const target = e.target as HTMLElement;
+              target.style.color = 'white';
+            }}
+          >
+            Reddit
+          </a>
+          <a 
+            href="https://github.com/Raktherock" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            style={{ 
+              color: 'white', 
+              textDecoration: 'none', 
+              fontSize: '0.9rem',
+              transition: 'color 0.3s ease'
+            }}
+            onMouseEnter={(e) => {
+              const target = e.target as HTMLElement;
+              target.style.color = theme === 'midnight-black' ? '#c559f7' : 
+                                   theme === 'cotton-candy-glow' ? '#ff59e8' : '#c454f0';
+            }}
+            onMouseLeave={(e) => {
+              const target = e.target as HTMLElement;
+              target.style.color = 'white';
+            }}
+          >
+            GitHub
+          </a>
+          <a 
+            href="https://t.me/RakshanKumaraa" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            style={{ 
+              color: 'white', 
+              textDecoration: 'none', 
+              fontSize: '0.9rem',
+              transition: 'color 0.3s ease'
+            }}
+            onMouseEnter={(e) => {
+              const target = e.target as HTMLElement;
+              target.style.color = theme === 'midnight-black' ? '#c559f7' : 
+                                   theme === 'cotton-candy-glow' ? '#ff59e8' : '#c454f0';
+            }}
+            onMouseLeave={(e) => {
+              const target = e.target as HTMLElement;
+              target.style.color = 'white';
+            }}
+          >
+            Telegram
+          </a>
+          <a 
+            href="https://www.linkedin.com/in/rakshan-kumaraa-140049365/" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            style={{ 
+              color: 'white', 
+              textDecoration: 'none', 
+              fontSize: '0.9rem',
+              transition: 'color 0.3s ease'
+            }}
+            onMouseEnter={(e) => {
+              const target = e.target as HTMLElement;
+              target.style.color = theme === 'midnight-black' ? '#c559f7' : 
+                                   theme === 'cotton-candy-glow' ? '#ff59e8' : '#c454f0';
+            }}
+            onMouseLeave={(e) => {
+              const target = e.target as HTMLElement;
+              target.style.color = 'white';
+            }}
+          >
+            LinkedIn
+          </a>
+          <a 
+            href="https://wa.me/916369314244" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            style={{ 
+              color: 'white', 
+              textDecoration: 'none', 
+              fontSize: '0.9rem',
+              transition: 'color 0.3s ease'
+            }}
+            onMouseEnter={(e) => {
+              const target = e.target as HTMLElement;
+              target.style.color = theme === 'midnight-black' ? '#c559f7' : 
+                                   theme === 'cotton-candy-glow' ? '#ff59e8' : '#c454f0';
+            }}
+            onMouseLeave={(e) => {
+              const target = e.target as HTMLElement;
+              target.style.color = 'white';
+            }}
+          >
+            WhatsApp
+          </a>
+          <a 
+            href="mailto:rakshankumaraa@gmail.com" 
+            style={{ 
+              color: 'white', 
+              textDecoration: 'none', 
+              fontSize: '0.9rem',
+              transition: 'color 0.3s ease'
+            }}
+            onMouseEnter={(e) => {
+              const target = e.target as HTMLElement;
+              target.style.color = theme === 'midnight-black' ? '#c559f7' : 
+                                   theme === 'cotton-candy-glow' ? '#ff59e8' : '#c454f0';
+            }}
+            onMouseLeave={(e) => {
+              const target = e.target as HTMLElement;
+              target.style.color = 'white';
+            }}
+          >
+            Gmail
+          </a>
         </footer>
       </div>
 
