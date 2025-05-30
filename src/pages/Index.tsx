@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { X } from 'lucide-react';
 
 const Index: React.FC = () => {
   // Word list for typing test
@@ -33,10 +34,14 @@ const Index: React.FC = () => {
   const [message, setMessage] = useState<string>('');
   const [showTestNameMenu, setShowTestNameMenu] = useState<boolean>(false);
   const [newTestName, setNewTestName] = useState<string>('');
+  const [showReturnConfirm, setShowReturnConfirm] = useState<boolean>(false);
+  const [highlightFooter, setHighlightFooter] = useState<boolean>(false);
+  const [lastTestResult, setLastTestResult] = useState<any>(null);
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const textFlowRef = useRef<HTMLDivElement>(null);
   const caretRef = useRef<HTMLDivElement>(null);
+  const messageTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Load users from localStorage on mount
   useEffect(() => {
@@ -84,19 +89,26 @@ const Index: React.FC = () => {
     }
   }, [theme]);
 
-  // Cheat code system
+  // Cheat code system - fixed to add 30 seconds to current time
   useEffect(() => {
     const handleCheatCode = (e: KeyboardEvent) => {
       if (e.ctrlKey && e.altKey && e.key === 'Backspace' && testActive) {
         e.preventDefault();
-        setDuration(prev => prev + 30);
+        setElapsed(prev => {
+          const newElapsed = prev + 30;
+          if (newElapsed >= duration) {
+            // If adding 30 seconds exceeds duration, end the test
+            setTimeout(endTest, 100);
+          }
+          return newElapsed;
+        });
         showToast("Cheat activated: +30 seconds!");
       }
     };
 
     document.addEventListener('keydown', handleCheatCode);
     return () => document.removeEventListener('keydown', handleCheatCode);
-  }, [testActive]);
+  }, [testActive, duration]);
 
   // Helper functions
   const generateWords = (count: number): string => {
@@ -146,11 +158,6 @@ const Index: React.FC = () => {
   };
 
   const updateStats = () => {
-    const mins = Math.max(elapsed / 60, 1 / 60);
-    const correctSigns = typedCharacters.filter((char, index) => char === chars[index]?.textContent).length;
-    const speed = Math.round(Math.max(0, (correctSigns / 5) / mins));
-    const accuracyValue = typedCharacters.length > 0 ? ((correctSigns / typedCharacters.length) * 100).toFixed(2) : "0.00";
-    
     adjustCaretPosition();
   };
 
@@ -175,11 +182,14 @@ const Index: React.FC = () => {
       timerRef.current = null;
     }
     
-    // Save test results
+    // Calculate stats
     const mins = Math.max(elapsed / 60, 1 / 60);
     const correctSigns = typedCharacters.filter((char, index) => char === chars[index]?.textContent).length;
     const speed = Math.round(Math.max(0, (correctSigns / 5) / mins));
     const accuracyValue = typedCharacters.length > 0 ? ((correctSigns / typedCharacters.length) * 100) : 0;
+    
+    // Calculate score (WPM * Accuracy percentage / 100 * 10)
+    const score = Math.round(speed * (accuracyValue / 100) * 10);
     
     const testResult = {
       name: currentTestName,
@@ -188,8 +198,12 @@ const Index: React.FC = () => {
       accuracy: parseFloat(accuracyValue.toFixed(2)),
       errors: totalErrors,
       time: elapsed,
-      characters: typedCharacters.length
+      characters: typedCharacters.length,
+      correctChars: correctSigns,
+      score: score
     };
+    
+    setLastTestResult(testResult);
     
     const newResults = [...testResults, testResult];
     setTestResults(newResults);
@@ -200,6 +214,12 @@ const Index: React.FC = () => {
 
   const handleKey = useCallback((e: KeyboardEvent) => {
     if (currentScreen !== 'typing' || gameOver) return;
+    
+    // Ignore backspace for typing (except for cheat code)
+    if (e.key === "Backspace" && !(e.ctrlKey && e.altKey)) {
+      e.preventDefault();
+      return;
+    }
     
     e.preventDefault();
     
@@ -213,13 +233,7 @@ const Index: React.FC = () => {
     const expectedChar = chars[pos]?.textContent;
     const typedChar = e.key;
     
-    if (typedChar === "Backspace") {
-      if (pos > 0) {
-        setPos(prev => prev - 1);
-        setTypedCharacters(prev => prev.slice(0, -1));
-        chars[pos - 1]?.classList.remove("correct", "incorrect");
-      }
-    } else if (typedChar && typedChar.length === 1) {
+    if (typedChar && typedChar.length === 1) {
       setTypedCharacters(prev => [...prev, typedChar]);
       if (expectedChar === typedChar) {
         chars[pos]?.classList.add("correct");
@@ -281,6 +295,7 @@ const Index: React.FC = () => {
     setPos(0);
     setTotalErrors(0);
     setTypedCharacters([]);
+    setShowReturnConfirm(false);
     
     setTimeout(() => {
       const textToUse = generateWords(100);
@@ -303,7 +318,17 @@ const Index: React.FC = () => {
 
   const showToast = (msg: string, isError = false) => {
     setMessage(msg);
-    setTimeout(() => setMessage(''), 3000);
+    if (messageTimeoutRef.current) {
+      clearTimeout(messageTimeoutRef.current);
+    }
+    messageTimeoutRef.current = setTimeout(() => setMessage(''), 5000);
+  };
+
+  const closeToast = () => {
+    setMessage('');
+    if (messageTimeoutRef.current) {
+      clearTimeout(messageTimeoutRef.current);
+    }
   };
 
   const handleDeleteUser = () => {
@@ -348,6 +373,33 @@ const Index: React.FC = () => {
     startNewTest(newTestName);
   };
 
+  const handleReturnToDashboard = () => {
+    if (!showReturnConfirm) {
+      setShowReturnConfirm(true);
+      return;
+    }
+    
+    // Abort test and return to dashboard
+    setGameOver(false);
+    setTestActive(false);
+    setElapsed(0);
+    setPos(0);
+    setTotalErrors(0);
+    setTypedCharacters([]);
+    setShowReturnConfirm(false);
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    setCurrentScreen('dashboard');
+  };
+
+  const handleContactMe = () => {
+    setSideMenuOpen(false);
+    setHighlightFooter(true);
+    setTimeout(() => setHighlightFooter(false), 2000);
+  };
+
   const getAverageStats = () => {
     if (testResults.length === 0) return null;
     
@@ -358,18 +410,23 @@ const Index: React.FC = () => {
     return { avgWpm, avgAccuracy, totalTests };
   };
 
-  // Get theme-specific button colors
+  // Get theme-specific button colors (adjusted)
   const getButtonColor = () => {
     switch (theme) {
       case 'cosmic-nebula':
-        return '#b20ff7';
+        return '#8f0cc4'; // 20% darker than #b20ff7
       case 'midnight-black':
-        return '#6a0dad';
+        return '#6a0dad'; // Keep as is
       case 'cotton-candy-glow':
-        return '#fa02fa';
+        return '#af01af'; // 30% darker than #fa02fa
       default:
-        return '#b20ff7';
+        return '#8f0cc4';
     }
+  };
+
+  // Get current correct characters including spaces
+  const getCorrectSigns = () => {
+    return typedCharacters.filter((char, index) => char === chars[index]?.textContent).length;
   };
 
   const averageStats = getAverageStats();
@@ -413,7 +470,7 @@ const Index: React.FC = () => {
               fontWeight: 700,
               margin: 0
             }}>
-              TypeRak
+              TypeWave
             </h1>
           </div>
           <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -427,29 +484,7 @@ const Index: React.FC = () => {
               backdropFilter: 'blur(10px)',
               border: '1px solid rgba(255, 255, 255, 0.3)'
             }}>
-              <label htmlFor="user-select" style={{ marginRight: '10px', fontSize: '0.9rem' }}>User:</label>
-              <select 
-                id="user-select"
-                value={currentActiveUser}
-                onChange={(e) => switchUser(e.target.value)}
-                style={{
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  border: '1px solid rgba(255, 255, 255, 0.3)',
-                  color: '#fff',
-                  padding: '8px 12px',
-                  borderRadius: '6px',
-                  fontSize: '0.9rem',
-                  cursor: 'pointer',
-                  backdropFilter: 'blur(10px)',
-                  minWidth: '120px'
-                }}
-              >
-                {usersList.map(user => (
-                  <option key={user} value={user} style={{ background: 'rgba(0,0,0,0.9)', color: '#fff' }}>
-                    {user}
-                  </option>
-                ))}
-              </select>
+              <span style={{ marginRight: '10px', fontSize: '0.9rem' }}>User: {currentActiveUser}</span>
               <button 
                 onClick={() => setCurrentScreen('create-user')}
                 style={{
@@ -576,7 +611,7 @@ const Index: React.FC = () => {
             padding: '20px 0',
             flex: 1
           }}>
-            <h2 style={{ marginBottom: '1rem' }}>Welcome to TypeRak!</h2>
+            <h2 style={{ marginBottom: '1rem' }}>Welcome to TypeWave!</h2>
             <p style={{ marginBottom: '1.5rem' }}>
               {usersList.length === 0 ? "No users found. Create one below to get started." : "Please select or create a user to begin."}
             </p>
@@ -914,7 +949,7 @@ const Index: React.FC = () => {
               }}>
                 <span style={{ display: 'block', fontSize: '0.9rem', opacity: 0.8, marginBottom: '0.25rem' }}>Speed:</span>
                 <span style={{ fontWeight: 'bold', fontSize: '1.2em' }}>
-                  {Math.round(Math.max(0, (typedCharacters.filter((char, index) => char === chars[index]?.textContent).length / 5) / Math.max(elapsed / 60, 1 / 60)))} WPM
+                  {Math.round(Math.max(0, (getCorrectSigns() / 5) / Math.max(elapsed / 60, 1 / 60)))} WPM
                 </span>
               </div>
               <div style={{
@@ -942,8 +977,21 @@ const Index: React.FC = () => {
               }}>
                 <span style={{ display: 'block', fontSize: '0.9rem', opacity: 0.8, marginBottom: '0.25rem' }}>Accuracy:</span>
                 <span style={{ fontWeight: 'bold', fontSize: '1.2em' }}>
-                  {typedCharacters.length > 0 ? ((typedCharacters.filter((char, index) => char === chars[index]?.textContent).length / typedCharacters.length) * 100).toFixed(2) : "0.00"}%
+                  {typedCharacters.length > 0 ? ((getCorrectSigns() / typedCharacters.length) * 100).toFixed(2) : "0.00"}%
                 </span>
+              </div>
+              <div style={{
+                background: theme === 'cotton-candy-glow' ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.3)',
+                padding: '0.8rem 1.2rem',
+                borderRadius: '6px',
+                textAlign: 'center',
+                color: theme === 'cotton-candy-glow' ? '#333' : 'white',
+                flexGrow: 1,
+                flexBasis: '150px',
+                minWidth: '120px'
+              }}>
+                <span style={{ display: 'block', fontSize: '0.9rem', opacity: 0.8, marginBottom: '0.25rem' }}>Signs:</span>
+                <span style={{ fontWeight: 'bold', fontSize: '1.2em' }}>{getCorrectSigns()}</span>
               </div>
             </div>
 
@@ -956,6 +1004,7 @@ const Index: React.FC = () => {
                   setPos(0);
                   setTotalErrors(0);
                   setTypedCharacters([]);
+                  setShowReturnConfirm(false);
                   if (timerRef.current) {
                     clearInterval(timerRef.current);
                     timerRef.current = null;
@@ -973,16 +1022,31 @@ const Index: React.FC = () => {
                   padding: '12px 24px',
                   borderRadius: '6px',
                   cursor: 'pointer',
-                  fontSize: '1rem'
+                  fontSize: '1rem',
+                  marginRight: '1rem'
                 }}
               >
                 Restart Current Test
+              </button>
+              <button 
+                onClick={handleReturnToDashboard}
+                style={{
+                  background: showReturnConfirm ? '#e74c3c' : '#6c757d',
+                  color: 'white',
+                  border: 'none',
+                  padding: '12px 24px',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '1rem'
+                }}
+              >
+                {showReturnConfirm ? 'Confirm Return?' : 'Return to Dashboard'}
               </button>
             </div>
           </div>
         )}
 
-        {currentScreen === 'results' && (
+        {currentScreen === 'results' && lastTestResult && (
           <div style={{
             width: '100%',
             display: 'flex',
@@ -999,7 +1063,7 @@ const Index: React.FC = () => {
               textAlign: 'center'
             }}>
               <span style={{ fontSize: '0.5em', opacity: 0.8, marginRight: '5px' }}>Score:</span>
-              <span>850</span>
+              <span>{lastTestResult.score}</span>
               <span style={{ fontSize: '0.5em', opacity: 0.8, marginLeft: '5px' }}>/ 1000</span>
             </div>
             
@@ -1009,7 +1073,48 @@ const Index: React.FC = () => {
               textAlign: 'center',
               color: theme === 'cotton-candy-glow' ? '#333' : 'white'
             }}>
-              Excellent! Impressive Speed and Accuracy!
+              {lastTestResult.score >= 800 ? "Excellent! Impressive Speed and Accuracy!" :
+               lastTestResult.score >= 600 ? "Great job! Keep practicing!" :
+               lastTestResult.score >= 400 ? "Good work! Room for improvement!" :
+               "Keep practicing! You'll get better!"}
+            </div>
+
+            {/* Test Stats */}
+            <div style={{
+              width: '100%',
+              maxWidth: '600px',
+              background: 'rgba(255, 255, 255, 0.1)',
+              borderRadius: '16px',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              padding: '20px',
+              marginBottom: '2rem'
+            }}>
+              <h3 style={{ marginBottom: '15px', textAlign: 'center' }}>Test Results</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '15px', textAlign: 'center' }}>
+                <div>
+                  <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: getButtonColor() }}>{lastTestResult.wpm}</div>
+                  <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>WPM</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: getButtonColor() }}>{lastTestResult.accuracy}%</div>
+                  <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>Accuracy</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: getButtonColor() }}>{lastTestResult.errors}</div>
+                  <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>Errors</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: getButtonColor() }}>{lastTestResult.correctChars}</div>
+                  <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>Correct Signs</div>
+                </div>
+                <div style={{ gridColumn: 'span 2' }}>
+                  <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: getButtonColor() }}>
+                    {Math.floor(lastTestResult.time / 60)}:{(lastTestResult.time % 60).toString().padStart(2, '0')}
+                  </div>
+                  <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>Time Taken</div>
+                </div>
+              </div>
             </div>
 
             <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
@@ -1202,7 +1307,7 @@ const Index: React.FC = () => {
                   About Me
                 </button>
                 <button
-                  onClick={() => window.open('mailto:rakshankumaraa@gmail.com', '_blank')}
+                  onClick={handleContactMe}
                   style={{
                     width: '100%',
                     backgroundColor: getButtonColor(),
@@ -1249,15 +1354,33 @@ const Index: React.FC = () => {
             backdropFilter: 'blur(20px)',
             border: '1px solid rgba(255, 255, 255, 0.3)',
             color: 'white',
-            padding: '12px 24px',
+            padding: '12px 24px 12px 24px',
             borderRadius: '12px',
             zIndex: 2000,
             fontSize: '0.9rem',
             maxWidth: '400px',
             textAlign: 'center',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between'
           }}>
-            {message}
+            <span style={{ flex: 1 }}>{message}</span>
+            <button
+              onClick={closeToast}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'white',
+                cursor: 'pointer',
+                padding: '0',
+                marginLeft: '12px',
+                display: 'flex',
+                alignItems: 'center'
+              }}
+            >
+              <X size={16} />
+            </button>
           </div>
         )}
 
@@ -1269,7 +1392,11 @@ const Index: React.FC = () => {
           justifyContent: 'center',
           gap: '1.5rem',
           padding: '1.5rem 0',
-          zIndex: 5
+          zIndex: 5,
+          background: highlightFooter ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+          borderRadius: highlightFooter ? '12px' : '0',
+          transition: 'all 0.3s ease',
+          border: highlightFooter ? '1px solid rgba(255, 255, 255, 0.3)' : 'none'
         }}>
           <a 
             href="https://www.reddit.com/user/Rak_the_rock" 
