@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 const Index: React.FC = () => {
@@ -32,6 +31,8 @@ const Index: React.FC = () => {
   const [currentScreen, setCurrentScreen] = useState<string>('greeting');
   const [theme, setTheme] = useState<string>('cosmic-nebula');
   const [message, setMessage] = useState<string>('');
+  const [showTestNameMenu, setShowTestNameMenu] = useState<boolean>(false);
+  const [newTestName, setNewTestName] = useState<string>('');
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const textFlowRef = useRef<HTMLDivElement>(null);
@@ -198,11 +199,11 @@ const Index: React.FC = () => {
 
   const createUser = (username: string) => {
     if (!username.trim()) {
-      setMessage("Please enter a username.");
+      showToast("Please enter a username.", true);
       return false;
     }
     if (usersList.includes(username)) {
-      setMessage("User already exists. Try a different name.");
+      showToast("User already exists. Try a different name.", true);
       return false;
     }
     
@@ -212,7 +213,7 @@ const Index: React.FC = () => {
     localStorage.setItem("typeRakUsersList", JSON.stringify(newUsers));
     localStorage.setItem("typeRakActiveUser", username);
     setCurrentScreen('dashboard');
-    setMessage(`User "${username}" created and selected.`);
+    showToast(`User "${username}" created successfully!`);
     return true;
   };
 
@@ -236,6 +237,52 @@ const Index: React.FC = () => {
   const applyTheme = (newTheme: string) => {
     setTheme(newTheme);
     localStorage.setItem("typeRakTheme", newTheme);
+  };
+
+  const showToast = (msg: string, isError = false) => {
+    setMessage(msg);
+    setTimeout(() => setMessage(''), 3000);
+  };
+
+  const handleDeleteUser = () => {
+    if (!deleteConfirmState) {
+      setDeleteConfirmState(true);
+      return;
+    }
+    
+    const userToDelete = currentActiveUser;
+    const newUsers = usersList.filter(u => u !== userToDelete);
+    setUsersList(newUsers);
+    localStorage.setItem("typeRakUsersList", JSON.stringify(newUsers));
+    localStorage.removeItem(`typeRakTests-${userToDelete}`);
+    localStorage.removeItem(`typeRakLastTest-${userToDelete}`);
+    
+    setDeleteConfirmState(false);
+    
+    if (newUsers.length > 0) {
+      setCurrentActiveUser(newUsers[0]);
+      localStorage.setItem("typeRakActiveUser", newUsers[0]);
+      setCurrentScreen('dashboard');
+    } else {
+      setCurrentActiveUser('');
+      localStorage.removeItem("typeRakActiveUser");
+      setCurrentScreen('greeting');
+    }
+    showToast(`User "${userToDelete}" deleted.`);
+  };
+
+  const handleCreateTestClick = () => {
+    setShowTestNameMenu(true);
+    setNewTestName('');
+  };
+
+  const handleConfirmTestName = () => {
+    if (!newTestName.trim()) {
+      showToast("Please enter a test name.", true);
+      return;
+    }
+    setShowTestNameMenu(false);
+    startNewTest(newTestName);
   };
 
   return (
@@ -291,23 +338,27 @@ const Index: React.FC = () => {
               backdropFilter: 'blur(10px)',
               border: '1px solid rgba(255, 255, 255, 0.3)'
             }}>
-              <label htmlFor="user-select" style={{ marginRight: '5px' }}>User:</label>
+              <label htmlFor="user-select" style={{ marginRight: '10px', fontSize: '0.9rem' }}>User:</label>
               <select 
                 id="user-select"
                 value={currentActiveUser}
                 onChange={(e) => setCurrentActiveUser(e.target.value)}
                 style={{
-                  background: 'none',
-                  border: 'none',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  border: '1px solid rgba(255, 255, 255, 0.3)',
                   color: '#fff',
-                  padding: '5px',
-                  borderRadius: '4px',
+                  padding: '8px 12px',
+                  borderRadius: '6px',
                   fontSize: '0.9rem',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  backdropFilter: 'blur(10px)',
+                  minWidth: '120px'
                 }}
               >
                 {usersList.map(user => (
-                  <option key={user} value={user}>{user}</option>
+                  <option key={user} value={user} style={{ background: 'rgba(0,0,0,0.9)', color: '#fff' }}>
+                    {user}
+                  </option>
                 ))}
               </select>
               <button 
@@ -319,16 +370,11 @@ const Index: React.FC = () => {
                   padding: '5px 10px',
                   borderRadius: '4px',
                   cursor: 'pointer',
-                  marginLeft: '5px'
+                  marginLeft: '10px'
                 }}
               >
                 +
               </button>
-              {currentActiveUser && (
-                <span style={{ marginLeft: '10px', fontWeight: 'bold' }}>
-                  {currentActiveUser}
-                </span>
-              )}
             </div>
             <button 
               onClick={() => setSideMenuOpen(true)}
@@ -345,6 +391,90 @@ const Index: React.FC = () => {
             </button>
           </div>
         </header>
+
+        {/* Test Name Menu */}
+        {showTestNameMenu && (
+          <>
+            <div 
+              style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: 'rgba(0, 0, 0, 0.4)',
+                zIndex: 999
+              }}
+              onClick={() => setShowTestNameMenu(false)}
+            />
+            <div style={{
+              position: 'fixed',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              background: 'rgba(255, 255, 255, 0.1)',
+              borderRadius: '16px',
+              backdropFilter: 'blur(20px)',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              padding: '30px',
+              zIndex: 1000,
+              minWidth: '400px'
+            }}>
+              <h3 style={{ marginBottom: '20px', textAlign: 'center' }}>Create New Test</h3>
+              <input
+                type="text"
+                value={newTestName}
+                onChange={(e) => setNewTestName(e.target.value)}
+                placeholder="Enter test name..."
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  marginBottom: '20px',
+                  border: '1px solid rgba(255, 255, 255, 0.3)',
+                  borderRadius: '8px',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  color: 'white',
+                  fontSize: '1rem',
+                  backdropFilter: 'blur(10px)'
+                }}
+                onKeyPress={(e) => e.key === 'Enter' && handleConfirmTestName()}
+                autoFocus
+              />
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button
+                  onClick={handleConfirmTestName}
+                  style={{
+                    flex: 1,
+                    background: 'rgba(65, 42, 92, 0.8)',
+                    color: 'white',
+                    border: 'none',
+                    padding: '12px',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontSize: '1rem'
+                  }}
+                >
+                  Start Test
+                </button>
+                <button
+                  onClick={() => setShowTestNameMenu(false)}
+                  style={{
+                    flex: 1,
+                    background: 'rgba(108, 117, 125, 0.8)',
+                    color: 'white',
+                    border: 'none',
+                    padding: '12px',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontSize: '1rem'
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </>
+        )}
 
         {/* Main Content Areas */}
         {currentScreen === 'greeting' && (
@@ -462,7 +592,7 @@ const Index: React.FC = () => {
                   if (input1 && input2 && input1.value === input2.value) {
                     createUser(input1.value);
                   } else {
-                    setMessage("Usernames do not match.");
+                    showToast("Usernames do not match.", true);
                   }
                 }}
                 style={{
@@ -506,10 +636,7 @@ const Index: React.FC = () => {
           }}>
             <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
               <button 
-                onClick={() => {
-                  const testName = prompt("Enter name for this test:");
-                  if (testName) startNewTest(testName);
-                }}
+                onClick={handleCreateTestClick}
                 style={{
                   background: 'rgba(65, 42, 92, 0.8)',
                   color: 'white',
@@ -801,20 +928,21 @@ const Index: React.FC = () => {
                     padding: '0.8rem',
                     border: '1px solid rgba(255, 255, 255, 0.25)',
                     borderRadius: '6px',
-                    background: 'rgba(255, 255, 255, 0.08)',
+                    background: 'rgba(255, 255, 255, 0.1)',
                     color: '#ffffff',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    backdropFilter: 'blur(10px)'
                   }}
                 >
-                  <option value="30">30 Seconds</option>
-                  <option value="60">1 Minute</option>
-                  <option value="120">2 Minutes</option>
-                  <option value="180">3 Minutes</option>
-                  <option value="300">5 Minutes</option>
-                  <option value="600">10 Minutes</option>
-                  <option value="1200">20 Minutes</option>
-                  <option value="1800">30 Minutes</option>
-                  <option value="3600">60 Minutes</option>
+                  <option value="30" style={{ background: 'rgba(0,0,0,0.9)' }}>30 Seconds</option>
+                  <option value="60" style={{ background: 'rgba(0,0,0,0.9)' }}>1 Minute</option>
+                  <option value="120" style={{ background: 'rgba(0,0,0,0.9)' }}>2 Minutes</option>
+                  <option value="180" style={{ background: 'rgba(0,0,0,0.9)' }}>3 Minutes</option>
+                  <option value="300" style={{ background: 'rgba(0,0,0,0.9)' }}>5 Minutes</option>
+                  <option value="600" style={{ background: 'rgba(0,0,0,0.9)' }}>10 Minutes</option>
+                  <option value="1200" style={{ background: 'rgba(0,0,0,0.9)' }}>20 Minutes</option>
+                  <option value="1800" style={{ background: 'rgba(0,0,0,0.9)' }}>30 Minutes</option>
+                  <option value="3600" style={{ background: 'rgba(0,0,0,0.9)' }}>60 Minutes</option>
                 </select>
               </div>
 
@@ -830,42 +958,75 @@ const Index: React.FC = () => {
                     padding: '0.8rem',
                     border: '1px solid rgba(255, 255, 255, 0.25)',
                     borderRadius: '6px',
-                    background: 'rgba(255, 255, 255, 0.08)',
+                    background: 'rgba(255, 255, 255, 0.1)',
                     color: '#ffffff',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    backdropFilter: 'blur(10px)'
                   }}
                 >
-                  <option value="cosmic-nebula">Cosmic Nebula</option>
-                  <option value="midnight-black">Midnight Black</option>
-                  <option value="cotton-candy-glow">Cotton Candy Glow</option>
+                  <option value="cosmic-nebula" style={{ background: 'rgba(0,0,0,0.9)' }}>Cosmic Nebula</option>
+                  <option value="midnight-black" style={{ background: 'rgba(0,0,0,0.9)' }}>Midnight Black</option>
+                  <option value="cotton-candy-glow" style={{ background: 'rgba(0,0,0,0.9)' }}>Cotton Candy Glow</option>
                 </select>
+              </div>
+
+              <div style={{ margin: '1.5rem 0' }}>
+                <button
+                  onClick={() => window.open('https://www.reddit.com/user/Rak_the_rock', '_blank')}
+                  style={{
+                    width: '100%',
+                    backgroundColor: 'rgba(65, 42, 92, 0.8)',
+                    color: 'white',
+                    border: 'none',
+                    padding: '0.8rem 1.5rem',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '1rem',
+                    marginBottom: '10px'
+                  }}
+                >
+                  About Me
+                </button>
+                <button
+                  onClick={() => window.open('mailto:rakshankumaraa@gmail.com', '_blank')}
+                  style={{
+                    width: '100%',
+                    backgroundColor: 'rgba(65, 42, 92, 0.8)',
+                    color: 'white',
+                    border: 'none',
+                    padding: '0.8rem 1.5rem',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '1rem',
+                    marginBottom: '10px'
+                  }}
+                >
+                  Contact Me
+                </button>
+                <button
+                  onClick={() => window.open('https://github.com/Raktherock', '_blank')}
+                  style={{
+                    width: '100%',
+                    backgroundColor: 'rgba(65, 42, 92, 0.8)',
+                    color: 'white',
+                    border: 'none',
+                    padding: '0.8rem 1.5rem',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '1rem',
+                    marginBottom: '10px'
+                  }}
+                >
+                  Check This Out
+                </button>
               </div>
 
               {currentActiveUser && (
                 <div style={{ margin: '1.5rem 0' }}>
                   <button 
-                    onClick={() => {
-                      if (window.confirm(`Are you sure you want to delete user "${currentActiveUser}"?`)) {
-                        const newUsers = usersList.filter(u => u !== currentActiveUser);
-                        setUsersList(newUsers);
-                        localStorage.setItem("typeRakUsersList", JSON.stringify(newUsers));
-                        localStorage.removeItem(`typeRakTests-${currentActiveUser}`);
-                        localStorage.removeItem(`typeRakLastTest-${currentActiveUser}`);
-                        
-                        if (newUsers.length > 0) {
-                          setCurrentActiveUser(newUsers[0]);
-                          localStorage.setItem("typeRakActiveUser", newUsers[0]);
-                          setCurrentScreen('dashboard');
-                        } else {
-                          setCurrentActiveUser('');
-                          localStorage.removeItem("typeRakActiveUser");
-                          setCurrentScreen('greeting');
-                        }
-                        setSideMenuOpen(false);
-                      }
-                    }}
+                    onClick={handleDeleteUser}
                     style={{
-                      backgroundColor: '#c0392b',
+                      backgroundColor: deleteConfirmState ? '#e74c3c' : '#c0392b',
                       color: 'white',
                       border: 'none',
                       padding: '0.8rem 1.5rem',
@@ -875,7 +1036,7 @@ const Index: React.FC = () => {
                       width: '100%'
                     }}
                   >
-                    Delete Current User
+                    {deleteConfirmState ? 'Confirm Delete?' : 'Delete Current User'}
                   </button>
                 </div>
               )}
@@ -883,18 +1044,24 @@ const Index: React.FC = () => {
           </>
         )}
 
-        {/* Message Display */}
+        {/* Toast Message */}
         {message && (
           <div style={{
             position: 'fixed',
             top: '20px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            background: 'rgba(0, 0, 0, 0.8)',
+            right: '20px',
+            background: theme === 'midnight-black' ? 'rgba(174, 30, 227, 0.9)' :
+                       theme === 'cotton-candy-glow' ? 'rgba(255, 31, 188, 0.9)' :
+                       'rgba(33, 177, 255, 0.9)',
             color: 'white',
-            padding: '10px 20px',
-            borderRadius: '6px',
-            zIndex: 2000
+            padding: '12px 20px',
+            borderRadius: '8px',
+            zIndex: 2000,
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            fontSize: '0.9rem',
+            maxWidth: '300px',
+            wordWrap: 'break-word'
           }}>
             {message}
           </div>
