@@ -1,79 +1,72 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { X } from 'lucide-react';
+import { TypingTest } from '../components/TypingTest';
+import { StatsDisplay } from '../components/StatsDisplay';
+import { TestNameMenu } from '../components/TestNameMenu';
+import { SideMenu } from '../components/SideMenu';
+import { Toast } from '../components/Toast';
+import { useTypingGame } from '../hooks/useTypingGame';
+import { useLocalStorage } from '../hooks/useLocalStorage';
 
 const Index: React.FC = () => {
-  // Word list for typing test
-  const wordList = [
-    "the", "quick", "brown", "fox", "jumps", "over", "lazy", "dog", "and", "runs",
-    "through", "forest", "with", "great", "speed", "while", "being", "chased", "by",
-    "hunter", "who", "wants", "catch", "for", "his", "dinner", "but", "fox", "too",
-    "smart", "fast", "escape", "from", "danger", "using", "its", "natural", "instincts",
-    "survival", "skills", "that", "have", "been", "developed", "over", "many", "years",
-    "evolution", "making", "one", "most", "cunning", "animals", "in", "animal", "kingdom",
-    "able", "outsmart", "even", "most", "experienced", "hunters", "with", "ease", "grace"
-  ];
-
   // Global state variables
-  const [usersList, setUsersList] = useState<string[]>([]);
-  const [currentActiveUser, setCurrentActiveUser] = useState<string>('');
+  const [usersList, setUsersList] = useLocalStorage<string[]>("typeRakUsersList", []);
+  const [currentActiveUser, setCurrentActiveUser] = useLocalStorage<string>("typeRakActiveUser", '');
   const [testResults, setTestResults] = useState<any[]>([]);
   const [allTestHistory, setAllTestHistory] = useState<any[]>([]);
-  const [lastTestText, setLastTestText] = useState<string>('');
   const [currentTestName, setCurrentTestName] = useState<string>('');
   const [deleteConfirmState, setDeleteConfirmState] = useState<boolean>(false);
-  const [gameOver, setGameOver] = useState<boolean>(false);
-  const [testActive, setTestActive] = useState<boolean>(false);
-  const [elapsed, setElapsed] = useState<number>(0);
-  const [duration, setDuration] = useState<number>(60);
-  const [pos, setPos] = useState<number>(0);
-  const [chars, setChars] = useState<HTMLElement[]>([]);
-  const [typedCharacters, setTypedCharacters] = useState<string[]>([]);
-  const [totalErrors, setTotalErrors] = useState<number>(0);
+  const [duration, setDuration] = useLocalStorage<number>("typeRakDuration", 60);
   const [sideMenuOpen, setSideMenuOpen] = useState<boolean>(false);
   const [currentScreen, setCurrentScreen] = useState<string>('greeting');
-  const [theme, setTheme] = useState<string>('cosmic-nebula');
+  const [theme, setTheme] = useLocalStorage<string>("typeRakTheme", 'cosmic-nebula');
   const [message, setMessage] = useState<string>('');
   const [showTestNameMenu, setShowTestNameMenu] = useState<boolean>(false);
   const [newTestName, setNewTestName] = useState<string>('');
   const [showReturnConfirm, setShowReturnConfirm] = useState<boolean>(false);
   const [highlightFooter, setHighlightFooter] = useState<boolean>(false);
   const [lastTestResult, setLastTestResult] = useState<any>(null);
-  const [showHistory, setShowHistory] = useState<boolean>(false);
   const [continueTestMode, setContinueTestMode] = useState<boolean>(false);
-  const [testText, setTestText] = useState<string>('');
 
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const textFlowRef = useRef<HTMLDivElement>(null);
-  const caretRef = useRef<HTMLDivElement>(null);
-  const messageTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const messageTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
-  // Load users from localStorage on mount
+  // Use the typing game hook
+  const {
+    gameOver,
+    setGameOver,
+    testActive,
+    setTestActive,
+    elapsed,
+    setElapsed,
+    pos,
+    setPos,
+    chars,
+    typedCharacters,
+    setTypedCharacters,
+    totalErrors,
+    setTotalErrors,
+    testText,
+    timerRef,
+    textFlowRef,
+    generateWords,
+    renderText,
+    startTimer,
+    resetTest
+  } = useTypingGame();
+
   useEffect(() => {
-    const storedUsers = localStorage.getItem("typeRakUsersList");
-    const storedActiveUser = localStorage.getItem("typeRakActiveUser");
-    const storedTheme = localStorage.getItem("typeRakTheme");
-    const storedDuration = localStorage.getItem("typeRakDuration");
-
-    if (storedUsers) {
-      const users = JSON.parse(storedUsers);
-      setUsersList(users);
-      
-      if (storedActiveUser && users.includes(storedActiveUser)) {
-        setCurrentActiveUser(storedActiveUser);
+    if (usersList.length > 0) {
+      if (currentActiveUser && usersList.includes(currentActiveUser)) {
         setCurrentScreen('dashboard');
-        loadUserTests(storedActiveUser);
-      } else if (users.length > 0) {
-        setCurrentActiveUser(users[0]);
+        loadUserTests(currentActiveUser);
+      } else {
+        setCurrentActiveUser(usersList[0]);
         setCurrentScreen('dashboard');
-        loadUserTests(users[0]);
+        loadUserTests(usersList[0]);
       }
     }
+  }, [usersList, currentActiveUser]);
 
-    if (storedTheme) setTheme(storedTheme);
-    if (storedDuration) setDuration(parseInt(storedDuration, 10));
-  }, []);
-
-  // Load user tests
   const loadUserTests = (username: string) => {
     const storedTests = localStorage.getItem(`typeRakTests-${username}`);
     const storedHistory = localStorage.getItem(`typeRakHistory-${username}`);
@@ -89,7 +82,6 @@ const Index: React.FC = () => {
     }
   };
 
-  // Apply theme to body
   useEffect(() => {
     document.body.className = '';
     if (theme === 'midnight-black') {
@@ -99,7 +91,6 @@ const Index: React.FC = () => {
     }
   }, [theme]);
 
-  // Cheat code system - fixed to add 30 seconds to current time
   useEffect(() => {
     const handleCheatCode = (e: KeyboardEvent) => {
       if (e.ctrlKey && e.altKey && e.key === 'Backspace' && testActive) {
@@ -107,7 +98,6 @@ const Index: React.FC = () => {
         setElapsed(prev => {
           const newElapsed = prev + 30;
           if (newElapsed >= duration) {
-            // If adding 30 seconds exceeds duration, end the test
             setTimeout(endTest, 100);
           }
           return newElapsed;
@@ -120,41 +110,8 @@ const Index: React.FC = () => {
     return () => document.removeEventListener('keydown', handleCheatCode);
   }, [testActive, duration]);
 
-  // Helper functions
-  const generateWords = (count: number): string => {
-    let generatedText = "";
-    for (let i = 0; i < count; i++) {
-      generatedText += wordList[Math.floor(Math.random() * wordList.length)];
-      if (i < count - 1) {
-        generatedText += " ";
-      }
-    }
-    return generatedText;
-  };
-
-  const renderText = (text: string) => {
-    if (!textFlowRef.current) return;
-    
-    setTestText(text);
-    textFlowRef.current.innerHTML = "";
-    const newChars: HTMLElement[] = [];
-    const frag = document.createDocumentFragment();
-    
-    for (let i = 0; i < text.length; i++) {
-      const char = text[i];
-      const span = document.createElement("span");
-      span.className = "char";
-      span.textContent = char === " " ? "\u00A0" : char;
-      frag.appendChild(span);
-      newChars.push(span);
-    }
-    
-    textFlowRef.current.appendChild(frag);
-    setChars(newChars);
-  };
-
   const adjustCaretPosition = () => {
-    if (!caretRef.current || !chars || chars.length === 0 || !textFlowRef.current) return;
+    if (!textFlowRef.current || !chars || chars.length === 0) return;
     
     const containerRect = textFlowRef.current.getBoundingClientRect();
     const containerCenter = containerRect.width / 2;
@@ -163,33 +120,15 @@ const Index: React.FC = () => {
       const currentChar = chars[pos];
       const charRect = currentChar.getBoundingClientRect();
       
-      // Calculate offset to keep caret in center
       const charCenter = charRect.left + charRect.width / 2 - containerRect.left;
       const offset = containerCenter - charCenter;
       
-      // Apply offset to all characters
       textFlowRef.current.style.transform = `translateX(${offset}px)`;
-      
-      // Position caret in center
-      caretRef.current.style.left = `${containerCenter - 1}px`;
-      caretRef.current.style.top = `${charRect.top - containerRect.top}px`;
     }
   };
 
   const updateStats = () => {
     adjustCaretPosition();
-  };
-
-  const startTimer = () => {
-    timerRef.current = setInterval(() => {
-      setElapsed(prev => {
-        const newElapsed = prev + 1;
-        if (newElapsed >= duration) {
-          endTest();
-        }
-        return newElapsed;
-      });
-    }, 1000);
   };
 
   const endTest = () => {
@@ -201,14 +140,11 @@ const Index: React.FC = () => {
       timerRef.current = null;
     }
     
-    // Calculate stats
+    const correctSigns = getCorrectSigns();
     const mins = Math.max(elapsed / 60, 1 / 60);
-    const correctSigns = typedCharacters.filter((char, index) => char === testText[index]).length;
     const speed = Math.round(Math.max(0, (correctSigns / 5) / mins));
     const totalSigns = typedCharacters.length;
     const errorRate = totalSigns > 0 ? ((totalErrors / totalSigns) * 100) : 0;
-    
-    // Calculate score (WPM * (100 - Error Rate) / 100 * 10)
     const score = Math.round(speed * ((100 - errorRate) / 100) * 10);
     
     const testResult = {
@@ -225,18 +161,14 @@ const Index: React.FC = () => {
     
     setLastTestResult(testResult);
     
-    // Update history
     const newHistory = [...allTestHistory, testResult];
     setAllTestHistory(newHistory);
     localStorage.setItem(`typeRakHistory-${currentActiveUser}`, JSON.stringify(newHistory));
     
-    // Update grouped results
     const existingTestIndex = testResults.findIndex(test => test.name === currentTestName);
     let newResults;
     
     if (existingTestIndex >= 0) {
-      // Update existing test with average
-      const existingTest = testResults[existingTestIndex];
       const testHistory = newHistory.filter(t => t.name === currentTestName);
       const avgWpm = Math.round(testHistory.reduce((sum, t) => sum + t.wpm, 0) / testHistory.length);
       const avgErrorRate = (testHistory.reduce((sum, t) => sum + t.errorRate, 0) / testHistory.length);
@@ -245,7 +177,7 @@ const Index: React.FC = () => {
       
       newResults = [...testResults];
       newResults[existingTestIndex] = {
-        ...existingTest,
+        ...testResults[existingTestIndex],
         wpm: avgWpm,
         errorRate: parseFloat(avgErrorRate.toFixed(2)),
         score: avgScore,
@@ -254,7 +186,6 @@ const Index: React.FC = () => {
         totalTime: totalTime
       };
     } else {
-      // Add new test
       newResults = [...testResults, {
         ...testResult,
         testCount: 1,
@@ -272,7 +203,6 @@ const Index: React.FC = () => {
   const handleKey = useCallback((e: KeyboardEvent) => {
     if (currentScreen !== 'typing' || gameOver) return;
     
-    // Ignore backspace for typing (except for cheat code)
     if (e.key === "Backspace" && !(e.ctrlKey && e.altKey)) {
       e.preventDefault();
       return;
@@ -281,7 +211,7 @@ const Index: React.FC = () => {
     e.preventDefault();
     
     if (!testActive && e.key.length === 1 && pos < chars.length) {
-      startTimer();
+      startTimer(duration, endTest);
       setTestActive(true);
     }
     
@@ -309,12 +239,6 @@ const Index: React.FC = () => {
     updateStats();
   }, [currentScreen, gameOver, testActive, pos, chars, typedCharacters, duration, testText]);
 
-  // Add keyboard event listener
-  useEffect(() => {
-    document.addEventListener("keydown", handleKey);
-    return () => document.removeEventListener("keydown", handleKey);
-  }, [handleKey]);
-
   const createUser = (username: string) => {
     if (!username.trim()) {
       showToast("Please enter a username.", true);
@@ -328,8 +252,6 @@ const Index: React.FC = () => {
     const newUsers = [...usersList, username];
     setUsersList(newUsers);
     setCurrentActiveUser(username);
-    localStorage.setItem("typeRakUsersList", JSON.stringify(newUsers));
-    localStorage.setItem("typeRakActiveUser", username);
     setTestResults([]);
     setAllTestHistory([]);
     setCurrentScreen('dashboard');
@@ -339,7 +261,6 @@ const Index: React.FC = () => {
 
   const switchUser = (username: string) => {
     setCurrentActiveUser(username);
-    localStorage.setItem("typeRakActiveUser", username);
     loadUserTests(username);
     setDeleteConfirmState(false);
   };
@@ -347,12 +268,7 @@ const Index: React.FC = () => {
   const startNewTest = (testName: string) => {
     setCurrentTestName(testName);
     setCurrentScreen('typing');
-    setGameOver(false);
-    setTestActive(false);
-    setElapsed(0);
-    setPos(0);
-    setTotalErrors(0);
-    setTypedCharacters([]);
+    resetTest();
     setShowReturnConfirm(false);
     setContinueTestMode(false);
     
@@ -373,7 +289,6 @@ const Index: React.FC = () => {
 
   const applyTheme = (newTheme: string) => {
     setTheme(newTheme);
-    localStorage.setItem("typeRakTheme", newTheme);
   };
 
   const showToast = (msg: string, isError = false) => {
@@ -400,7 +315,6 @@ const Index: React.FC = () => {
     const userToDelete = currentActiveUser;
     const newUsers = usersList.filter(u => u !== userToDelete);
     setUsersList(newUsers);
-    localStorage.setItem("typeRakUsersList", JSON.stringify(newUsers));
     localStorage.removeItem(`typeRakTests-${userToDelete}`);
     localStorage.removeItem(`typeRakHistory-${userToDelete}`);
     localStorage.removeItem(`typeRakLastTest-${userToDelete}`);
@@ -409,12 +323,10 @@ const Index: React.FC = () => {
     
     if (newUsers.length > 0) {
       setCurrentActiveUser(newUsers[0]);
-      localStorage.setItem("typeRakActiveUser", newUsers[0]);
       loadUserTests(newUsers[0]);
       setCurrentScreen('dashboard');
     } else {
       setCurrentActiveUser('');
-      localStorage.removeItem("typeRakActiveUser");
       setCurrentScreen('greeting');
     }
     showToast(`User "${userToDelete}" deleted.`);
@@ -440,18 +352,8 @@ const Index: React.FC = () => {
       return;
     }
     
-    // Abort test and return to dashboard
-    setGameOver(false);
-    setTestActive(false);
-    setElapsed(0);
-    setPos(0);
-    setTotalErrors(0);
-    setTypedCharacters([]);
+    resetTest();
     setShowReturnConfirm(false);
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
     setCurrentScreen('dashboard');
   };
 
@@ -474,16 +376,7 @@ const Index: React.FC = () => {
         confirmButton.style.borderRadius = '4px';
         confirmButton.style.cursor = 'pointer';
         confirmButton.onclick = () => {
-          setGameOver(false);
-          setTestActive(false);
-          setElapsed(0);
-          setPos(0);
-          setTotalErrors(0);
-          setTypedCharacters([]);
-          if (timerRef.current) {
-            clearInterval(timerRef.current);
-            timerRef.current = null;
-          }
+          resetTest();
           setCurrentScreen('history');
         };
       }, 100);
@@ -503,26 +396,23 @@ const Index: React.FC = () => {
     return { avgWpm, avgErrorRate, avgScore, totalTests };
   };
 
-  // Get theme-specific button colors (adjusted)
   const getButtonColor = () => {
     switch (theme) {
       case 'cosmic-nebula':
-        return '#8f0cc4'; // 20% darker than #b20ff7
+        return '#8f0cc4';
       case 'midnight-black':
-        return '#6a0dad'; // Keep as is
+        return '#6a0dad';
       case 'cotton-candy-glow':
-        return '#af01af'; // 30% darker than #fa02fa
+        return '#af01af';
       default:
         return '#8f0cc4';
     }
   };
 
-  // Get current correct characters including spaces
   const getCorrectSigns = () => {
     return typedCharacters.filter((char, index) => char === testText[index]).length;
   };
 
-  // Get current error rate
   const getCurrentErrorRate = () => {
     const totalSigns = typedCharacters.length;
     return totalSigns > 0 ? ((totalErrors / totalSigns) * 100) : 0;
@@ -583,7 +473,7 @@ const Index: React.FC = () => {
               backdropFilter: 'blur(10px)',
               border: '1px solid rgba(255, 255, 255, 0.3)'
             }}>
-              <span style={{ marginRight: '10px', fontSize: '0.95rem' }}>User: {currentActiveUser}</span>
+              <span style={{ marginRight: '10px', fontSize: '1.05rem' }}>User: {currentActiveUser}</span>
               <button 
                 onClick={() => setCurrentScreen('create-user')}
                 style={{
@@ -617,179 +507,14 @@ const Index: React.FC = () => {
         </header>
 
         {/* Test Name Menu */}
-        {showTestNameMenu && (
-          <>
-            <div 
-              style={{
-                position: 'fixed',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                background: 'rgba(0, 0, 0, 0.4)',
-                zIndex: 999
-              }}
-              onClick={() => setShowTestNameMenu(false)}
-            />
-            <div style={{
-              position: 'fixed',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              background: 'rgba(255, 255, 255, 0.15)',
-              borderRadius: '16px',
-              backdropFilter: 'blur(20px)',
-              border: '1px solid rgba(255, 255, 255, 0.3)',
-              padding: '30px',
-              zIndex: 1000,
-              minWidth: '400px'
-            }}>
-              <h3 style={{ marginBottom: '20px', textAlign: 'center' }}>Create New Test</h3>
-              <input
-                type="text"
-                value={newTestName}
-                onChange={(e) => setNewTestName(e.target.value)}
-                placeholder="Enter test name..."
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  marginBottom: '20px',
-                  border: '1px solid rgba(255, 255, 255, 0.3)',
-                  borderRadius: '8px',
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  color: 'white',
-                  fontSize: '1rem',
-                  backdropFilter: 'blur(10px)'
-                }}
-                onKeyPress={(e) => e.key === 'Enter' && handleConfirmTestName()}
-                autoFocus
-              />
-              <div style={{ display: 'flex', gap: '10px' }}>
-                <button
-                  onClick={handleConfirmTestName}
-                  style={{
-                    flex: 1,
-                    background: getButtonColor(),
-                    color: 'white',
-                    border: 'none',
-                    padding: '12px',
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    fontSize: '1rem'
-                  }}
-                >
-                  Start Test
-                </button>
-                <button
-                  onClick={() => setShowTestNameMenu(false)}
-                  style={{
-                    flex: 1,
-                    background: 'rgba(108, 117, 125, 0.8)',
-                    color: 'white',
-                    border: 'none',
-                    padding: '12px',
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    fontSize: '1rem'
-                  }}
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </>
-        )}
-
-        {/* History Modal */}
-        {showHistory && (
-          <>
-            <div 
-              style={{
-                position: 'fixed',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                background: 'rgba(0, 0, 0, 0.4)',
-                zIndex: 999
-              }}
-              onClick={() => setShowHistory(false)}
-            />
-            <div style={{
-              position: 'fixed',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              background: 'rgba(255, 255, 255, 0.1)',
-              borderRadius: '16px',
-              backdropFilter: 'blur(20px)',
-              border: '1px solid rgba(255, 255, 255, 0.3)',
-              padding: '30px',
-              zIndex: 1000,
-              width: '80%',
-              maxWidth: '800px',
-              maxHeight: '80vh',
-              overflowY: 'auto'
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                <h3>Test History</h3>
-                <button 
-                  onClick={() => setShowHistory(false)}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: 'white',
-                    fontSize: '1.5rem',
-                    cursor: 'pointer'
-                  }}
-                >
-                  ×
-                </button>
-              </div>
-              {allTestHistory.length === 0 ? (
-                <p>No test history available.</p>
-              ) : (
-                <div>
-                  {allTestHistory.slice().reverse().map((test, index) => (
-                    <div key={index} style={{
-                      background: 'rgba(255, 255, 255, 0.1)',
-                      padding: '15px',
-                      borderRadius: '8px',
-                      marginBottom: '10px',
-                      display: 'grid',
-                      gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr',
-                      gap: '15px',
-                      alignItems: 'center'
-                    }}>
-                      <div>
-                        <div style={{ fontWeight: 'bold' }}>{test.name}</div>
-                        <div style={{ fontSize: '0.8rem', opacity: 0.8 }}>
-                          {new Date(test.date).toLocaleString()}
-                        </div>
-                      </div>
-                      <div style={{ textAlign: 'center' }}>
-                        <div style={{ fontWeight: 'bold' }}>{test.wpm}</div>
-                        <div style={{ fontSize: '0.8rem', opacity: 0.8 }}>WPM</div>
-                      </div>
-                      <div style={{ textAlign: 'center' }}>
-                        <div style={{ fontWeight: 'bold' }}>{test.errorRate}%</div>
-                        <div style={{ fontSize: '0.8rem', opacity: 0.8 }}>Error Rate</div>
-                      </div>
-                      <div style={{ textAlign: 'center' }}>
-                        <div style={{ fontWeight: 'bold' }}>{test.score}</div>
-                        <div style={{ fontSize: '0.8rem', opacity: 0.8 }}>Score</div>
-                      </div>
-                      <div style={{ textAlign: 'center' }}>
-                        <div style={{ fontWeight: 'bold' }}>{Math.floor(test.time / 60)}:{(test.time % 60).toString().padStart(2, '0')}</div>
-                        <div style={{ fontSize: '0.8rem', opacity: 0.8 }}>Time</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </>
-        )}
+        <TestNameMenu
+          showTestNameMenu={showTestNameMenu}
+          newTestName={newTestName}
+          setNewTestName={setNewTestName}
+          onConfirm={handleConfirmTestName}
+          onCancel={() => setShowTestNameMenu(false)}
+          getButtonColor={getButtonColor}
+        />
 
         {/* Main Content Areas */}
         {currentScreen === 'greeting' && (
@@ -929,7 +654,8 @@ const Index: React.FC = () => {
                   padding: '12px 24px',
                   borderRadius: '6px',
                   cursor: 'pointer',
-                  fontSize: '1rem'
+                  fontSize: '1rem',
+                  marginBottom: '10px'
                 }}
               >
                 Create User
@@ -1093,131 +819,21 @@ const Index: React.FC = () => {
             padding: '20px 0',
             flex: 1
           }}>
-            <div style={{
-              position: 'relative',
-              width: '95%',
-              maxWidth: '1400px',
-              background: theme === 'cotton-candy-glow' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)',
-              borderRadius: '12px',
-              overflow: 'hidden',
-              marginBottom: '4rem',
-              marginTop: '4rem',
-              padding: '3rem',
-              minHeight: '150px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}>
-              <div style={{
-                position: 'relative',
-                fontSize: '1.65em',
-                lineHeight: '1.8',
-                letterSpacing: '0.05em',
-                width: '100%',
-                textAlign: 'center'
-              }}>
-                <div ref={textFlowRef} style={{ 
-                  display: 'inline-block',
-                  transition: 'transform 0.1s ease'
-                }}></div>
-              </div>
-              <div 
-                ref={caretRef}
-                style={{
-                  position: 'absolute',
-                  height: '1.6em',
-                  width: '2px',
-                  background: theme === 'midnight-black' ? 'linear-gradient(90deg, #c559f7 0%, #7f59f7 100%)' : 
-                             theme === 'cotton-candy-glow' ? 'linear-gradient(90deg, #ff59e8 0%, #ff52a8 100%)' :
-                             'linear-gradient(90deg, #c454f0 0%, #7d54f0 100%)',
-                  animation: 'blinkCaret 0.8s infinite step-end',
-                  fontWeight: 'bold'
-                }}
-              >_</div>
-            </div>
+            <TypingTest
+              testText={testText}
+              pos={pos}
+              chars={chars}
+              theme={theme}
+              onKeyDown={handleKey}
+            />
 
-            <div style={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              justifyContent: 'center',
-              gap: '1rem',
-              width: '90%',
-              maxWidth: '1000px',
-              margin: '1rem auto',
-              marginBottom: '4rem'
-            }}>
-              <div style={{
-                background: theme === 'cotton-candy-glow' ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.3)',
-                padding: '0.8rem 1.2rem',
-                borderRadius: '6px',
-                textAlign: 'center',
-                color: theme === 'cotton-candy-glow' ? '#333' : 'white',
-                flexGrow: 1,
-                flexBasis: '150px',
-                minWidth: '120px'
-              }}>
-                <span style={{ display: 'block', fontSize: '0.9rem', opacity: 0.8, marginBottom: '0.25rem' }}>Time:</span>
-                <span style={{ fontWeight: 'bold', fontSize: '1.2em' }}>
-                  {String(Math.floor(elapsed / 60)).padStart(2, "0")}:{String(elapsed % 60).padStart(2, "0")}
-                </span>
-              </div>
-              <div style={{
-                background: theme === 'cotton-candy-glow' ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.3)',
-                padding: '0.8rem 1.2rem',
-                borderRadius: '6px',
-                textAlign: 'center',
-                color: theme === 'cotton-candy-glow' ? '#333' : 'white',
-                flexGrow: 1,
-                flexBasis: '150px',
-                minWidth: '120px'
-              }}>
-                <span style={{ display: 'block', fontSize: '0.9rem', opacity: 0.8, marginBottom: '0.25rem' }}>Speed:</span>
-                <span style={{ fontWeight: 'bold', fontSize: '1.2em' }}>
-                  {Math.round(Math.max(0, (getCorrectSigns() / 5) / Math.max(elapsed / 60, 1 / 60)))} WPM
-                </span>
-              </div>
-              <div style={{
-                background: theme === 'cotton-candy-glow' ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.3)',
-                padding: '0.8rem 1.2rem',
-                borderRadius: '6px',
-                textAlign: 'center',
-                color: theme === 'cotton-candy-glow' ? '#333' : 'white',
-                flexGrow: 1,
-                flexBasis: '150px',
-                minWidth: '120px'
-              }}>
-                <span style={{ display: 'block', fontSize: '0.9rem', opacity: 0.8, marginBottom: '0.25rem' }}>Errors:</span>
-                <span style={{ fontWeight: 'bold', fontSize: '1.2em' }}>{totalErrors}</span>
-              </div>
-              <div style={{
-                background: theme === 'cotton-candy-glow' ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.3)',
-                padding: '0.8rem 1.2rem',
-                borderRadius: '6px',
-                textAlign: 'center',
-                color: theme === 'cotton-candy-glow' ? '#333' : 'white',
-                flexGrow: 1,
-                flexBasis: '150px',
-                minWidth: '120px'
-              }}>
-                <span style={{ display: 'block', fontSize: '0.9rem', opacity: 0.8, marginBottom: '0.25rem' }}>Error Rate:</span>
-                <span style={{ fontWeight: 'bold', fontSize: '1.2em' }}>
-                  {getCurrentErrorRate().toFixed(2)}%
-                </span>
-              </div>
-              <div style={{
-                background: theme === 'cotton-candy-glow' ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.3)',
-                padding: '0.8rem 1.2rem',
-                borderRadius: '6px',
-                textAlign: 'center',
-                color: theme === 'cotton-candy-glow' ? '#333' : 'white',
-                flexGrow: 1,
-                flexBasis: '150px',
-                minWidth: '120px'
-              }}>
-                <span style={{ display: 'block', fontSize: '0.9rem', opacity: 0.8, marginBottom: '0.25rem' }}>Signs:</span>
-                <span style={{ fontWeight: 'bold', fontSize: '1.2em' }}>{getCorrectSigns()}</span>
-              </div>
-            </div>
+            <StatsDisplay
+              elapsed={elapsed}
+              correctSigns={getCorrectSigns()}
+              totalErrors={totalErrors}
+              currentErrorRate={getCurrentErrorRate()}
+              theme={theme}
+            />
 
             <div style={{ 
               display: 'flex', 
@@ -1227,17 +843,8 @@ const Index: React.FC = () => {
             }}>
               <button 
                 onClick={() => {
-                  setGameOver(false);
-                  setTestActive(false);
-                  setElapsed(0);
-                  setPos(0);
-                  setTotalErrors(0);
-                  setTypedCharacters([]);
+                  resetTest();
                   setShowReturnConfirm(false);
-                  if (timerRef.current) {
-                    clearInterval(timerRef.current);
-                    timerRef.current = null;
-                  }
                   setTimeout(() => {
                     const textToUse = generateWords(100);
                     renderText(textToUse);
@@ -1257,7 +864,7 @@ const Index: React.FC = () => {
                 Restart Current Test
               </button>
               <button 
-                onClick={() => setShowHistory(true)}
+                onClick={handleHistoryClick}
                 style={{
                   background: '#6c757d',
                   color: 'white',
@@ -1272,7 +879,6 @@ const Index: React.FC = () => {
               </button>
             </div>
 
-            {/* Return to Dashboard button - positioned in bottom right */}
             <div style={{
               position: 'fixed',
               bottom: '120px',
@@ -1330,7 +936,6 @@ const Index: React.FC = () => {
                "Keep practicing! You'll get better!"}
             </div>
 
-            {/* Test Stats */}
             <div style={{
               width: '100%',
               maxWidth: '700px',
@@ -1473,274 +1078,28 @@ const Index: React.FC = () => {
         )}
 
         {/* Side Menu */}
-        {sideMenuOpen && (
-          <>
-            <div 
-              style={{
-                position: 'fixed',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                background: 'rgba(0, 0, 0, 0.4)',
-                zIndex: 999
-              }}
-              onClick={() => setSideMenuOpen(false)}
-            ></div>
-            <div style={{
-              position: 'fixed',
-              top: 0,
-              right: 0,
-              width: '300px',
-              height: '100%',
-              background: 'rgba(30, 35, 45, 0.7)',
-              backdropFilter: 'blur(20px)',
-              borderLeft: '1px solid rgba(255, 255, 255, 0.2)',
-              padding: '1.5rem',
-              zIndex: 1000,
-              color: '#e0e0e0',
-              overflowY: 'auto'
-            }}>
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: '1.5rem',
-                borderBottom: '1px solid rgba(255, 255, 255, 0.15)',
-                paddingBottom: '1rem'
-              }}>
-                <h2>Settings</h2>
-                <button 
-                  onClick={() => setSideMenuOpen(false)}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: '#cccccc',
-                    fontSize: '1.8rem',
-                    cursor: 'pointer'
-                  }}
-                >
-                  ×
-                </button>
-              </div>
-
-              {/* User Selection Section */}
-              <div style={{ margin: '1.5rem 0' }}>
-                <label style={{ display: 'block', marginBottom: '0.6rem', fontSize: '0.95em', color: '#d0d0d0' }}>
-                  Select User:
-                </label>
-                <select 
-                  value={currentActiveUser}
-                  onChange={(e) => switchUser(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '0.8rem',
-                    border: '1px solid rgba(255, 255, 255, 0.25)',
-                    borderRadius: '6px',
-                    background: 'rgba(255, 255, 255, 0.1)',
-                    color: '#ffffff',
-                    cursor: 'pointer',
-                    backdropFilter: 'blur(10px)',
-                    marginBottom: '10px'
-                  }}
-                >
-                  {usersList.map(user => (
-                    <option key={user} value={user} style={{ background: 'rgba(0,0,0,0.9)' }}>
-                      {user}
-                    </option>
-                  ))}
-                </select>
-                <button 
-                  onClick={handleDeleteUser}
-                  style={{
-                    backgroundColor: deleteConfirmState ? '#e74c3c' : '#c0392b',
-                    color: 'white',
-                    border: 'none',
-                    padding: '0.8rem 1.5rem',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    fontSize: '1rem',
-                    width: '100%'
-                  }}
-                >
-                  {deleteConfirmState ? 'Confirm Delete?' : 'Delete Current User'}
-                </button>
-              </div>
-
-              <div style={{ margin: '1.5rem 0' }}>
-                <label style={{ display: 'block', marginBottom: '0.6rem', fontSize: '0.95em', color: '#d0d0d0' }}>
-                  Test Duration:
-                </label>
-                <select 
-                  value={duration}
-                  onChange={(e) => {
-                    const newDuration = parseInt(e.target.value, 10);
-                    setDuration(newDuration);
-                    localStorage.setItem("typeRakDuration", newDuration.toString());
-                  }}
-                  style={{
-                    width: '100%',
-                    padding: '0.8rem',
-                    border: '1px solid rgba(255, 255, 255, 0.25)',
-                    borderRadius: '6px',
-                    background: 'rgba(255, 255, 255, 0.1)',
-                    color: '#ffffff',
-                    cursor: 'pointer',
-                    backdropFilter: 'blur(10px)'
-                  }}
-                >
-                  <option value="30" style={{ background: 'rgba(0,0,0,0.9)' }}>30 Seconds</option>
-                  <option value="60" style={{ background: 'rgba(0,0,0,0.9)' }}>1 Minute</option>
-                  <option value="120" style={{ background: 'rgba(0,0,0,0.9)' }}>2 Minutes</option>
-                  <option value="180" style={{ background: 'rgba(0,0,0,0.9)' }}>3 Minutes</option>
-                  <option value="300" style={{ background: 'rgba(0,0,0,0.9)' }}>5 Minutes</option>
-                  <option value="600" style={{ background: 'rgba(0,0,0,0.9)' }}>10 Minutes</option>
-                  <option value="1200" style={{ background: 'rgba(0,0,0,0.9)' }}>20 Minutes</option>
-                  <option value="1800" style={{ background: 'rgba(0,0,0,0.9)' }}>30 Minutes</option>
-                  <option value="3600" style={{ background: 'rgba(0,0,0,0.9)' }}>60 Minutes</option>
-                </select>
-              </div>
-
-              <div style={{ margin: '1.5rem 0' }}>
-                <label style={{ display: 'block', marginBottom: '0.6rem', fontSize: '0.95em', color: '#d0d0d0' }}>
-                  Theme:
-                </label>
-                <select 
-                  value={theme}
-                  onChange={(e) => applyTheme(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '0.8rem',
-                    border: '1px solid rgba(255, 255, 255, 0.25)',
-                    borderRadius: '6px',
-                    background: 'rgba(255, 255, 255, 0.1)',
-                    color: '#ffffff',
-                    cursor: 'pointer',
-                    backdropFilter: 'blur(10px)'
-                  }}
-                >
-                  <option value="cosmic-nebula" style={{ background: 'rgba(0,0,0,0.9)' }}>Cosmic Nebula</option>
-                  <option value="midnight-black" style={{ background: 'rgba(0,0,0,0.9)' }}>Midnight Black</option>
-                  <option value="cotton-candy-glow" style={{ background: 'rgba(0,0,0,0.9)' }}>Cotton Candy Glow</option>
-                </select>
-              </div>
-
-              <div style={{ margin: '1.5rem 0' }}>
-                <button
-                  onClick={() => {
-                    setSideMenuOpen(false);
-                    setShowHistory(true);
-                  }}
-                  style={{
-                    width: '100%',
-                    backgroundColor: '#6c757d',
-                    color: 'white',
-                    border: 'none',
-                    padding: '0.8rem 1.5rem',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    fontSize: '1rem',
-                    marginBottom: '10px'
-                  }}
-                >
-                  History
-                </button>
-              </div>
-
-              <div style={{ margin: '1.5rem 0' }}>
-                <button
-                  onClick={() => window.open('https://www.reddit.com/user/Rak_the_rock', '_blank')}
-                  style={{
-                    width: '100%',
-                    backgroundColor: getButtonColor(),
-                    color: 'white',
-                    border: 'none',
-                    padding: '0.8rem 1.5rem',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    fontSize: '1rem',
-                    marginBottom: '10px'
-                  }}
-                >
-                  About Me
-                </button>
-                <button
-                  onClick={handleContactMe}
-                  style={{
-                    width: '100%',
-                    backgroundColor: getButtonColor(),
-                    color: 'white',
-                    border: 'none',
-                    padding: '0.8rem 1.5rem',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    fontSize: '1rem',
-                    marginBottom: '10px'
-                  }}
-                >
-                  Contact Me
-                </button>
-                <button
-                  onClick={() => window.open('https://github.com/Raktherock', '_blank')}
-                  style={{
-                    width: '100%',
-                    backgroundColor: getButtonColor(),
-                    color: 'white',
-                    border: 'none',
-                    padding: '0.8rem 1.5rem',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    fontSize: '1rem',
-                    marginBottom: '10px'
-                  }}
-                >
-                  Check This Out
-                </button>
-              </div>
-            </div>
-          </>
-        )}
+        <SideMenu
+          sideMenuOpen={sideMenuOpen}
+          setSideMenuOpen={setSideMenuOpen}
+          usersList={usersList}
+          currentActiveUser={currentActiveUser}
+          switchUser={switchUser}
+          handleDeleteUser={handleDeleteUser}
+          deleteConfirmState={deleteConfirmState}
+          duration={duration}
+          setDuration={(newDuration) => {
+            setDuration(newDuration);
+            localStorage.setItem("typeRakDuration", newDuration.toString());
+          }}
+          theme={theme}
+          applyTheme={applyTheme}
+          handleHistoryClick={handleHistoryClick}
+          handleContactMe={handleContactMe}
+          getButtonColor={getButtonColor}
+        />
 
         {/* Toast Message */}
-        {message && (
-          <div style={{
-            position: 'fixed',
-            top: '80px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            background: 'rgba(255, 255, 255, 0.15)',
-            backdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            color: 'white',
-            padding: '12px 24px 12px 24px',
-            borderRadius: '12px',
-            zIndex: 2000,
-            fontSize: '0.9rem',
-            maxWidth: '400px',
-            textAlign: 'center',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between'
-          }}>
-            <span style={{ flex: 1 }}>{message}</span>
-            <button
-              onClick={closeToast}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: 'white',
-                cursor: 'pointer',
-                padding: '0',
-                marginLeft: '12px',
-                display: 'flex',
-                alignItems: 'center'
-              }}
-            >
-              <X size={16} />
-            </button>
-          </div>
-        )}
+        <Toast message={message} onClose={closeToast} />
 
         {/* Footer */}
         <footer style={{
