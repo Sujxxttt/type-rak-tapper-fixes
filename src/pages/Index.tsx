@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { X } from 'lucide-react';
 
@@ -41,6 +40,7 @@ const Index: React.FC = () => {
   const [lastTestResult, setLastTestResult] = useState<any>(null);
   const [showHistory, setShowHistory] = useState<boolean>(false);
   const [continueTestMode, setContinueTestMode] = useState<boolean>(false);
+  const [testText, setTestText] = useState<string>('');
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const textFlowRef = useRef<HTMLDivElement>(null);
@@ -135,6 +135,7 @@ const Index: React.FC = () => {
   const renderText = (text: string) => {
     if (!textFlowRef.current) return;
     
+    setTestText(text);
     textFlowRef.current.innerHTML = "";
     const newChars: HTMLElement[] = [];
     const frag = document.createDocumentFragment();
@@ -143,7 +144,7 @@ const Index: React.FC = () => {
       const char = text[i];
       const span = document.createElement("span");
       span.className = "char";
-      span.textContent = char === " " ? "\u00A0" : char; // Use non-breaking space
+      span.textContent = char === " " ? "\u00A0" : char;
       frag.appendChild(span);
       newChars.push(span);
     }
@@ -153,22 +154,26 @@ const Index: React.FC = () => {
   };
 
   const adjustCaretPosition = () => {
-    if (!caretRef.current || !chars || chars.length === 0) return;
+    if (!caretRef.current || !chars || chars.length === 0 || !textFlowRef.current) return;
     
-    const currentChar = pos < chars.length ? chars[pos] : chars[chars.length - 1];
-    if (!currentChar || !textFlowRef.current) return;
+    const containerRect = textFlowRef.current.getBoundingClientRect();
+    const containerCenter = containerRect.width / 2;
     
-    const charRect = currentChar.getBoundingClientRect();
-    const displayRect = textFlowRef.current.getBoundingClientRect();
-    
-    if (pos >= chars.length) {
-      // Position at end of last character
-      caretRef.current.style.left = `${charRect.right - displayRect.left}px`;
-    } else {
-      // Position at start of current character
-      caretRef.current.style.left = `${charRect.left - displayRect.left}px`;
+    if (pos < chars.length) {
+      const currentChar = chars[pos];
+      const charRect = currentChar.getBoundingClientRect();
+      
+      // Calculate offset to keep caret in center
+      const charCenter = charRect.left + charRect.width / 2 - containerRect.left;
+      const offset = containerCenter - charCenter;
+      
+      // Apply offset to all characters
+      textFlowRef.current.style.transform = `translateX(${offset}px)`;
+      
+      // Position caret in center
+      caretRef.current.style.left = `${containerCenter - 1}px`;
+      caretRef.current.style.top = `${charRect.top - containerRect.top}px`;
     }
-    caretRef.current.style.top = `${charRect.top - displayRect.top}px`;
   };
 
   const updateStats = () => {
@@ -198,7 +203,7 @@ const Index: React.FC = () => {
     
     // Calculate stats
     const mins = Math.max(elapsed / 60, 1 / 60);
-    const correctSigns = typedCharacters.filter((char, index) => char === chars[index]?.textContent?.replace('\u00A0', ' ')).length;
+    const correctSigns = typedCharacters.filter((char, index) => char === testText[index]).length;
     const speed = Math.round(Math.max(0, (correctSigns / 5) / mins));
     const totalSigns = typedCharacters.length;
     const errorRate = totalSigns > 0 ? ((totalErrors / totalSigns) * 100) : 0;
@@ -236,6 +241,7 @@ const Index: React.FC = () => {
       const avgWpm = Math.round(testHistory.reduce((sum, t) => sum + t.wpm, 0) / testHistory.length);
       const avgErrorRate = (testHistory.reduce((sum, t) => sum + t.errorRate, 0) / testHistory.length);
       const avgScore = Math.round(testHistory.reduce((sum, t) => sum + t.score, 0) / testHistory.length);
+      const totalTime = testHistory.reduce((sum, t) => sum + t.time, 0);
       
       newResults = [...testResults];
       newResults[existingTestIndex] = {
@@ -244,14 +250,16 @@ const Index: React.FC = () => {
         errorRate: parseFloat(avgErrorRate.toFixed(2)),
         score: avgScore,
         testCount: testHistory.length,
-        lastDate: testResult.date
+        lastDate: testResult.date,
+        totalTime: totalTime
       };
     } else {
       // Add new test
       newResults = [...testResults, {
         ...testResult,
         testCount: 1,
-        lastDate: testResult.date
+        lastDate: testResult.date,
+        totalTime: testResult.time
       }];
     }
     
@@ -279,7 +287,7 @@ const Index: React.FC = () => {
     
     if (!testActive) return;
     
-    const expectedChar = chars[pos]?.textContent?.replace('\u00A0', ' ');
+    const expectedChar = testText[pos];
     const typedChar = e.key;
     
     if (typedChar && typedChar.length === 1) {
@@ -299,7 +307,7 @@ const Index: React.FC = () => {
     }
     
     updateStats();
-  }, [currentScreen, gameOver, testActive, pos, chars, typedCharacters, duration]);
+  }, [currentScreen, gameOver, testActive, pos, chars, typedCharacters, duration, testText]);
 
   // Add keyboard event listener
   useEffect(() => {
@@ -453,6 +461,37 @@ const Index: React.FC = () => {
     setTimeout(() => setHighlightFooter(false), 2000);
   };
 
+  const handleHistoryClick = () => {
+    if (currentScreen === 'typing' && testActive) {
+      showToast("This will abort the current test. Confirm to continue.", true);
+      setTimeout(() => {
+        const confirmButton = document.createElement('button');
+        confirmButton.textContent = 'Confirm';
+        confirmButton.style.background = '#e74c3c';
+        confirmButton.style.color = 'white';
+        confirmButton.style.border = 'none';
+        confirmButton.style.padding = '8px 16px';
+        confirmButton.style.borderRadius = '4px';
+        confirmButton.style.cursor = 'pointer';
+        confirmButton.onclick = () => {
+          setGameOver(false);
+          setTestActive(false);
+          setElapsed(0);
+          setPos(0);
+          setTotalErrors(0);
+          setTypedCharacters([]);
+          if (timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+          }
+          setCurrentScreen('history');
+        };
+      }, 100);
+    } else {
+      setCurrentScreen('history');
+    }
+  };
+
   const getAverageStats = () => {
     if (testResults.length === 0) return null;
     
@@ -480,7 +519,7 @@ const Index: React.FC = () => {
 
   // Get current correct characters including spaces
   const getCorrectSigns = () => {
-    return typedCharacters.filter((char, index) => char === chars[index]?.textContent?.replace('\u00A0', ' ')).length;
+    return typedCharacters.filter((char, index) => char === testText[index]).length;
   };
 
   // Get current error rate
@@ -544,7 +583,7 @@ const Index: React.FC = () => {
               backdropFilter: 'blur(10px)',
               border: '1px solid rgba(255, 255, 255, 0.3)'
             }}>
-              <span style={{ marginRight: '10px', fontSize: '0.9rem' }}>User: {currentActiveUser}</span>
+              <span style={{ marginRight: '10px', fontSize: '0.95rem' }}>User: {currentActiveUser}</span>
               <button 
                 onClick={() => setCurrentScreen('create-user')}
                 style={{
@@ -555,7 +594,7 @@ const Index: React.FC = () => {
                   borderRadius: '4px',
                   cursor: 'pointer',
                   marginLeft: '10px',
-                  fontSize: '1.2rem'
+                  fontSize: '1.26rem'
                 }}
               >
                 +
@@ -834,7 +873,9 @@ const Index: React.FC = () => {
               padding: '30px',
               maxWidth: '400px'
             }}>
-              <label style={{ display: 'block', marginBottom: '10px' }}>Enter Username:</label>
+              <label style={{ display: 'block', marginBottom: '0.6rem', fontSize: '0.95em', color: '#d0d0d0' }}>
+                Enter Username:
+              </label>
               <input 
                 type="text" 
                 id="new-username-input"
@@ -843,14 +884,17 @@ const Index: React.FC = () => {
                   width: '100%',
                   padding: '10px',
                   marginBottom: '20px',
-                  border: '1px solid rgba(255, 255, 255, 0.3)',
+                  border: '1px solid rgba(255, 255, 255, 0.25)',
                   borderRadius: '6px',
                   background: 'rgba(255, 255, 255, 0.1)',
-                  color: 'white',
+                  color: '#ffffff',
+                  cursor: 'pointer',
                   backdropFilter: 'blur(10px)'
                 }}
               />
-              <label style={{ display: 'block', marginBottom: '10px' }}>Confirm Username:</label>
+              <label style={{ display: 'block', marginBottom: '0.6rem', fontSize: '0.95em', color: '#d0d0d0' }}>
+                Confirm Username:
+              </label>
               <input 
                 type="text" 
                 id="confirm-username-input"
@@ -859,10 +903,11 @@ const Index: React.FC = () => {
                   width: '100%',
                   padding: '10px',
                   marginBottom: '20px',
-                  border: '1px solid rgba(255, 255, 255, 0.3)',
+                  border: '1px solid rgba(255, 255, 255, 0.25)',
                   borderRadius: '6px',
                   background: 'rgba(255, 255, 255, 0.1)',
-                  color: 'white',
+                  color: '#ffffff',
+                  cursor: 'pointer',
                   backdropFilter: 'blur(10px)'
                 }}
               />
@@ -877,13 +922,14 @@ const Index: React.FC = () => {
                   }
                 }}
                 style={{
+                  width: '100%',
                   background: getButtonColor(),
                   color: 'white',
                   border: 'none',
                   padding: '12px 24px',
                   borderRadius: '6px',
                   cursor: 'pointer',
-                  marginRight: '10px'
+                  fontSize: '1rem'
                 }}
               >
                 Create User
@@ -891,12 +937,14 @@ const Index: React.FC = () => {
               <button 
                 onClick={() => setCurrentScreen(usersList.length > 0 ? 'dashboard' : 'greeting')}
                 style={{
+                  width: '100%',
                   background: '#6c757d',
                   color: 'white',
                   border: 'none',
                   padding: '12px 24px',
                   borderRadius: '6px',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  fontSize: '1rem'
                 }}
               >
                 Cancel
@@ -1018,6 +1066,9 @@ const Index: React.FC = () => {
                         <div style={{ fontSize: '0.8rem', opacity: 0.8 }}>
                           {test.testCount > 1 ? `${test.testCount} tests completed` : '1 test completed'} | Last: {new Date(test.lastDate).toLocaleDateString()}
                         </div>
+                        <div style={{ fontSize: '0.8rem', opacity: 0.8 }}>
+                          Time: {Math.floor((test.totalTime || 0) / 60)}:{((test.totalTime || 0) % 60).toString().padStart(2, '0')}
+                        </div>
                       </div>
                       <div style={{ textAlign: 'right' }}>
                         <div>{test.wpm} WPM | {test.errorRate}% Error Rate | Score: {test.score}</div>
@@ -1044,37 +1095,45 @@ const Index: React.FC = () => {
           }}>
             <div style={{
               position: 'relative',
-              width: '90%',
-              maxWidth: '1300px',
+              width: '95%',
+              maxWidth: '1400px',
               background: theme === 'cotton-candy-glow' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)',
-              borderRadius: '6px',
+              borderRadius: '12px',
               overflow: 'hidden',
-              marginBottom: '3rem',
-              marginTop: '3rem',
-              padding: '2rem',
-              minHeight: '120px'
+              marginBottom: '4rem',
+              marginTop: '4rem',
+              padding: '3rem',
+              minHeight: '150px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
             }}>
               <div style={{
                 position: 'relative',
-                whiteSpace: 'nowrap',
-                fontSize: '1.5em',
+                fontSize: '1.65em',
                 lineHeight: '1.8',
-                letterSpacing: '0.1em'
+                letterSpacing: '0.05em',
+                width: '100%',
+                textAlign: 'center'
               }}>
-                <div ref={textFlowRef} style={{ display: 'inline-block' }}></div>
+                <div ref={textFlowRef} style={{ 
+                  display: 'inline-block',
+                  transition: 'transform 0.1s ease'
+                }}></div>
               </div>
               <div 
                 ref={caretRef}
                 style={{
                   position: 'absolute',
                   height: '1.6em',
-                  width: '3px',
+                  width: '2px',
                   background: theme === 'midnight-black' ? 'linear-gradient(90deg, #c559f7 0%, #7f59f7 100%)' : 
                              theme === 'cotton-candy-glow' ? 'linear-gradient(90deg, #ff59e8 0%, #ff52a8 100%)' :
                              'linear-gradient(90deg, #c454f0 0%, #7d54f0 100%)',
-                  animation: 'blinkCaret 0.8s infinite step-end'
+                  animation: 'blinkCaret 0.8s infinite step-end',
+                  fontWeight: 'bold'
                 }}
-              ></div>
+              >_</div>
             </div>
 
             <div style={{
@@ -1085,7 +1144,7 @@ const Index: React.FC = () => {
               width: '90%',
               maxWidth: '1000px',
               margin: '1rem auto',
-              marginBottom: '3rem'
+              marginBottom: '4rem'
             }}>
               <div style={{
                 background: theme === 'cotton-candy-glow' ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.3)',
@@ -1198,20 +1257,6 @@ const Index: React.FC = () => {
                 Restart Current Test
               </button>
               <button 
-                onClick={handleReturnToDashboard}
-                style={{
-                  background: showReturnConfirm ? '#e74c3c' : '#6c757d',
-                  color: 'white',
-                  border: 'none',
-                  padding: '12px 24px',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontSize: '1rem'
-                }}
-              >
-                {showReturnConfirm ? 'Confirm Return?' : 'Return to Dashboard'}
-              </button>
-              <button 
                 onClick={() => setShowHistory(true)}
                 style={{
                   background: '#6c757d',
@@ -1224,6 +1269,29 @@ const Index: React.FC = () => {
                 }}
               >
                 History
+              </button>
+            </div>
+
+            {/* Return to Dashboard button - positioned in bottom right */}
+            <div style={{
+              position: 'fixed',
+              bottom: '120px',
+              right: '20px',
+              zIndex: 100
+            }}>
+              <button 
+                onClick={handleReturnToDashboard}
+                style={{
+                  background: showReturnConfirm ? '#e74c3c' : '#6c757d',
+                  color: 'white',
+                  border: 'none',
+                  padding: '12px 24px',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '1rem'
+                }}
+              >
+                {showReturnConfirm ? 'Confirm Return?' : 'Return to Dashboard'}
               </button>
             </div>
           </div>
@@ -1265,7 +1333,7 @@ const Index: React.FC = () => {
             {/* Test Stats */}
             <div style={{
               width: '100%',
-              maxWidth: '600px',
+              maxWidth: '700px',
               background: 'rgba(255, 255, 255, 0.1)',
               borderRadius: '16px',
               backdropFilter: 'blur(10px)',
@@ -1274,7 +1342,7 @@ const Index: React.FC = () => {
               marginBottom: '2rem'
             }}>
               <h3 style={{ marginBottom: '15px', textAlign: 'center' }}>Test Results</h3>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '15px', textAlign: 'center' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '15px', textAlign: 'center', marginBottom: '15px' }}>
                 <div>
                   <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: getButtonColor() }}>{lastTestResult.wpm}</div>
                   <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>WPM</div>
@@ -1287,6 +1355,8 @@ const Index: React.FC = () => {
                   <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: getButtonColor() }}>{lastTestResult.score}</div>
                   <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>Score</div>
                 </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '15px', textAlign: 'center' }}>
                 <div>
                   <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: getButtonColor() }}>{lastTestResult.errors}</div>
                   <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>Total Errors</div>
@@ -1319,6 +1389,85 @@ const Index: React.FC = () => {
               >
                 Back to Test Dashboard
               </button>
+            </div>
+          </div>
+        )}
+
+        {currentScreen === 'history' && (
+          <div style={{
+            width: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            padding: '20px 0',
+            flex: 1
+          }}>
+            <div style={{
+              width: '90%',
+              maxWidth: '800px',
+              background: 'rgba(255, 255, 255, 0.1)',
+              borderRadius: '16px',
+              backdropFilter: 'blur(20px)',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              padding: '30px'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h2>Test History</h2>
+                <button 
+                  onClick={() => setCurrentScreen('dashboard')}
+                  style={{
+                    background: getButtonColor(),
+                    color: 'white',
+                    border: 'none',
+                    padding: '10px 20px',
+                    borderRadius: '6px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Back to Dashboard
+                </button>
+              </div>
+              {allTestHistory.length === 0 ? (
+                <p>No test history available.</p>
+              ) : (
+                <div style={{ maxHeight: '60vh', overflowY: 'auto' }}>
+                  {allTestHistory.slice().reverse().map((test, index) => (
+                    <div key={index} style={{
+                      background: 'rgba(255, 255, 255, 0.1)',
+                      padding: '15px',
+                      borderRadius: '8px',
+                      marginBottom: '10px',
+                      display: 'grid',
+                      gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr',
+                      gap: '15px',
+                      alignItems: 'center'
+                    }}>
+                      <div>
+                        <div style={{ fontWeight: 'bold' }}>{test.name}</div>
+                        <div style={{ fontSize: '0.8rem', opacity: 0.8 }}>
+                          {new Date(test.date).toLocaleString()}
+                        </div>
+                      </div>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontWeight: 'bold' }}>{test.wpm}</div>
+                        <div style={{ fontSize: '0.8rem', opacity: 0.8 }}>WPM</div>
+                      </div>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontWeight: 'bold' }}>{test.errorRate}%</div>
+                        <div style={{ fontSize: '0.8rem', opacity: 0.8 }}>Error Rate</div>
+                      </div>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontWeight: 'bold' }}>{test.score}</div>
+                        <div style={{ fontSize: '0.8rem', opacity: 0.8 }}>Score</div>
+                      </div>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontWeight: 'bold' }}>{Math.floor(test.time / 60)}:{(test.time % 60).toString().padStart(2, '0')}</div>
+                        <div style={{ fontSize: '0.8rem', opacity: 0.8 }}>Time</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -1749,7 +1898,8 @@ const Index: React.FC = () => {
           display: inline-block;
           color: ${theme === 'midnight-black' ? '#f0f0f0' : theme === 'cotton-candy-glow' ? '#555' : '#f5e9f1'};
           transition: color 0.15s ease-in-out;
-          padding: 0 1px;
+          padding: 0;
+          margin: 0;
         }
         
         .char.correct {
