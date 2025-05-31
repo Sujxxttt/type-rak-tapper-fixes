@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { X } from 'lucide-react';
 
 interface SideMenuProps {
   sideMenuOpen: boolean;
@@ -45,212 +46,164 @@ export const SideMenu: React.FC<SideMenuProps> = ({
           left: 0,
           right: 0,
           bottom: 0,
-          background: 'rgba(0, 0, 0, 0.4)',
-          zIndex: 999
+          background: 'rgba(0, 0, 0, 0.5)',
+          zIndex: 998
         }}
         onClick={() => setSideMenuOpen(false)}
-      ></div>
+      />
       <div style={{
         position: 'fixed',
         top: 0,
         right: 0,
-        width: '300px',
-        height: '100%',
-        background: 'rgba(30, 35, 45, 0.7)',
+        width: '350px',
+        height: '100vh',
+        background: 'rgba(255, 255, 255, 0.15)',
         backdropFilter: 'blur(20px)',
-        borderLeft: '1px solid rgba(255, 255, 255, 0.2)',
-        padding: '1.5rem',
-        zIndex: 1000,
-        color: '#e0e0e0',
-        overflowY: 'auto'
+        border: '1px solid rgba(255, 255, 255, 0.3)',
+        zIndex: 999,
+        overflowY: 'auto',
+        padding: '20px'
       }}>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '1.5rem',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.15)',
-          paddingBottom: '1rem'
-        }}>
-          <h2>Settings</h2>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <h3>Settings</h3>
           <button 
             onClick={() => setSideMenuOpen(false)}
             style={{
               background: 'none',
               border: 'none',
-              color: '#cccccc',
-              fontSize: '1.8rem',
-              cursor: 'pointer'
+              color: 'white',
+              cursor: 'pointer',
+              padding: '5px'
             }}
           >
-            ×
+            <X size={20} />
           </button>
         </div>
 
-        {/* User Selection Section */}
-        <div style={{ margin: '1.5rem 0' }}>
-          <label style={{ display: 'block', marginBottom: '0.6rem', fontSize: '0.95em', color: '#d0d0d0' }}>
-            Select User:
-          </label>
-          <select 
-            value={currentActiveUser}
-            onChange={(e) => switchUser(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '0.8rem',
-              border: '1px solid rgba(255, 255, 255, 0.25)',
+        {/* User Management */}
+        <div style={{ marginBottom: '30px' }}>
+          <h4 style={{ marginBottom: '15px' }}>Users</h4>
+          {usersList.map(user => (
+            <div key={user} style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              padding: '8px 12px',
+              background: user === currentActiveUser ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)',
               borderRadius: '6px',
-              background: 'rgba(255, 255, 255, 0.1)',
-              color: '#ffffff',
-              cursor: 'pointer',
-              backdropFilter: 'blur(10px)',
-              marginBottom: '10px'
-            }}
-          >
-            {usersList.map(user => (
-              <option key={user} value={user} style={{ background: 'rgba(0,0,0,0.9)' }}>
-                {user}
-              </option>
-            ))}
-          </select>
+              marginBottom: '8px',
+              cursor: 'pointer'
+            }} onClick={() => switchUser(user)}>
+              <span>{user}</span>
+              {user === currentActiveUser && <span style={{ fontSize: '0.8rem' }}>✓</span>}
+            </div>
+          ))}
           <button 
             onClick={handleDeleteUser}
+            disabled={usersList.length === 0}
             style={{
-              backgroundColor: deleteConfirmState ? '#e74c3c' : '#c0392b',
+              width: '100%',
+              background: usersList.length === 0 ? '#6c757d' : (deleteConfirmState ? '#e74c3c' : '#dc3545'),
               color: 'white',
               border: 'none',
-              padding: '0.8rem 1.5rem',
+              padding: '10px',
               borderRadius: '6px',
-              cursor: 'pointer',
+              cursor: usersList.length === 0 ? 'not-allowed' : 'pointer',
               fontSize: '1rem',
-              width: '100%'
+              opacity: usersList.length === 0 ? 0.5 : 1
             }}
           >
-            {deleteConfirmState ? 'Confirm Delete?' : 'Delete Current User'}
+            {deleteConfirmState ? 'Confirm Delete' : 'Delete Current User'}
           </button>
         </div>
 
-        <div style={{ margin: '1.5rem 0' }}>
-          <label style={{ display: 'block', marginBottom: '0.6rem', fontSize: '0.95em', color: '#d0d0d0' }}>
-            Test Duration:
-          </label>
-          <select 
-            value={duration}
-            onChange={(e) => setDuration(parseInt(e.target.value, 10))}
-            style={{
-              width: '100%',
-              padding: '0.8rem',
-              border: '1px solid rgba(255, 255, 255, 0.25)',
-              borderRadius: '6px',
-              background: 'rgba(255, 255, 255, 0.1)',
-              color: '#ffffff',
-              cursor: 'pointer',
-              backdropFilter: 'blur(10px)'
-            }}
-          >
-            <option value="30" style={{ background: 'rgba(0,0,0,0.9)' }}>30 Seconds</option>
-            <option value="60" style={{ background: 'rgba(0,0,0,0.9)' }}>1 Minute</option>
-            <option value="120" style={{ background: 'rgba(0,0,0,0.9)' }}>2 Minutes</option>
-            <option value="180" style={{ background: 'rgba(0,0,0,0.9)' }}>3 Minutes</option>
-            <option value="300" style={{ background: 'rgba(0,0,0,0.9)' }}>5 Minutes</option>
-            <option value="600" style={{ background: 'rgba(0,0,0,0.9)' }}>10 Minutes</option>
-            <option value="1200" style={{ background: 'rgba(0,0,0,0.9)' }}>20 Minutes</option>
-            <option value="1800" style={{ background: 'rgba(0,0,0,0.9)' }}>30 Minutes</option>
-            <option value="3600" style={{ background: 'rgba(0,0,0,0.9)' }}>60 Minutes</option>
-          </select>
+        {/* Duration Settings */}
+        <div style={{ marginBottom: '30px' }}>
+          <h4 style={{ marginBottom: '15px' }}>Test Duration</h4>
+          {[30, 60, 120, 300].map(dur => (
+            <button 
+              key={dur}
+              onClick={() => setDuration(dur)}
+              style={{
+                width: '100%',
+                background: duration === dur ? getButtonColor() : 'rgba(255, 255, 255, 0.1)',
+                color: 'white',
+                border: 'none',
+                padding: '10px',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                marginBottom: '8px'
+              }}
+            >
+              {dur < 60 ? `${dur} seconds` : `${dur / 60} minute${dur > 60 ? 's' : ''}`}
+            </button>
+          ))}
         </div>
 
-        <div style={{ margin: '1.5rem 0' }}>
-          <label style={{ display: 'block', marginBottom: '0.6rem', fontSize: '0.95em', color: '#d0d0d0' }}>
-            Theme:
-          </label>
-          <select 
-            value={theme}
-            onChange={(e) => applyTheme(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '0.8rem',
-              border: '1px solid rgba(255, 255, 255, 0.25)',
-              borderRadius: '6px',
-              background: 'rgba(255, 255, 255, 0.1)',
-              color: '#ffffff',
-              cursor: 'pointer',
-              backdropFilter: 'blur(10px)'
-            }}
-          >
-            <option value="cosmic-nebula" style={{ background: 'rgba(0,0,0,0.9)' }}>Cosmic Nebula</option>
-            <option value="midnight-black" style={{ background: 'rgba(0,0,0,0.9)' }}>Midnight Black</option>
-            <option value="cotton-candy-glow" style={{ background: 'rgba(0,0,0,0.9)' }}>Cotton Candy Glow</option>
-          </select>
+        {/* Theme Settings */}
+        <div style={{ marginBottom: '30px' }}>
+          <h4 style={{ marginBottom: '15px' }}>Theme</h4>
+          {[
+            { id: 'cosmic-nebula', name: 'Cosmic Nebula' },
+            { id: 'midnight-black', name: 'Midnight Black' },
+            { id: 'cotton-candy-glow', name: 'Cotton Candy Glow' }
+          ].map(themeOption => (
+            <button 
+              key={themeOption.id}
+              onClick={() => applyTheme(themeOption.id)}
+              style={{
+                width: '100%',
+                background: theme === themeOption.id ? getButtonColor() : 'rgba(255, 255, 255, 0.1)',
+                color: 'white',
+                border: 'none',
+                padding: '10px',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                marginBottom: '8px'
+              }}
+            >
+              {themeOption.name}
+            </button>
+          ))}
         </div>
 
-        <div style={{ margin: '1.5rem 0' }}>
-          <button
-            onClick={handleHistoryClick}
+        {/* History Button */}
+        <div style={{ marginBottom: '30px' }}>
+          <button 
+            onClick={() => {
+              setSideMenuOpen(false);
+              handleHistoryClick();
+            }}
             style={{
               width: '100%',
-              backgroundColor: '#6c757d',
+              background: '#6c757d',
               color: 'white',
               border: 'none',
-              padding: '0.8rem 1.5rem',
+              padding: '12px',
               borderRadius: '6px',
               cursor: 'pointer',
-              fontSize: '1rem',
-              marginBottom: '10px'
+              fontSize: '1rem'
             }}
           >
             History
           </button>
         </div>
 
-        <div style={{ margin: '1.5rem 0' }}>
-          <button
-            onClick={() => window.open('https://www.reddit.com/user/Rak_the_rock', '_blank')}
-            style={{
-              width: '100%',
-              backgroundColor: getButtonColor(),
-              color: 'white',
-              border: 'none',
-              padding: '0.8rem 1.5rem',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '1rem',
-              marginBottom: '10px'
-            }}
-          >
-            About Me
-          </button>
-          <button
+        {/* Contact */}
+        <div>
+          <button 
             onClick={handleContactMe}
             style={{
               width: '100%',
-              backgroundColor: getButtonColor(),
+              background: 'rgba(255, 255, 255, 0.1)',
               color: 'white',
               border: 'none',
-              padding: '0.8rem 1.5rem',
+              padding: '12px',
               borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '1rem',
-              marginBottom: '10px'
+              cursor: 'pointer'
             }}
           >
             Contact Me
-          </button>
-          <button
-            onClick={() => window.open('https://github.com/Raktherock', '_blank')}
-            style={{
-              width: '100%',
-              backgroundColor: getButtonColor(),
-              color: 'white',
-              border: 'none',
-              padding: '0.8rem 1.5rem',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '1rem',
-              marginBottom: '10px'
-            }}
-          >
-            Check This Out
           </button>
         </div>
       </div>

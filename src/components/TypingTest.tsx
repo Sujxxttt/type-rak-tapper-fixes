@@ -30,23 +30,37 @@ export const TypingTest: React.FC<TypingTestProps> = ({
   const adjustCaretPosition = () => {
     if (!caretRef.current || !chars || chars.length === 0 || !textFlowRef.current) return;
     
-    const containerRect = textFlowRef.current.getBoundingClientRect();
+    const container = textFlowRef.current.parentElement;
+    if (!container) return;
+    
+    const containerRect = container.getBoundingClientRect();
     const containerCenter = containerRect.width / 2;
     
     if (pos < chars.length) {
       const currentChar = chars[pos];
       const charRect = currentChar.getBoundingClientRect();
       
-      // Calculate offset to keep caret in center
-      const charCenter = charRect.left + charRect.width / 2 - containerRect.left;
-      const offset = containerCenter - charCenter;
+      // Calculate offset to keep current character in center
+      const charLeft = charRect.left - containerRect.left;
+      const offset = containerCenter - charLeft;
       
-      // Apply offset to all characters
+      // Apply offset to text flow
       textFlowRef.current.style.transform = `translateX(${offset}px)`;
       
-      // Position caret in center
-      caretRef.current.style.left = `${containerCenter - 1}px`;
-      caretRef.current.style.top = `${charRect.top - containerRect.top}px`;
+      // Position caret directly under the current character
+      caretRef.current.style.left = `${containerCenter}px`;
+      caretRef.current.style.top = `${charRect.top - containerRect.top + charRect.height}px`;
+    }
+  };
+
+  const getCaretColor = () => {
+    switch (theme) {
+      case 'midnight-black':
+        return 'linear-gradient(90deg, #c559f7 0%, #7f59f7 100%)';
+      case 'cotton-candy-glow':
+        return 'linear-gradient(90deg, #ff59e8 0%, #ff52a8 100%)';
+      default:
+        return 'linear-gradient(90deg, #c454f0 0%, #7d54f0 100%)';
     }
   };
 
@@ -56,40 +70,41 @@ export const TypingTest: React.FC<TypingTestProps> = ({
       width: '95%',
       maxWidth: '1400px',
       background: theme === 'cotton-candy-glow' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)',
-      borderRadius: '12px',
+      borderRadius: '16px',
       overflow: 'hidden',
-      marginBottom: '4rem',
-      marginTop: '4rem',
-      padding: '3rem',
-      minHeight: '200px',
+      marginBottom: '5rem',
+      marginTop: '6rem',
+      padding: '4rem',
+      minHeight: '220px',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center'
     }}>
       <div style={{
         position: 'relative',
-        fontSize: '1.82em',
-        lineHeight: '1.8',
-        letterSpacing: '0.03em',
+        fontSize: '2em',
+        lineHeight: '1.6',
+        letterSpacing: '0.02em',
         width: '100%',
-        textAlign: 'center'
+        textAlign: 'center',
+        whiteSpace: 'nowrap',
+        overflow: 'hidden'
       }}>
         <div ref={textFlowRef} style={{ 
           display: 'inline-block',
-          transition: 'transform 0.1s ease'
+          transition: 'transform 0.15s ease-out'
         }}></div>
       </div>
       <div 
         ref={caretRef}
         style={{
           position: 'absolute',
-          height: '1.6em',
-          width: '2px',
-          background: theme === 'midnight-black' ? 'linear-gradient(90deg, #c559f7 0%, #7f59f7 100%)' : 
-                     theme === 'cotton-candy-glow' ? 'linear-gradient(90deg, #ff59e8 0%, #ff52a8 100%)' :
-                     'linear-gradient(90deg, #c454f0 0%, #7d54f0 100%)',
-          animation: 'blinkCaret 0.8s infinite step-end',
-          fontWeight: 'bold'
+          height: '2px',
+          width: '20px',
+          background: getCaretColor(),
+          fontWeight: '900',
+          fontSize: '2em',
+          zIndex: 10
         }}
       >_</div>
     </div>

@@ -13,6 +13,7 @@ export const useTypingGame = () => {
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const textFlowRef = useRef<HTMLDivElement>(null);
+  const usedWordsRef = useRef<string[]>([]);
 
   const wordList = [
     "the", "quick", "brown", "fox", "jumps", "over", "lazy", "dog", "and", "runs",
@@ -26,8 +27,21 @@ export const useTypingGame = () => {
 
   const generateWords = (count: number): string => {
     let generatedText = "";
+    const availableWords = [...wordList];
+    
     for (let i = 0; i < count; i++) {
-      generatedText += wordList[Math.floor(Math.random() * wordList.length)];
+      if (availableWords.length === 0) {
+        // Reset when all words are used
+        availableWords.push(...wordList);
+        usedWordsRef.current = [];
+      }
+      
+      const randomIndex = Math.floor(Math.random() * availableWords.length);
+      const selectedWord = availableWords[randomIndex];
+      availableWords.splice(randomIndex, 1);
+      usedWordsRef.current.push(selectedWord);
+      
+      generatedText += selectedWord;
       if (i < count - 1) {
         generatedText += " ";
       }
@@ -75,6 +89,7 @@ export const useTypingGame = () => {
     setPos(0);
     setTotalErrors(0);
     setTypedCharacters([]);
+    usedWordsRef.current = [];
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;

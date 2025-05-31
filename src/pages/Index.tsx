@@ -5,6 +5,7 @@ import { StatsDisplay } from '../components/StatsDisplay';
 import { TestNameMenu } from '../components/TestNameMenu';
 import { SideMenu } from '../components/SideMenu';
 import { Toast } from '../components/Toast';
+import { HistoryPage } from '../components/HistoryPage';
 import { useTypingGame } from '../hooks/useTypingGame';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
@@ -140,11 +141,11 @@ const Index: React.FC = () => {
       timerRef.current = null;
     }
     
-    const correctSigns = getCorrectSigns();
+    const correctChars = getCorrectSigns();
+    const totalTyped = typedCharacters.length;
     const mins = Math.max(elapsed / 60, 1 / 60);
-    const speed = Math.round(Math.max(0, (correctSigns / 5) / mins));
-    const totalSigns = typedCharacters.length;
-    const errorRate = totalSigns > 0 ? ((totalErrors / totalSigns) * 100) : 0;
+    const speed = Math.round(Math.max(0, (correctChars / 5) / mins));
+    const errorRate = totalTyped > 0 ? ((totalErrors / totalTyped) * 100) : 0;
     const score = Math.round(speed * ((100 - errorRate) / 100) * 10);
     
     const testResult = {
@@ -154,8 +155,8 @@ const Index: React.FC = () => {
       errorRate: parseFloat(errorRate.toFixed(2)),
       errors: totalErrors,
       time: elapsed,
-      characters: typedCharacters.length,
-      correctChars: correctSigns,
+      characters: totalTyped,
+      correctChars: correctChars,
       score: score
     };
     
@@ -222,13 +223,18 @@ const Index: React.FC = () => {
     
     if (typedChar && typedChar.length === 1) {
       setTypedCharacters(prev => [...prev, typedChar]);
+      
       if (expectedChar === typedChar) {
+        chars[pos]?.classList.remove("incorrect");
         chars[pos]?.classList.add("correct");
         setPos(prev => prev + 1);
       } else {
-        chars[pos]?.classList.add("incorrect");
+        // Add error styling to the left of current character
+        if (pos > 0) {
+          chars[pos - 1]?.classList.add("error-left");
+        }
         setTotalErrors(prev => prev + 1);
-        setPos(prev => prev + 1);
+        // Don't advance position on error
       }
       
       if (pos + 1 >= chars.length) {
@@ -237,7 +243,7 @@ const Index: React.FC = () => {
     }
     
     updateStats();
-  }, [currentScreen, gameOver, testActive, pos, chars, typedCharacters, duration, testText]);
+  }, [currentScreen, gameOver, testActive, pos, chars, typedCharacters, duration, testText, totalErrors]);
 
   const createUser = (username: string) => {
     if (!username.trim()) {
@@ -365,24 +371,19 @@ const Index: React.FC = () => {
 
   const handleHistoryClick = () => {
     if (currentScreen === 'typing' && testActive) {
-      showToast("This will abort the current test. Confirm to continue.", true);
+      showToast("This will abort the current test.", true);
       setTimeout(() => {
-        const confirmButton = document.createElement('button');
-        confirmButton.textContent = 'Confirm';
-        confirmButton.style.background = '#e74c3c';
-        confirmButton.style.color = 'white';
-        confirmButton.style.border = 'none';
-        confirmButton.style.padding = '8px 16px';
-        confirmButton.style.borderRadius = '4px';
-        confirmButton.style.cursor = 'pointer';
-        confirmButton.onclick = () => {
-          resetTest();
-          setCurrentScreen('history');
-        };
+        setShowReturnConfirm(true);
       }, 100);
     } else {
       setCurrentScreen('history');
     }
+  };
+
+  const confirmAbortAndGoToHistory = () => {
+    resetTest();
+    setShowReturnConfirm(false);
+    setCurrentScreen('history');
   };
 
   const getAverageStats = () => {
@@ -473,7 +474,7 @@ const Index: React.FC = () => {
               backdropFilter: 'blur(10px)',
               border: '1px solid rgba(255, 255, 255, 0.3)'
             }}>
-              <span style={{ marginRight: '10px', fontSize: '1.05rem' }}>User: {currentActiveUser}</span>
+              <span style={{ marginRight: '10px', fontSize: '1.1rem' }}>User: {currentActiveUser}</span>
               <button 
                 onClick={() => setCurrentScreen('create-user')}
                 style={{
@@ -999,82 +1000,12 @@ const Index: React.FC = () => {
         )}
 
         {currentScreen === 'history' && (
-          <div style={{
-            width: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            padding: '20px 0',
-            flex: 1
-          }}>
-            <div style={{
-              width: '90%',
-              maxWidth: '800px',
-              background: 'rgba(255, 255, 255, 0.1)',
-              borderRadius: '16px',
-              backdropFilter: 'blur(20px)',
-              border: '1px solid rgba(255, 255, 255, 0.3)',
-              padding: '30px'
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                <h2>Test History</h2>
-                <button 
-                  onClick={() => setCurrentScreen('dashboard')}
-                  style={{
-                    background: getButtonColor(),
-                    color: 'white',
-                    border: 'none',
-                    padding: '10px 20px',
-                    borderRadius: '6px',
-                    cursor: 'pointer'
-                  }}
-                >
-                  Back to Dashboard
-                </button>
-              </div>
-              {allTestHistory.length === 0 ? (
-                <p>No test history available.</p>
-              ) : (
-                <div style={{ maxHeight: '60vh', overflowY: 'auto' }}>
-                  {allTestHistory.slice().reverse().map((test, index) => (
-                    <div key={index} style={{
-                      background: 'rgba(255, 255, 255, 0.1)',
-                      padding: '15px',
-                      borderRadius: '8px',
-                      marginBottom: '10px',
-                      display: 'grid',
-                      gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr',
-                      gap: '15px',
-                      alignItems: 'center'
-                    }}>
-                      <div>
-                        <div style={{ fontWeight: 'bold' }}>{test.name}</div>
-                        <div style={{ fontSize: '0.8rem', opacity: 0.8 }}>
-                          {new Date(test.date).toLocaleString()}
-                        </div>
-                      </div>
-                      <div style={{ textAlign: 'center' }}>
-                        <div style={{ fontWeight: 'bold' }}>{test.wpm}</div>
-                        <div style={{ fontSize: '0.8rem', opacity: 0.8 }}>WPM</div>
-                      </div>
-                      <div style={{ textAlign: 'center' }}>
-                        <div style={{ fontWeight: 'bold' }}>{test.errorRate}%</div>
-                        <div style={{ fontSize: '0.8rem', opacity: 0.8 }}>Error Rate</div>
-                      </div>
-                      <div style={{ textAlign: 'center' }}>
-                        <div style={{ fontWeight: 'bold' }}>{test.score}</div>
-                        <div style={{ fontSize: '0.8rem', opacity: 0.8 }}>Score</div>
-                      </div>
-                      <div style={{ textAlign: 'center' }}>
-                        <div style={{ fontWeight: 'bold' }}>{Math.floor(test.time / 60)}:{(test.time % 60).toString().padStart(2, '0')}</div>
-                        <div style={{ fontSize: '0.8rem', opacity: 0.8 }}>Time</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
+          <HistoryPage
+            allTestHistory={allTestHistory}
+            theme={theme}
+            onBack={() => setCurrentScreen('dashboard')}
+            getButtonColor={getButtonColor}
+          />
         )}
 
         {/* Side Menu */}
@@ -1259,6 +1190,7 @@ const Index: React.FC = () => {
           transition: color 0.15s ease-in-out;
           padding: 0;
           margin: 0;
+          letter-spacing: 0.02em;
         }
         
         .char.correct {
@@ -1268,6 +1200,11 @@ const Index: React.FC = () => {
         .char.incorrect {
           color: #ff1c14 !important;
           background-color: rgba(255, 28, 20, 0.1);
+        }
+        
+        .char.error-left {
+          background-color: rgba(255, 28, 20, 0.2);
+          border-left: 2px solid #ff1c14;
         }
       `}</style>
     </div>
