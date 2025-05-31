@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect } from 'react';
 
 interface TypingTestProps {
@@ -84,7 +85,7 @@ export const TypingTest: React.FC<TypingTestProps> = ({
         position: 'relative',
         fontSize: '2em',
         lineHeight: '1.6',
-        letterSpacing: '0.02em',
+        letterSpacing: '0.01em',
         width: '100%',
         textAlign: 'center',
         whiteSpace: 'nowrap',
@@ -92,19 +93,21 @@ export const TypingTest: React.FC<TypingTestProps> = ({
       }}>
         <div ref={textFlowRef} style={{ 
           display: 'inline-block',
-          transition: 'transform 0.15s ease-out'
+          transition: 'transform 0.15s ease-out',
+          color: theme === 'cotton-candy-glow' ? '#333' : '#fff'
         }}></div>
       </div>
       <div 
         ref={caretRef}
         style={{
           position: 'absolute',
-          height: '2px',
+          height: '3px',
           width: '20px',
           background: getCaretColor(),
           fontWeight: '900',
           fontSize: '2em',
-          zIndex: 10
+          zIndex: 10,
+          borderRadius: '2px'
         }}
       >_</div>
     </div>

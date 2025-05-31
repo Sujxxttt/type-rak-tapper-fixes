@@ -6,10 +6,14 @@ import { TestNameMenu } from '../components/TestNameMenu';
 import { SideMenu } from '../components/SideMenu';
 import { Toast } from '../components/Toast';
 import { HistoryPage } from '../components/HistoryPage';
+import { Introduction } from '../components/Introduction';
 import { useTypingGame } from '../hooks/useTypingGame';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
 const Index: React.FC = () => {
+  // Introduction state
+  const [showIntroduction, setShowIntroduction] = useState(true);
+  
   // Global state variables
   const [usersList, setUsersList] = useLocalStorage<string[]>("typeRakUsersList", []);
   const [currentActiveUser, setCurrentActiveUser] = useLocalStorage<string>("typeRakActiveUser", '');
@@ -55,7 +59,22 @@ const Index: React.FC = () => {
     resetTest
   } = useTypingGame();
 
+  // Show introduction on first load
   useEffect(() => {
+    const hasSeenIntro = localStorage.getItem('typeWaveSeenIntro');
+    if (hasSeenIntro) {
+      setShowIntroduction(false);
+    }
+  }, []);
+
+  const handleIntroComplete = () => {
+    localStorage.setItem('typeWaveSeenIntro', 'true');
+    setShowIntroduction(false);
+  };
+
+  useEffect(() => {
+    if (showIntroduction) return;
+    
     if (usersList.length > 0) {
       if (currentActiveUser && usersList.includes(currentActiveUser)) {
         setCurrentScreen('dashboard');
@@ -66,7 +85,7 @@ const Index: React.FC = () => {
         loadUserTests(usersList[0]);
       }
     }
-  }, [usersList, currentActiveUser]);
+  }, [usersList, currentActiveUser, showIntroduction]);
 
   const loadUserTests = (username: string) => {
     const storedTests = localStorage.getItem(`typeRakTests-${username}`);
@@ -229,12 +248,10 @@ const Index: React.FC = () => {
         chars[pos]?.classList.add("correct");
         setPos(prev => prev + 1);
       } else {
-        // Add error styling to the left of current character
         if (pos > 0) {
           chars[pos - 1]?.classList.add("error-left");
         }
         setTotalErrors(prev => prev + 1);
-        // Don't advance position on error
       }
       
       if (pos + 1 >= chars.length) {
@@ -393,8 +410,9 @@ const Index: React.FC = () => {
     const avgErrorRate = (testResults.reduce((sum, test) => sum + test.errorRate, 0) / testResults.length).toFixed(2);
     const avgScore = Math.round(testResults.reduce((sum, test) => sum + test.score, 0) / testResults.length);
     const totalTests = testResults.reduce((sum, test) => sum + (test.testCount || 1), 0);
+    const totalTime = testResults.reduce((sum, test) => sum + (test.totalTime || 0), 0);
     
-    return { avgWpm, avgErrorRate, avgScore, totalTests };
+    return { avgWpm, avgErrorRate, avgScore, totalTests, totalTime };
   };
 
   const getButtonColor = () => {
@@ -420,6 +438,11 @@ const Index: React.FC = () => {
   };
 
   const averageStats = getAverageStats();
+
+  // Show introduction first
+  if (showIntroduction) {
+    return <Introduction onComplete={handleIntroComplete} />;
+  }
 
   return (
     <div style={{
@@ -474,7 +497,7 @@ const Index: React.FC = () => {
               backdropFilter: 'blur(10px)',
               border: '1px solid rgba(255, 255, 255, 0.3)'
             }}>
-              <span style={{ marginRight: '10px', fontSize: '1.1rem' }}>User: {currentActiveUser}</span>
+              <span style={{ marginRight: '10px', fontSize: '1.15rem' }}>User: {currentActiveUser}</span>
               <button 
                 onClick={() => setCurrentScreen('create-user')}
                 style={{
@@ -751,6 +774,12 @@ const Index: React.FC = () => {
                   <div>
                     <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: getButtonColor() }}>{averageStats.totalTests}</div>
                     <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>Total Tests</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: getButtonColor() }}>
+                      {Math.floor((averageStats.totalTime || 0) / 60)}:{((averageStats.totalTime || 0) % 60).toString().padStart(2, '0')}
+                    </div>
+                    <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>Time</div>
                   </div>
                 </div>
               </div>
@@ -1190,7 +1219,7 @@ const Index: React.FC = () => {
           transition: color 0.15s ease-in-out;
           padding: 0;
           margin: 0;
-          letter-spacing: 0.02em;
+          letter-spacing: 0.01em;
         }
         
         .char.correct {
