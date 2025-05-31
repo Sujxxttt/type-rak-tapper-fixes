@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { X } from 'lucide-react';
 
@@ -17,6 +18,7 @@ const Index: React.FC = () => {
   const [usersList, setUsersList] = useState<string[]>([]);
   const [currentActiveUser, setCurrentActiveUser] = useState<string>('');
   const [testResults, setTestResults] = useState<any[]>([]);
+  const [allTestHistory, setAllTestHistory] = useState<any[]>([]);
   const [lastTestText, setLastTestText] = useState<string>('');
   const [currentTestName, setCurrentTestName] = useState<string>('');
   const [deleteConfirmState, setDeleteConfirmState] = useState<boolean>(false);
@@ -37,6 +39,8 @@ const Index: React.FC = () => {
   const [showReturnConfirm, setShowReturnConfirm] = useState<boolean>(false);
   const [highlightFooter, setHighlightFooter] = useState<boolean>(false);
   const [lastTestResult, setLastTestResult] = useState<any>(null);
+  const [showHistory, setShowHistory] = useState<boolean>(false);
+  const [continueTestMode, setContinueTestMode] = useState<boolean>(false);
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const textFlowRef = useRef<HTMLDivElement>(null);
@@ -72,10 +76,16 @@ const Index: React.FC = () => {
   // Load user tests
   const loadUserTests = (username: string) => {
     const storedTests = localStorage.getItem(`typeRakTests-${username}`);
+    const storedHistory = localStorage.getItem(`typeRakHistory-${username}`);
     if (storedTests) {
       setTestResults(JSON.parse(storedTests));
     } else {
       setTestResults([]);
+    }
+    if (storedHistory) {
+      setAllTestHistory(JSON.parse(storedHistory));
+    } else {
+      setAllTestHistory([]);
     }
   };
 
@@ -133,7 +143,7 @@ const Index: React.FC = () => {
       const char = text[i];
       const span = document.createElement("span");
       span.className = "char";
-      span.textContent = char;
+      span.textContent = char === " " ? "\u00A0" : char; // Use non-breaking space
       frag.appendChild(span);
       newChars.push(span);
     }
@@ -143,18 +153,22 @@ const Index: React.FC = () => {
   };
 
   const adjustCaretPosition = () => {
-    if (!caretRef.current || !chars || chars.length === 0 || pos >= chars.length) return;
+    if (!caretRef.current || !chars || chars.length === 0) return;
     
-    const currentChar = chars[pos];
-    if (!currentChar) return;
+    const currentChar = pos < chars.length ? chars[pos] : chars[chars.length - 1];
+    if (!currentChar || !textFlowRef.current) return;
     
     const charRect = currentChar.getBoundingClientRect();
-    const displayRect = textFlowRef.current?.getBoundingClientRect();
+    const displayRect = textFlowRef.current.getBoundingClientRect();
     
-    if (displayRect) {
+    if (pos >= chars.length) {
+      // Position at end of last character
+      caretRef.current.style.left = `${charRect.right - displayRect.left}px`;
+    } else {
+      // Position at start of current character
       caretRef.current.style.left = `${charRect.left - displayRect.left}px`;
-      caretRef.current.style.top = `${charRect.bottom - displayRect.top - 2}px`;
     }
+    caretRef.current.style.top = `${charRect.top - displayRect.top}px`;
   };
 
   const updateStats = () => {
@@ -184,18 +198,19 @@ const Index: React.FC = () => {
     
     // Calculate stats
     const mins = Math.max(elapsed / 60, 1 / 60);
-    const correctSigns = typedCharacters.filter((char, index) => char === chars[index]?.textContent).length;
+    const correctSigns = typedCharacters.filter((char, index) => char === chars[index]?.textContent?.replace('\u00A0', ' ')).length;
     const speed = Math.round(Math.max(0, (correctSigns / 5) / mins));
-    const accuracyValue = typedCharacters.length > 0 ? ((correctSigns / typedCharacters.length) * 100) : 0;
+    const totalSigns = typedCharacters.length;
+    const errorRate = totalSigns > 0 ? ((totalErrors / totalSigns) * 100) : 0;
     
-    // Calculate score (WPM * Accuracy percentage / 100 * 10)
-    const score = Math.round(speed * (accuracyValue / 100) * 10);
+    // Calculate score (WPM * (100 - Error Rate) / 100 * 10)
+    const score = Math.round(speed * ((100 - errorRate) / 100) * 10);
     
     const testResult = {
       name: currentTestName,
       date: new Date().toISOString(),
       wpm: speed,
-      accuracy: parseFloat(accuracyValue.toFixed(2)),
+      errorRate: parseFloat(errorRate.toFixed(2)),
       errors: totalErrors,
       time: elapsed,
       characters: typedCharacters.length,
@@ -205,7 +220,41 @@ const Index: React.FC = () => {
     
     setLastTestResult(testResult);
     
-    const newResults = [...testResults, testResult];
+    // Update history
+    const newHistory = [...allTestHistory, testResult];
+    setAllTestHistory(newHistory);
+    localStorage.setItem(`typeRakHistory-${currentActiveUser}`, JSON.stringify(newHistory));
+    
+    // Update grouped results
+    const existingTestIndex = testResults.findIndex(test => test.name === currentTestName);
+    let newResults;
+    
+    if (existingTestIndex >= 0) {
+      // Update existing test with average
+      const existingTest = testResults[existingTestIndex];
+      const testHistory = newHistory.filter(t => t.name === currentTestName);
+      const avgWpm = Math.round(testHistory.reduce((sum, t) => sum + t.wpm, 0) / testHistory.length);
+      const avgErrorRate = (testHistory.reduce((sum, t) => sum + t.errorRate, 0) / testHistory.length);
+      const avgScore = Math.round(testHistory.reduce((sum, t) => sum + t.score, 0) / testHistory.length);
+      
+      newResults = [...testResults];
+      newResults[existingTestIndex] = {
+        ...existingTest,
+        wpm: avgWpm,
+        errorRate: parseFloat(avgErrorRate.toFixed(2)),
+        score: avgScore,
+        testCount: testHistory.length,
+        lastDate: testResult.date
+      };
+    } else {
+      // Add new test
+      newResults = [...testResults, {
+        ...testResult,
+        testCount: 1,
+        lastDate: testResult.date
+      }];
+    }
+    
     setTestResults(newResults);
     localStorage.setItem(`typeRakTests-${currentActiveUser}`, JSON.stringify(newResults));
     
@@ -230,7 +279,7 @@ const Index: React.FC = () => {
     
     if (!testActive) return;
     
-    const expectedChar = chars[pos]?.textContent;
+    const expectedChar = chars[pos]?.textContent?.replace('\u00A0', ' ');
     const typedChar = e.key;
     
     if (typedChar && typedChar.length === 1) {
@@ -274,6 +323,7 @@ const Index: React.FC = () => {
     localStorage.setItem("typeRakUsersList", JSON.stringify(newUsers));
     localStorage.setItem("typeRakActiveUser", username);
     setTestResults([]);
+    setAllTestHistory([]);
     setCurrentScreen('dashboard');
     showToast(`User "${username}" created successfully!`);
     return true;
@@ -296,6 +346,7 @@ const Index: React.FC = () => {
     setTotalErrors(0);
     setTypedCharacters([]);
     setShowReturnConfirm(false);
+    setContinueTestMode(false);
     
     setTimeout(() => {
       const textToUse = generateWords(100);
@@ -304,10 +355,11 @@ const Index: React.FC = () => {
     }, 100);
   };
 
-  const continueLastTest = () => {
-    if (testResults.length > 0) {
-      const lastTest = testResults[testResults.length - 1];
-      startNewTest(`${lastTest.name} (Continued)`);
+  const continueTest = (testName?: string) => {
+    if (testName) {
+      startNewTest(testName);
+    } else {
+      setContinueTestMode(true);
     }
   };
 
@@ -342,6 +394,7 @@ const Index: React.FC = () => {
     setUsersList(newUsers);
     localStorage.setItem("typeRakUsersList", JSON.stringify(newUsers));
     localStorage.removeItem(`typeRakTests-${userToDelete}`);
+    localStorage.removeItem(`typeRakHistory-${userToDelete}`);
     localStorage.removeItem(`typeRakLastTest-${userToDelete}`);
     
     setDeleteConfirmState(false);
@@ -404,10 +457,11 @@ const Index: React.FC = () => {
     if (testResults.length === 0) return null;
     
     const avgWpm = Math.round(testResults.reduce((sum, test) => sum + test.wpm, 0) / testResults.length);
-    const avgAccuracy = (testResults.reduce((sum, test) => sum + test.accuracy, 0) / testResults.length).toFixed(2);
-    const totalTests = testResults.length;
+    const avgErrorRate = (testResults.reduce((sum, test) => sum + test.errorRate, 0) / testResults.length).toFixed(2);
+    const avgScore = Math.round(testResults.reduce((sum, test) => sum + test.score, 0) / testResults.length);
+    const totalTests = testResults.reduce((sum, test) => sum + (test.testCount || 1), 0);
     
-    return { avgWpm, avgAccuracy, totalTests };
+    return { avgWpm, avgErrorRate, avgScore, totalTests };
   };
 
   // Get theme-specific button colors (adjusted)
@@ -426,7 +480,13 @@ const Index: React.FC = () => {
 
   // Get current correct characters including spaces
   const getCorrectSigns = () => {
-    return typedCharacters.filter((char, index) => char === chars[index]?.textContent).length;
+    return typedCharacters.filter((char, index) => char === chars[index]?.textContent?.replace('\u00A0', ' ')).length;
+  };
+
+  // Get current error rate
+  const getCurrentErrorRate = () => {
+    const totalSigns = typedCharacters.length;
+    return totalSigns > 0 ? ((totalErrors / totalSigns) * 100) : 0;
   };
 
   const averageStats = getAverageStats();
@@ -488,13 +548,14 @@ const Index: React.FC = () => {
               <button 
                 onClick={() => setCurrentScreen('create-user')}
                 style={{
-                  background: getButtonColor(),
+                  background: 'transparent',
                   color: 'white',
                   border: 'none',
                   padding: '5px 10px',
                   borderRadius: '4px',
                   cursor: 'pointer',
-                  marginLeft: '10px'
+                  marginLeft: '10px',
+                  fontSize: '1.2rem'
                 }}
               >
                 +
@@ -536,7 +597,7 @@ const Index: React.FC = () => {
               top: '50%',
               left: '50%',
               transform: 'translate(-50%, -50%)',
-              background: 'rgba(255, 255, 255, 0.1)',
+              background: 'rgba(255, 255, 255, 0.15)',
               borderRadius: '16px',
               backdropFilter: 'blur(20px)',
               border: '1px solid rgba(255, 255, 255, 0.3)',
@@ -600,6 +661,97 @@ const Index: React.FC = () => {
           </>
         )}
 
+        {/* History Modal */}
+        {showHistory && (
+          <>
+            <div 
+              style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: 'rgba(0, 0, 0, 0.4)',
+                zIndex: 999
+              }}
+              onClick={() => setShowHistory(false)}
+            />
+            <div style={{
+              position: 'fixed',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              background: 'rgba(255, 255, 255, 0.1)',
+              borderRadius: '16px',
+              backdropFilter: 'blur(20px)',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              padding: '30px',
+              zIndex: 1000,
+              width: '80%',
+              maxWidth: '800px',
+              maxHeight: '80vh',
+              overflowY: 'auto'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h3>Test History</h3>
+                <button 
+                  onClick={() => setShowHistory(false)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: 'white',
+                    fontSize: '1.5rem',
+                    cursor: 'pointer'
+                  }}
+                >
+                  ×
+                </button>
+              </div>
+              {allTestHistory.length === 0 ? (
+                <p>No test history available.</p>
+              ) : (
+                <div>
+                  {allTestHistory.slice().reverse().map((test, index) => (
+                    <div key={index} style={{
+                      background: 'rgba(255, 255, 255, 0.1)',
+                      padding: '15px',
+                      borderRadius: '8px',
+                      marginBottom: '10px',
+                      display: 'grid',
+                      gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr',
+                      gap: '15px',
+                      alignItems: 'center'
+                    }}>
+                      <div>
+                        <div style={{ fontWeight: 'bold' }}>{test.name}</div>
+                        <div style={{ fontSize: '0.8rem', opacity: 0.8 }}>
+                          {new Date(test.date).toLocaleString()}
+                        </div>
+                      </div>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontWeight: 'bold' }}>{test.wpm}</div>
+                        <div style={{ fontSize: '0.8rem', opacity: 0.8 }}>WPM</div>
+                      </div>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontWeight: 'bold' }}>{test.errorRate}%</div>
+                        <div style={{ fontSize: '0.8rem', opacity: 0.8 }}>Error Rate</div>
+                      </div>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontWeight: 'bold' }}>{test.score}</div>
+                        <div style={{ fontSize: '0.8rem', opacity: 0.8 }}>Score</div>
+                      </div>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontWeight: 'bold' }}>{Math.floor(test.time / 60)}:{(test.time % 60).toString().padStart(2, '0')}</div>
+                        <div style={{ fontSize: '0.8rem', opacity: 0.8 }}>Time</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </>
+        )}
+
         {/* Main Content Areas */}
         {currentScreen === 'greeting' && (
           <div style={{
@@ -617,7 +769,7 @@ const Index: React.FC = () => {
             </p>
             {usersList.length === 0 && (
               <div style={{
-                background: 'rgba(255, 255, 255, 0.1)',
+                background: 'rgba(255, 255, 255, 0.15)',
                 borderRadius: '16px',
                 backdropFilter: 'blur(10px)',
                 border: '1px solid rgba(255, 255, 255, 0.3)',
@@ -675,9 +827,9 @@ const Index: React.FC = () => {
           }}>
             <h2 style={{ marginBottom: '1rem' }}>Create New User</h2>
             <div style={{
-              background: 'rgba(255, 255, 255, 0.1)',
+              background: 'rgba(255, 255, 255, 0.15)',
               borderRadius: '16px',
-              backdropFilter: 'blur(5px)',
+              backdropFilter: 'blur(10px)',
               border: '1px solid rgba(255, 255, 255, 0.3)',
               padding: '30px',
               maxWidth: '400px'
@@ -780,7 +932,7 @@ const Index: React.FC = () => {
               </button>
               {testResults.length > 0 && (
                 <button 
-                  onClick={continueLastTest}
+                  onClick={() => continueTest()}
                   style={{
                     background: getButtonColor(),
                     color: 'white',
@@ -814,8 +966,12 @@ const Index: React.FC = () => {
                     <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>Avg WPM</div>
                   </div>
                   <div>
-                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: getButtonColor() }}>{averageStats.avgAccuracy}%</div>
-                    <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>Avg Accuracy</div>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: getButtonColor() }}>{averageStats.avgErrorRate}%</div>
+                    <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>Avg Error Rate</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: getButtonColor() }}>{averageStats.avgScore}</div>
+                    <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>Avg Score</div>
                   </div>
                   <div>
                     <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: getButtonColor() }}>{averageStats.totalTests}</div>
@@ -841,26 +997,32 @@ const Index: React.FC = () => {
                 <p>No tests recorded yet.</p>
               ) : (
                 <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
-                  {testResults.slice(-10).reverse().map((test, index) => (
-                    <div key={index} style={{
-                      background: 'rgba(255, 255, 255, 0.1)',
-                      padding: '10px',
-                      borderRadius: '8px',
-                      marginBottom: '8px',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center'
-                    }}>
+                  {testResults.map((test, index) => (
+                    <div 
+                      key={index} 
+                      style={{
+                        background: continueTestMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                        padding: '10px',
+                        borderRadius: '8px',
+                        marginBottom: '8px',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        cursor: continueTestMode ? 'pointer' : 'default',
+                        border: continueTestMode ? '1px solid rgba(255, 255, 255, 0.3)' : 'none'
+                      }}
+                      onClick={() => continueTestMode && continueTest(test.name)}
+                    >
                       <div>
                         <div style={{ fontWeight: 'bold' }}>{test.name}</div>
                         <div style={{ fontSize: '0.8rem', opacity: 0.8 }}>
-                          {new Date(test.date).toLocaleDateString()}
+                          {test.testCount > 1 ? `${test.testCount} tests completed` : '1 test completed'} | Last: {new Date(test.lastDate).toLocaleDateString()}
                         </div>
                       </div>
                       <div style={{ textAlign: 'right' }}>
-                        <div>{test.wpm} WPM | {test.accuracy}% Accuracy</div>
+                        <div>{test.wpm} WPM | {test.errorRate}% Error Rate | Score: {test.score}</div>
                         <div style={{ fontSize: '0.8rem', opacity: 0.8 }}>
-                          {test.errors} errors | {Math.floor(test.time / 60)}:{(test.time % 60).toString().padStart(2, '0')}
+                          Average Stats
                         </div>
                       </div>
                     </div>
@@ -883,20 +1045,21 @@ const Index: React.FC = () => {
             <div style={{
               position: 'relative',
               width: '90%',
-              maxWidth: '1200px',
+              maxWidth: '1300px',
               background: theme === 'cotton-candy-glow' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)',
               borderRadius: '6px',
               overflow: 'hidden',
-              marginBottom: '1.5rem',
-              padding: '1rem',
-              minHeight: '80px'
+              marginBottom: '3rem',
+              marginTop: '3rem',
+              padding: '2rem',
+              minHeight: '120px'
             }}>
               <div style={{
                 position: 'relative',
                 whiteSpace: 'nowrap',
-                fontSize: '1.35em',
-                lineHeight: '1.6',
-                letterSpacing: '0.05em'
+                fontSize: '1.5em',
+                lineHeight: '1.8',
+                letterSpacing: '0.1em'
               }}>
                 <div ref={textFlowRef} style={{ display: 'inline-block' }}></div>
               </div>
@@ -904,10 +1067,11 @@ const Index: React.FC = () => {
                 ref={caretRef}
                 style={{
                   position: 'absolute',
-                  height: '1.4em',
-                  width: '2px',
-                  background: theme === 'midnight-black' ? '#ae1ee3' : 
-                             theme === 'cotton-candy-glow' ? '#ff1fbc' : '#21b1ff',
+                  height: '1.6em',
+                  width: '3px',
+                  background: theme === 'midnight-black' ? 'linear-gradient(90deg, #c559f7 0%, #7f59f7 100%)' : 
+                             theme === 'cotton-candy-glow' ? 'linear-gradient(90deg, #ff59e8 0%, #ff52a8 100%)' :
+                             'linear-gradient(90deg, #c454f0 0%, #7d54f0 100%)',
                   animation: 'blinkCaret 0.8s infinite step-end'
                 }}
               ></div>
@@ -919,8 +1083,9 @@ const Index: React.FC = () => {
               justifyContent: 'center',
               gap: '1rem',
               width: '90%',
-              maxWidth: '900px',
-              margin: '1rem auto'
+              maxWidth: '1000px',
+              margin: '1rem auto',
+              marginBottom: '3rem'
             }}>
               <div style={{
                 background: theme === 'cotton-candy-glow' ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.3)',
@@ -975,9 +1140,9 @@ const Index: React.FC = () => {
                 flexBasis: '150px',
                 minWidth: '120px'
               }}>
-                <span style={{ display: 'block', fontSize: '0.9rem', opacity: 0.8, marginBottom: '0.25rem' }}>Accuracy:</span>
+                <span style={{ display: 'block', fontSize: '0.9rem', opacity: 0.8, marginBottom: '0.25rem' }}>Error Rate:</span>
                 <span style={{ fontWeight: 'bold', fontSize: '1.2em' }}>
-                  {typedCharacters.length > 0 ? ((getCorrectSigns() / typedCharacters.length) * 100).toFixed(2) : "0.00"}%
+                  {getCurrentErrorRate().toFixed(2)}%
                 </span>
               </div>
               <div style={{
@@ -995,7 +1160,12 @@ const Index: React.FC = () => {
               </div>
             </div>
 
-            <div style={{ marginTop: '1rem', textAlign: 'center' }}>
+            <div style={{ 
+              display: 'flex', 
+              gap: '1rem', 
+              alignItems: 'center',
+              marginBottom: '2rem'
+            }}>
               <button 
                 onClick={() => {
                   setGameOver(false);
@@ -1022,8 +1192,7 @@ const Index: React.FC = () => {
                   padding: '12px 24px',
                   borderRadius: '6px',
                   cursor: 'pointer',
-                  fontSize: '1rem',
-                  marginRight: '1rem'
+                  fontSize: '1rem'
                 }}
               >
                 Restart Current Test
@@ -1041,6 +1210,20 @@ const Index: React.FC = () => {
                 }}
               >
                 {showReturnConfirm ? 'Confirm Return?' : 'Return to Dashboard'}
+              </button>
+              <button 
+                onClick={() => setShowHistory(true)}
+                style={{
+                  background: '#6c757d',
+                  color: 'white',
+                  border: 'none',
+                  padding: '12px 24px',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '1rem'
+                }}
+              >
+                History
               </button>
             </div>
           </div>
@@ -1073,7 +1256,7 @@ const Index: React.FC = () => {
               textAlign: 'center',
               color: theme === 'cotton-candy-glow' ? '#333' : 'white'
             }}>
-              {lastTestResult.score >= 800 ? "Excellent! Impressive Speed and Accuracy!" :
+              {lastTestResult.score >= 800 ? "Excellent! Impressive Speed and Low Error Rate!" :
                lastTestResult.score >= 600 ? "Great job! Keep practicing!" :
                lastTestResult.score >= 400 ? "Good work! Room for improvement!" :
                "Keep practicing! You'll get better!"}
@@ -1091,24 +1274,28 @@ const Index: React.FC = () => {
               marginBottom: '2rem'
             }}>
               <h3 style={{ marginBottom: '15px', textAlign: 'center' }}>Test Results</h3>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '15px', textAlign: 'center' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '15px', textAlign: 'center' }}>
                 <div>
                   <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: getButtonColor() }}>{lastTestResult.wpm}</div>
                   <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>WPM</div>
                 </div>
                 <div>
-                  <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: getButtonColor() }}>{lastTestResult.accuracy}%</div>
-                  <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>Accuracy</div>
+                  <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: getButtonColor() }}>{lastTestResult.errorRate}%</div>
+                  <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>Error Rate</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: getButtonColor() }}>{lastTestResult.score}</div>
+                  <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>Score</div>
                 </div>
                 <div>
                   <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: getButtonColor() }}>{lastTestResult.errors}</div>
-                  <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>Errors</div>
+                  <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>Total Errors</div>
                 </div>
                 <div>
                   <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: getButtonColor() }}>{lastTestResult.correctChars}</div>
                   <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>Correct Signs</div>
                 </div>
-                <div style={{ gridColumn: 'span 2' }}>
+                <div>
                   <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: getButtonColor() }}>
                     {Math.floor(lastTestResult.time / 60)}:{(lastTestResult.time % 60).toString().padStart(2, '0')}
                   </div>
@@ -1291,6 +1478,28 @@ const Index: React.FC = () => {
 
               <div style={{ margin: '1.5rem 0' }}>
                 <button
+                  onClick={() => {
+                    setSideMenuOpen(false);
+                    setShowHistory(true);
+                  }}
+                  style={{
+                    width: '100%',
+                    backgroundColor: '#6c757d',
+                    color: 'white',
+                    border: 'none',
+                    padding: '0.8rem 1.5rem',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '1rem',
+                    marginBottom: '10px'
+                  }}
+                >
+                  History
+                </button>
+              </div>
+
+              <div style={{ margin: '1.5rem 0' }}>
+                <button
                   onClick={() => window.open('https://www.reddit.com/user/Rak_the_rock', '_blank')}
                   style={{
                     width: '100%',
@@ -1347,7 +1556,7 @@ const Index: React.FC = () => {
         {message && (
           <div style={{
             position: 'fixed',
-            top: '50px',
+            top: '80px',
             left: '50%',
             transform: 'translateX(-50%)',
             background: 'rgba(255, 255, 255, 0.15)',
@@ -1540,6 +1749,7 @@ const Index: React.FC = () => {
           display: inline-block;
           color: ${theme === 'midnight-black' ? '#f0f0f0' : theme === 'cotton-candy-glow' ? '#555' : '#f5e9f1'};
           transition: color 0.15s ease-in-out;
+          padding: 0 1px;
         }
         
         .char.correct {
