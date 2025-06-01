@@ -7,7 +7,8 @@ interface IntroductionProps {
 
 export const Introduction: React.FC<IntroductionProps> = ({ onComplete }) => {
   const [currentTheme, setCurrentTheme] = useState(0);
-  const [showTitle, setShowTitle] = useState(true);
+  const [animationPhase, setAnimationPhase] = useState('themes'); // 'themes' or 'moving'
+  const [titlePosition, setTitlePosition] = useState('center');
 
   const themes = [
     {
@@ -28,22 +29,48 @@ export const Introduction: React.FC<IntroductionProps> = ({ onComplete }) => {
   ];
 
   useEffect(() => {
-    const interval = setInterval(() => {
+    let themeInterval: NodeJS.Timeout;
+    let phaseTimeout: NodeJS.Timeout;
+    let completeTimeout: NodeJS.Timeout;
+
+    // Theme switching phase
+    themeInterval = setInterval(() => {
       setCurrentTheme(prev => (prev + 1) % themes.length);
     }, 1500);
 
-    const timeout = setTimeout(() => {
-      setShowTitle(false);
-      setTimeout(() => {
-        onComplete();
-      }, 500);
+    // After 3 theme cycles (4.5 seconds), switch to moving phase
+    phaseTimeout = setTimeout(() => {
+      clearInterval(themeInterval);
+      setAnimationPhase('moving');
+      setTitlePosition('top-left');
+    }, 4500);
+
+    // Complete animation after title moves to top-left
+    completeTimeout = setTimeout(() => {
+      onComplete();
     }, 6000);
 
     return () => {
-      clearInterval(interval);
-      clearTimeout(timeout);
+      clearInterval(themeInterval);
+      clearTimeout(phaseTimeout);
+      clearTimeout(completeTimeout);
     };
   }, [onComplete]);
+
+  const getDefaultTheme = () => {
+    const savedTheme = localStorage.getItem("typeRakTheme");
+    return savedTheme || 'cosmic-nebula';
+  };
+
+  const getCurrentThemeData = () => {
+    if (animationPhase === 'moving') {
+      const defaultTheme = getDefaultTheme();
+      return themes.find(t => t.id === defaultTheme) || themes[0];
+    }
+    return themes[currentTheme];
+  };
+
+  const currentThemeData = getCurrentThemeData();
 
   return (
     <div 
@@ -53,40 +80,46 @@ export const Introduction: React.FC<IntroductionProps> = ({ onComplete }) => {
         left: 0,
         right: 0,
         bottom: 0,
-        background: themes[currentTheme].background,
-        transition: 'background 1s ease-in-out',
+        background: currentThemeData.background,
+        transition: animationPhase === 'themes' ? 'background 1s ease-in-out' : 'background 2s ease-in-out',
         display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 9999
+        alignItems: titlePosition === 'center' ? 'center' : 'flex-start',
+        justifyContent: titlePosition === 'center' ? 'center' : 'flex-start',
+        zIndex: 9999,
+        paddingTop: titlePosition === 'top-left' ? '20px' : '0',
+        paddingLeft: titlePosition === 'top-left' ? '20px' : '0'
       }}
     >
       <h1 
         style={{
-          backgroundImage: themes[currentTheme].titleGradient,
+          backgroundImage: currentThemeData.titleGradient,
           WebkitBackgroundClip: 'text',
           backgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
           color: 'transparent',
-          fontSize: showTitle ? '5rem' : '2.5rem',
+          fontSize: titlePosition === 'center' ? '5rem' : '2.5rem',
           fontWeight: 700,
           margin: 0,
-          transition: 'all 1s ease-in-out, background-image 1s ease-in-out',
+          transition: animationPhase === 'themes' ? 
+            'background-image 1s ease-in-out' : 
+            'all 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), background-image 2s ease-in-out',
           textAlign: 'center',
-          animation: showTitle ? 'wave 2s ease-in-out infinite' : 'none',
-          transform: showTitle ? 'translateY(0)' : 'translateY(-40vh) scale(0.5)',
-          opacity: showTitle ? 1 : 0
+          animation: animationPhase === 'themes' ? 'colorWave 1.5s ease-in-out infinite' : 'none'
         }}
       >
         TypeWave
       </h1>
       
       <style>{`
-        @keyframes wave {
-          0%, 100% { transform: translateY(0) scale(1); }
-          25% { transform: translateY(-10px) scale(1.05); }
-          50% { transform: translateY(0) scale(1); }
-          75% { transform: translateY(-5px) scale(1.02); }
+        @keyframes colorWave {
+          0%, 100% { 
+            background-position: 0% 50%;
+            transform: scale(1);
+          }
+          50% { 
+            background-position: 100% 50%;
+            transform: scale(1.02);
+          }
         }
       `}</style>
     </div>

@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect } from 'react';
 
 interface TypingTestProps {
@@ -85,31 +84,40 @@ export const TypingTest: React.FC<TypingTestProps> = ({
         position: 'relative',
         fontSize: '2em',
         lineHeight: '1.6',
-        letterSpacing: '0.01em',
+        letterSpacing: '0.02em',
         width: '100%',
         textAlign: 'center',
         whiteSpace: 'nowrap',
         overflow: 'hidden'
       }}>
-        <div ref={textFlowRef} style={{ 
-          display: 'inline-block',
-          transition: 'transform 0.15s ease-out',
-          color: theme === 'cotton-candy-glow' ? '#333' : '#fff'
-        }}></div>
+        <div 
+          ref={textFlowRef} 
+          id="text-flow"
+          style={{ 
+            display: 'inline-block',
+            transition: 'transform 0.15s ease-out',
+            color: theme === 'cotton-candy-glow' ? '#333' : '#fff',
+            fontWeight: '500',
+            userSelect: 'none'
+          }}
+        >
+          {/* Text will be rendered here by useTypingGame hook */}
+        </div>
       </div>
       <div 
         ref={caretRef}
         style={{
           position: 'absolute',
-          height: '3px',
-          width: '20px',
+          height: '4px',
+          width: '24px',
           background: getCaretColor(),
           fontWeight: '900',
           fontSize: '2em',
           zIndex: 10,
-          borderRadius: '2px'
+          borderRadius: '3px',
+          boxShadow: '0 0 8px rgba(0,0,0,0.3)'
         }}
-      >_</div>
+      />
     </div>
   );
 };

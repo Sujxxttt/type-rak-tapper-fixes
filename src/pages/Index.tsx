@@ -11,7 +11,7 @@ import { useTypingGame } from '../hooks/useTypingGame';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
 const Index: React.FC = () => {
-  // Introduction state
+  // Introduction state - show on every reload
   const [showIntroduction, setShowIntroduction] = useState(true);
   
   // Global state variables
@@ -61,14 +61,10 @@ const Index: React.FC = () => {
 
   // Show introduction on first load
   useEffect(() => {
-    const hasSeenIntro = localStorage.getItem('typeWaveSeenIntro');
-    if (hasSeenIntro) {
-      setShowIntroduction(false);
-    }
+    setShowIntroduction(false);
   }, []);
 
   const handleIntroComplete = () => {
-    localStorage.setItem('typeWaveSeenIntro', 'true');
     setShowIntroduction(false);
   };
 
@@ -439,7 +435,7 @@ const Index: React.FC = () => {
 
   const averageStats = getAverageStats();
 
-  // Show introduction first
+  // Show introduction first - always
   if (showIntroduction) {
     return <Introduction onComplete={handleIntroComplete} />;
   }

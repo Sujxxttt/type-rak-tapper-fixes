@@ -50,10 +50,15 @@ export const useTypingGame = () => {
   };
 
   const renderText = (text: string) => {
-    if (!textFlowRef.current) return;
+    // Find the text flow element by ID instead of using ref
+    const textFlowElement = document.getElementById('text-flow');
+    if (!textFlowElement) {
+      console.log('Text flow element not found');
+      return;
+    }
     
     setTestText(text);
-    textFlowRef.current.innerHTML = "";
+    textFlowElement.innerHTML = "";
     const newChars: HTMLElement[] = [];
     const frag = document.createDocumentFragment();
     
@@ -66,8 +71,9 @@ export const useTypingGame = () => {
       newChars.push(span);
     }
     
-    textFlowRef.current.appendChild(frag);
+    textFlowElement.appendChild(frag);
     setChars(newChars);
+    console.log('Text rendered:', text.substring(0, 50) + '...');
   };
 
   const startTimer = useCallback((duration: number, onComplete: () => void) => {
