@@ -22,7 +22,7 @@ const Index: React.FC = () => {
   const [currentTestName, setCurrentTestName] = useState<string>('');
   const [deleteConfirmState, setDeleteConfirmState] = useState<boolean>(false);
   const [duration, setDuration] = useLocalStorage<number>("typeRakDuration", 60);
-  const [fontSize, setFontSize] = useLocalStorage<number>("typeRakFontSize", 150);
+  const [fontSize, setFontSize] = useLocalStorage<number>("typeRakFontSize", 120);
   const [fontStyle, setFontStyle] = useLocalStorage<string>("typeRakFontStyle", 'inter');
   const [sideMenuOpen, setSideMenuOpen] = useState<boolean>(false);
   const [currentScreen, setCurrentScreen] = useState<string>('greeting');
@@ -34,6 +34,7 @@ const Index: React.FC = () => {
   const [highlightFooter, setHighlightFooter] = useState<boolean>(false);
   const [lastTestResult, setLastTestResult] = useState<any>(null);
   const [continueTestMode, setContinueTestMode] = useState<boolean>(false);
+  const [extraChars, setExtraChars] = useState<string[]>([]);
 
   const messageTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
@@ -44,28 +45,26 @@ const Index: React.FC = () => {
     testActive,
     setTestActive,
     elapsed,
-    setElapsed,
     pos,
     setPos,
     chars,
-    typedCharacters,
-    setTypedCharacters,
-    totalErrors,
-    setTotalErrors,
     testText,
-    lastErrorPos,
-    setLastErrorPos,
     correctCharacters,
     setCorrectCharacters,
+    totalErrors,
+    setTotalErrors,
     actualTypedCount,
     setActualTypedCount,
+    lastErrorPos,
+    setLastErrorPos,
     timerRef,
-    textFlowRef,
     generateWords,
     renderText,
     startTimer,
     resetTest,
-    extendText
+    extendText,
+    getCurrentWPM,
+    getCurrentErrorRate
   } = useTypingGame();
 
   // Show introduction on first load
@@ -134,27 +133,6 @@ const Index: React.FC = () => {
     document.addEventListener('keydown', handleCheatCode);
     return () => document.removeEventListener('keydown', handleCheatCode);
   }, [testActive, duration]);
-
-  const adjustCaretPosition = () => {
-    if (!textFlowRef.current || !chars || chars.length === 0) return;
-    
-    const containerRect = textFlowRef.current.getBoundingClientRect();
-    const containerCenter = containerRect.width / 2;
-    
-    if (pos < chars.length) {
-      const currentChar = chars[pos];
-      const charRect = currentChar.getBoundingClientRect();
-      
-      const charCenter = charRect.left + charRect.width / 2 - containerRect.left;
-      const offset = containerCenter - charCenter;
-      
-      textFlowRef.current.style.transform = `translateX(${offset}px)`;
-    }
-  };
-
-  const updateStats = () => {
-    adjustCaretPosition();
-  };
 
   const endTest = () => {
     if (gameOver) return;
@@ -240,6 +218,19 @@ const Index: React.FC = () => {
 
     if (e.key === "Backspace" && !(e.ctrlKey && e.altKey)) {
       e.preventDefault();
+      
+      if (extraChars.length > 0) {
+        // Remove last extra character
+        setExtraChars(prev => prev.slice(0, -1));
+      } else if (pos > 0) {
+        // Move back one position and remove styling
+        const newPos = pos - 1;
+        setPos(newPos);
+        chars[newPos]?.classList.remove("correct", "incorrect");
+        if (chars[newPos]?.classList.contains("correct")) {
+          setCorrectCharacters(prev => prev - 1);
+        }
+      }
       return;
     }
     
@@ -264,33 +255,28 @@ const Index: React.FC = () => {
     if (typedChar && typedChar.length === 1) {
       setActualTypedCount(prev => prev + 1);
       
-      if (expectedChar === typedChar) {
+      if (expectedChar === typedChar && extraChars.length === 0) {
         // Correct character
-        chars[pos]?.classList.remove("incorrect", "error-left");
+        chars[pos]?.classList.remove("incorrect");
         chars[pos]?.classList.add("correct");
         setCorrectCharacters(prev => prev + 1);
         setPos(prev => prev + 1);
         setLastErrorPos(-1);
       } else {
-        // Incorrect character - only count if not consecutive error
-        if (lastErrorPos !== pos) {
-          chars[pos]?.classList.add("incorrect");
-          // Add error-left class to previous character for visual feedback
-          if (pos > 0 && chars[pos - 1]) {
-            chars[pos - 1].classList.add("error-left");
+        // Incorrect character - add to extra chars or handle error
+        if (pos < testText.length) {
+          // Only count as error if it's not consecutive to the last error
+          if (lastErrorPos !== pos) {
+            setTotalErrors(prev => prev + 1);
+            setLastErrorPos(pos);
+            chars[pos]?.classList.add("incorrect");
           }
-          setTotalErrors(prev => prev + 1);
-          setLastErrorPos(pos);
+          
+          // Add extra character for visual feedback
+          setExtraChars(prev => [...prev, typedChar]);
         }
-        // Don't advance position on error
-      }
-      
-      if (pos + 1 >= chars.length && expectedChar === typedChar) {
-        endTest();
       }
     }
-    
-    updateStats();
   };
 
   const createUser = (username: string) => {
@@ -323,6 +309,7 @@ const Index: React.FC = () => {
     setCurrentTestName(testName);
     setCurrentScreen('typing');
     resetTest();
+    setExtraChars([]);
     setShowReturnConfirm(false);
     setContinueTestMode(false);
     
@@ -406,6 +393,7 @@ const Index: React.FC = () => {
     }
     
     resetTest();
+    setExtraChars([]);
     setShowReturnConfirm(false);
     setCurrentScreen('dashboard');
   };
@@ -429,6 +417,7 @@ const Index: React.FC = () => {
 
   const confirmAbortAndGoToHistory = () => {
     resetTest();
+    setExtraChars([]);
     setShowReturnConfirm(false);
     setCurrentScreen('history');
   };
@@ -458,15 +447,6 @@ const Index: React.FC = () => {
     }
   };
 
-  const getCorrectSigns = () => {
-    return correctCharacters;
-  };
-
-  const getCurrentErrorRate = () => {
-    const totalSigns = actualTypedCount;
-    return totalSigns > 0 ? ((totalErrors / totalSigns) * 100) : 0;
-  };
-
   const averageStats = getAverageStats();
 
   // Show introduction first - always
@@ -476,7 +456,7 @@ const Index: React.FC = () => {
 
   const getTitleGradient = () => {
     if (theme === 'cosmic-nebula') {
-      return 'linear-gradient(90deg, #e454f0 0%, #bd54f0 100%)'; // 20% brighter
+      return 'linear-gradient(90deg, #f364f0 0%, #cd64f0 100%)'; // 20% brighter
     } else if (theme === 'midnight-black') {
       return 'linear-gradient(90deg, #c559f7 0%, #7f59f7 100%)';
     } else if (theme === 'cotton-candy-glow') {
@@ -491,6 +471,8 @@ const Index: React.FC = () => {
                   fontStyle === 'open-sans' ? "'Open Sans', sans-serif" :
                   fontStyle === 'lato' ? "'Lato', sans-serif" :
                   fontStyle === 'source-sans' ? "'Source Sans Pro', sans-serif" :
+                  fontStyle === 'dancing-script' ? "'Dancing Script', cursive" :
+                  fontStyle === 'pacifico' ? "'Pacifico', cursive" :
                   "'Inter', sans-serif",
       fontSize: '112.5%',
       color: 'white',
@@ -525,7 +507,7 @@ const Index: React.FC = () => {
               fontSize: '2.5rem',
               fontWeight: 700,
               margin: 0,
-              fontFamily: "'Inter', sans-serif" // Title always uses Inter
+              fontFamily: "'Inter', sans-serif"
             }}>
               TypeWave
             </h1>
@@ -901,11 +883,12 @@ const Index: React.FC = () => {
               onKeyDown={handleKeyDown}
               fontSize={fontSize}
               fontStyle={fontStyle}
+              extraChars={extraChars}
             />
 
             <StatsDisplay
               elapsed={elapsed}
-              correctSigns={getCorrectSigns()}
+              correctSigns={correctCharacters}
               totalErrors={totalErrors}
               currentErrorRate={getCurrentErrorRate()}
               theme={theme}
@@ -920,6 +903,7 @@ const Index: React.FC = () => {
               <button 
                 onClick={() => {
                   resetTest();
+                  setExtraChars([]);
                   setShowReturnConfirm(false);
                   setTimeout(() => {
                     const textToUse = generateWords(100);
@@ -1255,7 +1239,7 @@ const Index: React.FC = () => {
       </div>
 
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Open+Sans:wght@300;400;500;700&family=Lato:wght@300;400;700&family=Source+Sans+Pro:wght@300;400;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Open+Sans:wght@300;400;500;700&family=Lato:wght@300;400;700&family=Source+Sans+Pro:wght@300;400;600;700&family=Inter:wght@300;400;500;600;700&family=Dancing+Script:wght@400;500;600;700&family=Pacifico:wght@400&display=swap');
 
         @keyframes blinkCaret {
           50% { opacity: 0; }
@@ -1281,15 +1265,10 @@ const Index: React.FC = () => {
           border-radius: 2px;
         }
         
-        .char.error-left::before {
-          content: '';
-          position: absolute;
-          left: -2px;
-          top: 0;
-          bottom: 0;
-          width: 2px;
-          background-color: #ff1c14;
-          border-radius: 1px;
+        .extra {
+          color: #ff4444 !important;
+          background-color: rgba(255, 68, 68, 0.2);
+          border-radius: 2px;
         }
       `}</style>
     </div>

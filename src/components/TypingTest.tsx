@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect, useState } from 'react';
 
 interface TypingTestProps {
@@ -8,6 +9,7 @@ interface TypingTestProps {
   onKeyDown: (e: KeyboardEvent) => void;
   fontSize: number;
   fontStyle: string;
+  extraChars: string[];
 }
 
 export const TypingTest: React.FC<TypingTestProps> = ({
@@ -17,42 +19,55 @@ export const TypingTest: React.FC<TypingTestProps> = ({
   theme,
   onKeyDown,
   fontSize,
-  fontStyle
+  fontStyle,
+  extraChars
 }) => {
   const textFlowRef = useRef<HTMLDivElement>(null);
   const caretRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
+    const handleKeyDown = (e: KeyboardEvent) => {
+      onKeyDown(e);
+    };
+    
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
   }, [onKeyDown]);
 
   useEffect(() => {
     adjustCaretPosition();
-  }, [pos, chars, fontSize]);
+  }, [pos, chars, fontSize, extraChars]);
 
   const adjustCaretPosition = () => {
-    if (!caretRef.current || !chars || chars.length === 0 || !textFlowRef.current || !containerRef.current) return;
+    if (!caretRef.current || !chars || chars.length === 0 || !textFlowRef.current || !containerRef.current) {
+      return;
+    }
     
     const container = containerRef.current;
     const containerRect = container.getBoundingClientRect();
     const containerCenter = containerRect.width / 2;
     
-    if (pos < chars.length) {
+    // Calculate position based on current position and extra characters
+    const currentIndex = pos + extraChars.length;
+    
+    if (pos < testText.length) {
       const currentChar = chars[pos];
+      if (!currentChar) return;
+      
       const charRect = currentChar.getBoundingClientRect();
       
       // Calculate offset to keep current character in center
       const charLeft = charRect.left - containerRect.left;
       const offset = containerCenter - charLeft - (charRect.width / 2);
       
-      // Apply offset to text flow with smooth transition
+      // Apply smooth transform
       textFlowRef.current.style.transform = `translateX(${offset}px)`;
+      textFlowRef.current.style.transition = 'transform 0.2s ease-out';
       
-      // Position caret directly below the current character
+      // Position caret below the current character
       caretRef.current.style.left = `${containerCenter}px`;
-      caretRef.current.style.top = `${charRect.bottom - containerRect.top + 2}px`;
+      caretRef.current.style.top = `${charRect.bottom - containerRect.top + 4}px`;
       caretRef.current.style.display = 'block';
     } else {
       caretRef.current.style.display = 'none';
@@ -77,6 +92,8 @@ export const TypingTest: React.FC<TypingTestProps> = ({
       case 'lato': return "'Lato', sans-serif";
       case 'source-sans': return "'Source Sans Pro', sans-serif";
       case 'inter': return "'Inter', sans-serif";
+      case 'dancing-script': return "'Dancing Script', cursive";
+      case 'pacifico': return "'Pacifico', cursive";
       default: return "'Inter', sans-serif";
     }
   };
@@ -91,10 +108,10 @@ export const TypingTest: React.FC<TypingTestProps> = ({
         background: theme === 'cotton-candy-glow' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)',
         borderRadius: '16px',
         overflow: 'hidden',
-        marginBottom: '5rem',
-        marginTop: '6rem',
-        padding: '4rem',
-        minHeight: '220px',
+        marginBottom: '3rem',
+        marginTop: '4rem',
+        padding: '3rem',
+        minHeight: '180px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center'
@@ -103,8 +120,8 @@ export const TypingTest: React.FC<TypingTestProps> = ({
       <div style={{
         position: 'relative',
         fontSize: `${fontSize}%`,
-        lineHeight: '1.8',
-        letterSpacing: '0.05em',
+        lineHeight: '1.6',
+        letterSpacing: '0.02em',
         width: '100%',
         textAlign: 'center',
         whiteSpace: 'nowrap',
@@ -116,7 +133,6 @@ export const TypingTest: React.FC<TypingTestProps> = ({
           id="text-flow"
           style={{ 
             display: 'inline-block',
-            transition: 'transform 0.3s ease-out',
             color: theme === 'cotton-candy-glow' ? '#333' : '#fff',
             fontWeight: '500',
             userSelect: 'none',
@@ -124,6 +140,11 @@ export const TypingTest: React.FC<TypingTestProps> = ({
           }}
         >
           {/* Text will be rendered here by useTypingGame hook */}
+          {extraChars.length > 0 && (
+            <span style={{ color: '#ff4444', backgroundColor: 'rgba(255, 68, 68, 0.2)' }}>
+              {extraChars.join('')}
+            </span>
+          )}
         </div>
       </div>
       <div 

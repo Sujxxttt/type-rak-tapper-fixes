@@ -7,12 +7,11 @@ export const useTypingGame = () => {
   const [elapsed, setElapsed] = useState<number>(0);
   const [pos, setPos] = useState<number>(0);
   const [chars, setChars] = useState<HTMLElement[]>([]);
-  const [typedCharacters, setTypedCharacters] = useState<string[]>([]);
-  const [totalErrors, setTotalErrors] = useState<number>(0);
   const [testText, setTestText] = useState<string>('');
-  const [lastErrorPos, setLastErrorPos] = useState<number>(-1);
   const [correctCharacters, setCorrectCharacters] = useState<number>(0);
+  const [totalErrors, setTotalErrors] = useState<number>(0);
   const [actualTypedCount, setActualTypedCount] = useState<number>(0);
+  const [lastErrorPos, setLastErrorPos] = useState<number>(-1);
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const textFlowRef = useRef<HTMLDivElement>(null);
@@ -100,10 +99,14 @@ export const useTypingGame = () => {
   };
 
   const startTimer = useCallback((duration: number, onComplete: () => void) => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
     timerRef.current = setInterval(() => {
       setElapsed(prev => {
         const newElapsed = prev + 1;
         if (newElapsed >= duration) {
+          clearInterval(timerRef.current!);
           onComplete();
         }
         return newElapsed;
@@ -117,13 +120,13 @@ export const useTypingGame = () => {
     setElapsed(0);
     setPos(0);
     setTotalErrors(0);
-    setTypedCharacters([]);
-    setLastErrorPos(-1);
     setCorrectCharacters(0);
     setActualTypedCount(0);
+    setLastErrorPos(-1);
     usedWordsRef.current = [];
     generatedTextRef.current = '';
     wordListUsedRef.current = false;
+    
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
@@ -132,8 +135,18 @@ export const useTypingGame = () => {
     // Clear all character styling
     const allChars = document.querySelectorAll('.char');
     allChars.forEach(char => {
-      char.classList.remove('correct', 'incorrect', 'error-left');
+      char.classList.remove('correct', 'incorrect', 'extra');
     });
+  };
+
+  const getCurrentWPM = () => {
+    if (elapsed === 0) return 0;
+    return Math.round((correctCharacters / 5) / (elapsed / 60));
+  };
+
+  const getCurrentErrorRate = () => {
+    if (actualTypedCount === 0) return 0;
+    return (totalErrors / actualTypedCount) * 100;
   };
 
   return {
@@ -146,25 +159,23 @@ export const useTypingGame = () => {
     pos,
     setPos,
     chars,
-    setChars,
-    typedCharacters,
-    setTypedCharacters,
-    totalErrors,
-    setTotalErrors,
     testText,
-    setTestText,
-    lastErrorPos,
-    setLastErrorPos,
     correctCharacters,
     setCorrectCharacters,
+    totalErrors,
+    setTotalErrors,
     actualTypedCount,
     setActualTypedCount,
+    lastErrorPos,
+    setLastErrorPos,
     timerRef,
     textFlowRef,
     generateWords,
     renderText,
     startTimer,
     resetTest,
-    extendText
+    extendText,
+    getCurrentWPM,
+    getCurrentErrorRate
   };
 };

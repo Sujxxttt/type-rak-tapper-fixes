@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { CustomDurationSlider } from './CustomDurationSlider';
 
@@ -44,16 +44,34 @@ export const SideMenu: React.FC<SideMenuProps> = ({
   fontStyle,
   setFontStyle
 }) => {
+  const [showUsersDropdown, setShowUsersDropdown] = useState(false);
   const [showDurationDropdown, setShowDurationDropdown] = useState(false);
   const [showThemeDropdown, setShowThemeDropdown] = useState(false);
   const [showFontSizeDropdown, setShowFontSizeDropdown] = useState(false);
   const [showFontStyleDropdown, setShowFontStyleDropdown] = useState(false);
   const [showCustomSlider, setShowCustomSlider] = useState(false);
+  
+  const sideMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (sideMenuRef.current && !sideMenuRef.current.contains(event.target as Node)) {
+        setSideMenuOpen(false);
+      }
+    };
+
+    if (sideMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [sideMenuOpen, setSideMenuOpen]);
 
   if (!sideMenuOpen) return null;
 
   const durationOptions = [
-    { label: '15 seconds', value: 15 },
     { label: '30 seconds', value: 30 },
     { label: '1 minute', value: 60 },
     { label: '2 minutes', value: 120 },
@@ -85,7 +103,9 @@ export const SideMenu: React.FC<SideMenuProps> = ({
     { label: 'Roboto', value: 'roboto' },
     { label: 'Open Sans', value: 'open-sans' },
     { label: 'Lato', value: 'lato' },
-    { label: 'Source Sans Pro', value: 'source-sans' }
+    { label: 'Source Sans Pro', value: 'source-sans' },
+    { label: 'Dancing Script', value: 'dancing-script' },
+    { label: 'Pacifico', value: 'pacifico' }
   ];
 
   const handleDurationSelect = (value: any) => {
@@ -102,7 +122,6 @@ export const SideMenu: React.FC<SideMenuProps> = ({
     const option = durationOptions.find(opt => opt.value === duration);
     if (option) return option.label;
     
-    // For custom durations
     if (duration < 60) {
       return `${duration} seconds`;
     } else if (duration < 3600) {
@@ -130,28 +149,52 @@ export const SideMenu: React.FC<SideMenuProps> = ({
     return option ? option.label : 'Inter';
   };
 
+  const getFontFamily = (style: string) => {
+    switch (style) {
+      case 'roboto': return "'Roboto', sans-serif";
+      case 'open-sans': return "'Open Sans', sans-serif";
+      case 'lato': return "'Lato', sans-serif";
+      case 'source-sans': return "'Source Sans Pro', sans-serif";
+      case 'dancing-script': return "'Dancing Script', cursive";
+      case 'pacifico': return "'Pacifico', cursive";
+      default: return "'Inter', sans-serif";
+    }
+  };
+
+  const dropdownStyle = {
+    background: 'rgba(255, 255, 255, 0.15)',
+    backdropFilter: 'blur(20px)',
+    border: '1px solid rgba(255, 255, 255, 0.25)',
+    borderRadius: '12px',
+    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
+  };
+
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      right: sideMenuOpen ? '0' : '-400px',
-      width: '400px',
-      height: '100vh',
-      background: 'rgba(0, 0, 0, 0.95)',
-      backdropFilter: 'blur(20px)',
-      borderLeft: '1px solid rgba(255, 255, 255, 0.2)',
-      padding: '20px',
-      transition: 'right 0.3s ease-in-out',
-      zIndex: 1000,
-      overflowY: 'auto'
-    }}>
+    <div 
+      ref={sideMenuRef}
+      style={{
+        position: 'fixed',
+        top: 0,
+        right: sideMenuOpen ? '0' : '-420px',
+        width: '420px',
+        height: '100vh',
+        background: 'rgba(0, 0, 0, 0.85)',
+        backdropFilter: 'blur(20px)',
+        borderLeft: '1px solid rgba(255, 255, 255, 0.2)',
+        padding: '20px',
+        transition: 'right 0.3s ease-in-out',
+        zIndex: 1000,
+        overflowY: 'auto',
+        fontSize: '0.85rem'
+      }}
+    >
       <div style={{
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: '30px'
+        marginBottom: '25px'
       }}>
-        <h2 style={{ color: 'white', margin: 0 }}>Settings</h2>
+        <h2 style={{ color: 'white', margin: 0, fontSize: '1.4rem' }}>Settings</h2>
         <button 
           onClick={() => setSideMenuOpen(false)}
           style={{
@@ -167,44 +210,86 @@ export const SideMenu: React.FC<SideMenuProps> = ({
         </button>
       </div>
 
-      {/* User Management */}
-      <div style={{ marginBottom: '30px' }}>
-        <h3 style={{ color: 'white', marginBottom: '15px' }}>Users</h3>
-        <div style={{ maxHeight: '150px', overflowY: 'auto' }}>
-          {usersList.map((user, index) => (
-            <div 
-              key={index}
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                padding: '10px',
-                marginBottom: '8px',
-                background: user === currentActiveUser ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)',
-                borderRadius: '6px',
-                cursor: 'pointer'
-              }}
-              onClick={() => switchUser(user)}
-            >
-              <span style={{ color: 'white' }}>{user}</span>
-              {user === currentActiveUser && (
-                <span style={{ color: getButtonColor(), fontSize: '0.8rem' }}>Active</span>
-              )}
-            </div>
-          ))}
-        </div>
+      {/* Users Dropdown */}
+      <div style={{ marginBottom: '20px', position: 'relative' }}>
+        <h3 style={{ color: 'white', marginBottom: '10px', fontSize: '1rem' }}>Users</h3>
+        <button
+          onClick={() => setShowUsersDropdown(!showUsersDropdown)}
+          style={{
+            width: '100%',
+            padding: '10px 12px',
+            ...dropdownStyle,
+            color: 'white',
+            cursor: 'pointer',
+            textAlign: 'left',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            fontSize: '0.85rem'
+          }}
+        >
+          {currentActiveUser || 'Select User'}
+          <span style={{ transform: showUsersDropdown ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>▼</span>
+        </button>
+        
+        {showUsersDropdown && (
+          <div style={{
+            position: 'absolute',
+            top: '100%',
+            left: 0,
+            right: 0,
+            ...dropdownStyle,
+            zIndex: 1001,
+            maxHeight: '200px',
+            overflowY: 'auto',
+            marginTop: '5px'
+          }}>
+            {usersList.map((user, index) => (
+              <button
+                key={index}
+                onClick={() => {
+                  switchUser(user);
+                  setShowUsersDropdown(false);
+                }}
+                style={{
+                  width: '100%',
+                  padding: '8px 12px',
+                  background: user === currentActiveUser ? 'rgba(255, 255, 255, 0.2)' : 'transparent',
+                  border: 'none',
+                  color: 'white',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  borderBottom: index < usersList.length - 1 ? '1px solid rgba(255, 255, 255, 0.1)' : 'none',
+                  fontSize: '0.85rem'
+                }}
+                onMouseEnter={(e) => {
+                  const target = e.target as HTMLElement;
+                  target.style.background = 'rgba(255, 255, 255, 0.1)';
+                }}
+                onMouseLeave={(e) => {
+                  const target = e.target as HTMLElement;
+                  target.style.background = user === currentActiveUser ? 'rgba(255, 255, 255, 0.2)' : 'transparent';
+                }}
+              >
+                {user}
+              </button>
+            ))}
+          </div>
+        )}
+        
         {currentActiveUser && (
           <button 
             onClick={handleDeleteUser}
             style={{
               width: '100%',
-              background: deleteConfirmState ? '#e74c3c' : '#6c757d',
+              background: deleteConfirmState ? '#e74c3c' : '#dc3545',
               color: 'white',
               border: 'none',
-              padding: '10px',
+              padding: '8px',
               borderRadius: '6px',
               cursor: 'pointer',
-              marginTop: '10px'
+              marginTop: '8px',
+              fontSize: '0.8rem'
             }}
           >
             {deleteConfirmState ? 'Confirm Delete?' : 'Delete Current User'}
@@ -213,23 +298,21 @@ export const SideMenu: React.FC<SideMenuProps> = ({
       </div>
 
       {/* Duration Dropdown */}
-      <div style={{ marginBottom: '20px', position: 'relative' }}>
-        <label style={{ display: 'block', color: 'white', marginBottom: '8px' }}>Test Duration</label>
+      <div style={{ marginBottom: '15px', position: 'relative' }}>
+        <label style={{ display: 'block', color: 'white', marginBottom: '6px', fontSize: '0.9rem' }}>Test Duration</label>
         <button
           onClick={() => setShowDurationDropdown(!showDurationDropdown)}
           style={{
             width: '100%',
-            padding: '12px',
-            background: 'rgba(255, 255, 255, 0.1)',
-            backdropFilter: 'blur(10px)',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            borderRadius: '8px',
+            padding: '10px 12px',
+            ...dropdownStyle,
             color: 'white',
             cursor: 'pointer',
             textAlign: 'left',
             display: 'flex',
             justifyContent: 'space-between',
-            alignItems: 'center'
+            alignItems: 'center',
+            fontSize: '0.85rem'
           }}
         >
           {getDurationLabel()}
@@ -242,13 +325,11 @@ export const SideMenu: React.FC<SideMenuProps> = ({
             top: '100%',
             left: 0,
             right: 0,
-            background: 'rgba(0, 0, 0, 0.95)',
-            backdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            borderRadius: '8px',
+            ...dropdownStyle,
             zIndex: 1001,
             maxHeight: '200px',
-            overflowY: 'auto'
+            overflowY: 'auto',
+            marginTop: '5px'
           }}>
             {durationOptions.map((option, index) => (
               <button
@@ -256,13 +337,14 @@ export const SideMenu: React.FC<SideMenuProps> = ({
                 onClick={() => handleDurationSelect(option.value)}
                 style={{
                   width: '100%',
-                  padding: '10px 12px',
+                  padding: '8px 12px',
                   background: 'transparent',
                   border: 'none',
                   color: 'white',
                   cursor: 'pointer',
                   textAlign: 'left',
-                  borderBottom: index < durationOptions.length - 1 ? '1px solid rgba(255, 255, 255, 0.1)' : 'none'
+                  borderBottom: index < durationOptions.length - 1 ? '1px solid rgba(255, 255, 255, 0.1)' : 'none',
+                  fontSize: '0.85rem'
                 }}
                 onMouseEnter={(e) => {
                   const target = e.target as HTMLElement;
@@ -282,31 +364,31 @@ export const SideMenu: React.FC<SideMenuProps> = ({
 
       {/* Custom Duration Slider */}
       {showCustomSlider && (
-        <CustomDurationSlider
-          value={duration}
-          onChange={setDuration}
-          theme={theme}
-        />
+        <div style={{ marginBottom: '15px' }}>
+          <CustomDurationSlider
+            value={duration}
+            onChange={setDuration}
+            theme={theme}
+          />
+        </div>
       )}
 
       {/* Theme Dropdown */}
-      <div style={{ marginBottom: '20px', position: 'relative' }}>
-        <label style={{ display: 'block', color: 'white', marginBottom: '8px' }}>Theme</label>
+      <div style={{ marginBottom: '15px', position: 'relative' }}>
+        <label style={{ display: 'block', color: 'white', marginBottom: '6px', fontSize: '0.9rem' }}>Theme</label>
         <button
           onClick={() => setShowThemeDropdown(!showThemeDropdown)}
           style={{
             width: '100%',
-            padding: '12px',
-            background: 'rgba(255, 255, 255, 0.1)',
-            backdropFilter: 'blur(10px)',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            borderRadius: '8px',
+            padding: '10px 12px',
+            ...dropdownStyle,
             color: 'white',
             cursor: 'pointer',
             textAlign: 'left',
             display: 'flex',
             justifyContent: 'space-between',
-            alignItems: 'center'
+            alignItems: 'center',
+            fontSize: '0.85rem'
           }}
         >
           {getThemeLabel()}
@@ -319,11 +401,9 @@ export const SideMenu: React.FC<SideMenuProps> = ({
             top: '100%',
             left: 0,
             right: 0,
-            background: 'rgba(0, 0, 0, 0.95)',
-            backdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            borderRadius: '8px',
-            zIndex: 1001
+            ...dropdownStyle,
+            zIndex: 1001,
+            marginTop: '5px'
           }}>
             {themeOptions.map((option, index) => (
               <button
@@ -334,13 +414,14 @@ export const SideMenu: React.FC<SideMenuProps> = ({
                 }}
                 style={{
                   width: '100%',
-                  padding: '10px 12px',
+                  padding: '8px 12px',
                   background: 'transparent',
                   border: 'none',
                   color: 'white',
                   cursor: 'pointer',
                   textAlign: 'left',
-                  borderBottom: index < themeOptions.length - 1 ? '1px solid rgba(255, 255, 255, 0.1)' : 'none'
+                  borderBottom: index < themeOptions.length - 1 ? '1px solid rgba(255, 255, 255, 0.1)' : 'none',
+                  fontSize: '0.85rem'
                 }}
                 onMouseEnter={(e) => {
                   const target = e.target as HTMLElement;
@@ -359,23 +440,21 @@ export const SideMenu: React.FC<SideMenuProps> = ({
       </div>
 
       {/* Font Size Dropdown */}
-      <div style={{ marginBottom: '20px', position: 'relative' }}>
-        <label style={{ display: 'block', color: 'white', marginBottom: '8px' }}>Font Size</label>
+      <div style={{ marginBottom: '15px', position: 'relative' }}>
+        <label style={{ display: 'block', color: 'white', marginBottom: '6px', fontSize: '0.9rem' }}>Font Size</label>
         <button
           onClick={() => setShowFontSizeDropdown(!showFontSizeDropdown)}
           style={{
             width: '100%',
-            padding: '12px',
-            background: 'rgba(255, 255, 255, 0.1)',
-            backdropFilter: 'blur(10px)',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            borderRadius: '8px',
+            padding: '10px 12px',
+            ...dropdownStyle,
             color: 'white',
             cursor: 'pointer',
             textAlign: 'left',
             display: 'flex',
             justifyContent: 'space-between',
-            alignItems: 'center'
+            alignItems: 'center',
+            fontSize: '0.85rem'
           }}
         >
           {getFontSizeLabel()}
@@ -388,11 +467,9 @@ export const SideMenu: React.FC<SideMenuProps> = ({
             top: '100%',
             left: 0,
             right: 0,
-            background: 'rgba(0, 0, 0, 0.95)',
-            backdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            borderRadius: '8px',
-            zIndex: 1001
+            ...dropdownStyle,
+            zIndex: 1001,
+            marginTop: '5px'
           }}>
             {fontSizeOptions.map((option, index) => (
               <button
@@ -403,13 +480,14 @@ export const SideMenu: React.FC<SideMenuProps> = ({
                 }}
                 style={{
                   width: '100%',
-                  padding: '10px 12px',
+                  padding: '8px 12px',
                   background: 'transparent',
                   border: 'none',
                   color: 'white',
                   cursor: 'pointer',
                   textAlign: 'left',
-                  borderBottom: index < fontSizeOptions.length - 1 ? '1px solid rgba(255, 255, 255, 0.1)' : 'none'
+                  borderBottom: index < fontSizeOptions.length - 1 ? '1px solid rgba(255, 255, 255, 0.1)' : 'none',
+                  fontSize: '0.85rem'
                 }}
                 onMouseEnter={(e) => {
                   const target = e.target as HTMLElement;
@@ -429,22 +507,20 @@ export const SideMenu: React.FC<SideMenuProps> = ({
 
       {/* Font Style Dropdown */}
       <div style={{ marginBottom: '20px', position: 'relative' }}>
-        <label style={{ display: 'block', color: 'white', marginBottom: '8px' }}>Font Style</label>
+        <label style={{ display: 'block', color: 'white', marginBottom: '6px', fontSize: '0.9rem' }}>Font Style</label>
         <button
           onClick={() => setShowFontStyleDropdown(!showFontStyleDropdown)}
           style={{
             width: '100%',
-            padding: '12px',
-            background: 'rgba(255, 255, 255, 0.1)',
-            backdropFilter: 'blur(10px)',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            borderRadius: '8px',
+            padding: '10px 12px',
+            ...dropdownStyle,
             color: 'white',
             cursor: 'pointer',
             textAlign: 'left',
             display: 'flex',
             justifyContent: 'space-between',
-            alignItems: 'center'
+            alignItems: 'center',
+            fontSize: '0.85rem'
           }}
         >
           {getFontStyleLabel()}
@@ -457,11 +533,9 @@ export const SideMenu: React.FC<SideMenuProps> = ({
             top: '100%',
             left: 0,
             right: 0,
-            background: 'rgba(0, 0, 0, 0.95)',
-            backdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            borderRadius: '8px',
-            zIndex: 1001
+            ...dropdownStyle,
+            zIndex: 1001,
+            marginTop: '5px'
           }}>
             {fontStyleOptions.map((option, index) => (
               <button
@@ -472,18 +546,15 @@ export const SideMenu: React.FC<SideMenuProps> = ({
                 }}
                 style={{
                   width: '100%',
-                  padding: '10px 12px',
+                  padding: '8px 12px',
                   background: 'transparent',
                   border: 'none',
                   color: 'white',
                   cursor: 'pointer',
                   textAlign: 'left',
                   borderBottom: index < fontStyleOptions.length - 1 ? '1px solid rgba(255, 255, 255, 0.1)' : 'none',
-                  fontFamily: option.value === 'roboto' ? "'Roboto', sans-serif" :
-                            option.value === 'open-sans' ? "'Open Sans', sans-serif" :
-                            option.value === 'lato' ? "'Lato', sans-serif" :
-                            option.value === 'source-sans' ? "'Source Sans Pro', sans-serif" :
-                            "'Inter', sans-serif"
+                  fontSize: '0.85rem',
+                  fontFamily: getFontFamily(option.value)
                 }}
                 onMouseEnter={(e) => {
                   const target = e.target as HTMLElement;
@@ -510,13 +581,23 @@ export const SideMenu: React.FC<SideMenuProps> = ({
           }}
           style={{
             width: '100%',
-            background: 'rgba(255, 255, 255, 0.1)',
+            background: 'linear-gradient(135deg, #4a5568 0%, #2d3748 100%)',
             color: 'white',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            padding: '12px',
-            borderRadius: '6px',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            padding: '10px',
+            borderRadius: '8px',
             cursor: 'pointer',
-            marginBottom: '10px'
+            marginBottom: '8px',
+            fontSize: '0.85rem',
+            transition: 'all 0.2s ease'
+          }}
+          onMouseEnter={(e) => {
+            const target = e.target as HTMLElement;
+            target.style.background = 'linear-gradient(135deg, #5a6578 0%, #3d4758 100%)';
+          }}
+          onMouseLeave={(e) => {
+            const target = e.target as HTMLElement;
+            target.style.background = 'linear-gradient(135deg, #4a5568 0%, #2d3748 100%)';
           }}
         >
           View History
@@ -526,13 +607,23 @@ export const SideMenu: React.FC<SideMenuProps> = ({
           onClick={handleContactMe}
           style={{
             width: '100%',
-            background: 'rgba(255, 255, 255, 0.1)',
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
             color: 'white',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            padding: '12px',
-            borderRadius: '6px',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            padding: '10px',
+            borderRadius: '8px',
             cursor: 'pointer',
-            marginBottom: '10px'
+            marginBottom: '8px',
+            fontSize: '0.85rem',
+            transition: 'all 0.2s ease'
+          }}
+          onMouseEnter={(e) => {
+            const target = e.target as HTMLElement;
+            target.style.background = 'linear-gradient(135deg, #7689fa 0%, #865bb2 100%)';
+          }}
+          onMouseLeave={(e) => {
+            const target = e.target as HTMLElement;
+            target.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
           }}
         >
           Contact Me
@@ -545,13 +636,23 @@ export const SideMenu: React.FC<SideMenuProps> = ({
           }}
           style={{
             width: '100%',
-            background: 'rgba(255, 255, 255, 0.1)',
+            background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
             color: 'white',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            padding: '12px',
-            borderRadius: '6px',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            padding: '10px',
+            borderRadius: '8px',
             cursor: 'pointer',
-            marginBottom: '10px'
+            marginBottom: '8px',
+            fontSize: '0.85rem',
+            transition: 'all 0.2s ease'
+          }}
+          onMouseEnter={(e) => {
+            const target = e.target as HTMLElement;
+            target.style.background = 'linear-gradient(135deg, #ffa3fb 0%, #f5677c 100%)';
+          }}
+          onMouseLeave={(e) => {
+            const target = e.target as HTMLElement;
+            target.style.background = 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)';
           }}
         >
           Check This Out
@@ -564,12 +665,22 @@ export const SideMenu: React.FC<SideMenuProps> = ({
           }}
           style={{
             width: '100%',
-            background: 'rgba(255, 255, 255, 0.1)',
+            background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
             color: 'white',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            padding: '12px',
-            borderRadius: '6px',
-            cursor: 'pointer'
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            padding: '10px',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            fontSize: '0.85rem',
+            transition: 'all 0.2s ease'
+          }}
+          onMouseEnter={(e) => {
+            const target = e.target as HTMLElement;
+            target.style.background = 'linear-gradient(135deg, #5fbcfe 0%, #10f2fe 100%)';
+          }}
+          onMouseLeave={(e) => {
+            const target = e.target as HTMLElement;
+            target.style.background = 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)';
           }}
         >
           About Me
