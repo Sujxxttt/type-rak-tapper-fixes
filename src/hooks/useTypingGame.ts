@@ -10,11 +10,14 @@ export const useTypingGame = () => {
   const [typedCharacters, setTypedCharacters] = useState<string[]>([]);
   const [totalErrors, setTotalErrors] = useState<number>(0);
   const [testText, setTestText] = useState<string>('');
+  const [lastErrorPos, setLastErrorPos] = useState<number>(-1);
+  const [correctCharacters, setCorrectCharacters] = useState<number>(0);
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const textFlowRef = useRef<HTMLDivElement>(null);
   const usedWordsRef = useRef<string[]>([]);
   const generatedTextRef = useRef<string>('');
+  const wordListUsedRef = useRef<boolean>(false);
 
   const wordList = [
     "the", "quick", "brown", "fox", "jumps", "over", "lazy", "dog", "and", "runs",
@@ -25,17 +28,28 @@ export const useTypingGame = () => {
     "evolution", "making", "one", "most", "cunning", "animals", "in", "animal", "kingdom",
     "able", "outsmart", "even", "most", "experienced", "hunters", "with", "ease", "grace",
     "amazing", "wonderful", "beautiful", "fantastic", "incredible", "awesome", "brilliant",
-    "excellent", "perfect", "outstanding", "remarkable", "stunning", "magnificent", "spectacular"
+    "excellent", "perfect", "outstanding", "remarkable", "stunning", "magnificent", "spectacular",
+    "powerful", "strong", "mighty", "fierce", "brave", "bold", "confident", "determined",
+    "focused", "dedicated", "passionate", "creative", "innovative", "intelligent", "wise",
+    "clever", "skilled", "talented", "gifted", "capable", "efficient", "effective", "successful"
   ];
 
   const generateWords = (count: number): string => {
     let generatedText = "";
-    const availableWords = [...wordList];
+    let availableWords = [...wordList];
+    
+    // If we've used all words once, reset and allow repetition
+    if (wordListUsedRef.current) {
+      availableWords = [...wordList];
+      usedWordsRef.current = [];
+      wordListUsedRef.current = false;
+    }
     
     for (let i = 0; i < count; i++) {
       if (availableWords.length === 0) {
-        // Reset when all words are used
-        availableWords.push(...wordList);
+        // Mark that we've used all words at least once
+        wordListUsedRef.current = true;
+        availableWords = [...wordList];
         usedWordsRef.current = [];
       }
       
@@ -50,20 +64,17 @@ export const useTypingGame = () => {
       }
     }
     
-    // Store the generated text for unlimited flow
     generatedTextRef.current = generatedText;
     return generatedText;
   };
 
   const extendText = () => {
-    // Generate more words when we're close to the end
     const additionalWords = generateWords(50);
     generatedTextRef.current += " " + additionalWords;
     return generatedTextRef.current;
   };
 
   const renderText = (text: string) => {
-    // Find the text flow element by ID instead of using ref
     const textFlowElement = document.getElementById('text-flow');
     if (!textFlowElement) {
       console.log('Text flow element not found');
@@ -80,8 +91,6 @@ export const useTypingGame = () => {
       const span = document.createElement("span");
       span.className = "char";
       span.textContent = char === " " ? "\u00A0" : char;
-      span.style.fontSize = "2em";
-      span.style.fontWeight = "500";
       frag.appendChild(span);
       newChars.push(span);
     }
@@ -110,12 +119,21 @@ export const useTypingGame = () => {
     setPos(0);
     setTotalErrors(0);
     setTypedCharacters([]);
+    setLastErrorPos(-1);
+    setCorrectCharacters(0);
     usedWordsRef.current = [];
     generatedTextRef.current = '';
+    wordListUsedRef.current = false;
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
+    
+    // Clear all character styling
+    const allChars = document.querySelectorAll('.char');
+    allChars.forEach(char => {
+      char.classList.remove('correct', 'incorrect', 'error-left');
+    });
   };
 
   return {
@@ -135,6 +153,10 @@ export const useTypingGame = () => {
     setTotalErrors,
     testText,
     setTestText,
+    lastErrorPos,
+    setLastErrorPos,
+    correctCharacters,
+    setCorrectCharacters,
     timerRef,
     textFlowRef,
     generateWords,

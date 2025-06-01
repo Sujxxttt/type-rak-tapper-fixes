@@ -22,6 +22,7 @@ const Index: React.FC = () => {
   const [currentTestName, setCurrentTestName] = useState<string>('');
   const [deleteConfirmState, setDeleteConfirmState] = useState<boolean>(false);
   const [duration, setDuration] = useLocalStorage<number>("typeRakDuration", 60);
+  const [fontSize, setFontSize] = useLocalStorage<number>("typeRakFontSize", 150);
   const [sideMenuOpen, setSideMenuOpen] = useState<boolean>(false);
   const [currentScreen, setCurrentScreen] = useState<string>('greeting');
   const [theme, setTheme] = useLocalStorage<string>("typeRakTheme", 'cosmic-nebula');
@@ -51,12 +52,17 @@ const Index: React.FC = () => {
     totalErrors,
     setTotalErrors,
     testText,
+    lastErrorPos,
+    setLastErrorPos,
+    correctCharacters,
+    setCorrectCharacters,
     timerRef,
     textFlowRef,
     generateWords,
     renderText,
     startTimer,
-    resetTest
+    resetTest,
+    extendText
   } = useTypingGame();
 
   // Show introduction on first load
@@ -156,7 +162,7 @@ const Index: React.FC = () => {
       timerRef.current = null;
     }
     
-    const correctChars = getCorrectSigns();
+    const correctChars = correctCharacters;
     const totalTyped = typedCharacters.length;
     const mins = Math.max(elapsed / 60, 1 / 60);
     const speed = Math.round(Math.max(0, (correctChars / 5) / mins));
@@ -233,6 +239,12 @@ const Index: React.FC = () => {
     
     if (!testActive) return;
     
+    // Check if we need to extend text
+    if (pos >= testText.length - 100) {
+      const newText = extendText();
+      renderText(newText);
+    }
+    
     const expectedChar = testText[pos];
     const typedChar = e.key;
     
@@ -240,17 +252,26 @@ const Index: React.FC = () => {
       setTypedCharacters(prev => [...prev, typedChar]);
       
       if (expectedChar === typedChar) {
-        chars[pos]?.classList.remove("incorrect");
+        // Correct character
+        chars[pos]?.classList.remove("incorrect", "error-left");
         chars[pos]?.classList.add("correct");
+        setCorrectCharacters(prev => prev + 1);
         setPos(prev => prev + 1);
+        setLastErrorPos(-1); // Reset error position after correct typing
       } else {
-        if (pos > 0) {
-          chars[pos - 1]?.classList.add("error-left");
+        // Incorrect character - only count if not consecutive error
+        if (lastErrorPos !== pos - 1) {
+          chars[pos]?.classList.add("incorrect");
+          if (pos > 0) {
+            chars[pos - 1]?.classList.add("error-left");
+          }
+          setTotalErrors(prev => prev + 1);
+          setLastErrorPos(pos);
         }
-        setTotalErrors(prev => prev + 1);
+        // Don't advance position on error
       }
       
-      if (pos + 1 >= chars.length) {
+      if (pos + 1 >= chars.length && expectedChar === typedChar) {
         endTest();
       }
     }
@@ -294,7 +315,6 @@ const Index: React.FC = () => {
     setTimeout(() => {
       const textToUse = generateWords(100);
       renderText(textToUse);
-      adjustCaretPosition();
     }, 100);
   };
 
@@ -425,7 +445,7 @@ const Index: React.FC = () => {
   };
 
   const getCorrectSigns = () => {
-    return typedCharacters.filter((char, index) => char === testText[index]).length;
+    return correctCharacters;
   };
 
   const getCurrentErrorRate = () => {
@@ -851,6 +871,7 @@ const Index: React.FC = () => {
               chars={chars}
               theme={theme}
               onKeyDown={handleKeyDown}
+              fontSize={fontSize}
             />
 
             <StatsDisplay
@@ -874,7 +895,6 @@ const Index: React.FC = () => {
                   setTimeout(() => {
                     const textToUse = generateWords(100);
                     renderText(textToUse);
-                    adjustCaretPosition();
                   }, 100);
                 }}
                 style={{
@@ -1043,15 +1063,14 @@ const Index: React.FC = () => {
           handleDeleteUser={handleDeleteUser}
           deleteConfirmState={deleteConfirmState}
           duration={duration}
-          setDuration={(newDuration) => {
-            setDuration(newDuration);
-            localStorage.setItem("typeRakDuration", newDuration.toString());
-          }}
+          setDuration={setDuration}
           theme={theme}
           applyTheme={applyTheme}
           handleHistoryClick={handleHistoryClick}
           handleContactMe={handleContactMe}
           getButtonColor={getButtonColor}
+          fontSize={fontSize}
+          setFontSize={setFontSize}
         />
 
         {/* Toast Message */}
@@ -1213,7 +1232,7 @@ const Index: React.FC = () => {
           display: inline-block;
           color: ${theme === 'midnight-black' ? '#f0f0f0' : theme === 'cotton-candy-glow' ? '#555' : '#f5e9f1'};
           transition: color 0.15s ease-in-out;
-          padding: 0;
+          padding: 0 1px;
           margin: 0;
           letter-spacing: 0.01em;
         }
@@ -1224,11 +1243,11 @@ const Index: React.FC = () => {
         
         .char.incorrect {
           color: #ff1c14 !important;
-          background-color: rgba(255, 28, 20, 0.1);
+          background-color: rgba(255, 28, 20, 0.2);
         }
         
         .char.error-left {
-          background-color: rgba(255, 28, 20, 0.2);
+          background-color: rgba(255, 28, 20, 0.3);
           border-left: 2px solid #ff1c14;
         }
       `}</style>
