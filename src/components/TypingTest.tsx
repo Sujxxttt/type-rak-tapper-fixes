@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState } from 'react';
 
 interface TypingTestProps {
@@ -8,6 +7,7 @@ interface TypingTestProps {
   theme: string;
   onKeyDown: (e: KeyboardEvent) => void;
   fontSize: number;
+  fontStyle: string;
 }
 
 export const TypingTest: React.FC<TypingTestProps> = ({
@@ -16,7 +16,8 @@ export const TypingTest: React.FC<TypingTestProps> = ({
   chars,
   theme,
   onKeyDown,
-  fontSize
+  fontSize,
+  fontStyle
 }) => {
   const textFlowRef = useRef<HTMLDivElement>(null);
   const caretRef = useRef<HTMLDivElement>(null);
@@ -46,12 +47,12 @@ export const TypingTest: React.FC<TypingTestProps> = ({
       const charLeft = charRect.left - containerRect.left;
       const offset = containerCenter - charLeft - (charRect.width / 2);
       
-      // Apply offset to text flow
+      // Apply offset to text flow with smooth transition
       textFlowRef.current.style.transform = `translateX(${offset}px)`;
       
       // Position caret directly below the current character
       caretRef.current.style.left = `${containerCenter}px`;
-      caretRef.current.style.top = `${charRect.bottom - containerRect.top + 4}px`;
+      caretRef.current.style.top = `${charRect.bottom - containerRect.top + 2}px`;
       caretRef.current.style.display = 'block';
     } else {
       caretRef.current.style.display = 'none';
@@ -61,11 +62,22 @@ export const TypingTest: React.FC<TypingTestProps> = ({
   const getCaretColor = () => {
     switch (theme) {
       case 'midnight-black':
-        return 'linear-gradient(90deg, #c559f7 0%, #7f59f7 100%)';
+        return 'linear-gradient(90deg, #e559f7 0%, #9f59f7 100%)';
       case 'cotton-candy-glow':
         return 'linear-gradient(90deg, #ff59e8 0%, #ff52a8 100%)';
       default:
-        return 'linear-gradient(90deg, #c454f0 0%, #7d54f0 100%)';
+        return 'linear-gradient(90deg, #e454f0 0%, #9d54f0 100%)';
+    }
+  };
+
+  const getFontFamily = () => {
+    switch (fontStyle) {
+      case 'roboto': return "'Roboto', sans-serif";
+      case 'open-sans': return "'Open Sans', sans-serif";
+      case 'lato': return "'Lato', sans-serif";
+      case 'source-sans': return "'Source Sans Pro', sans-serif";
+      case 'inter': return "'Inter', sans-serif";
+      default: return "'Inter', sans-serif";
     }
   };
 
@@ -91,19 +103,20 @@ export const TypingTest: React.FC<TypingTestProps> = ({
       <div style={{
         position: 'relative',
         fontSize: `${fontSize}%`,
-        lineHeight: '1.6',
-        letterSpacing: '0.02em',
+        lineHeight: '1.8',
+        letterSpacing: '0.05em',
         width: '100%',
         textAlign: 'center',
         whiteSpace: 'nowrap',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        fontFamily: getFontFamily()
       }}>
         <div 
           ref={textFlowRef} 
           id="text-flow"
           style={{ 
             display: 'inline-block',
-            transition: 'transform 0.2s ease-out',
+            transition: 'transform 0.3s ease-out',
             color: theme === 'cotton-candy-glow' ? '#333' : '#fff',
             fontWeight: '500',
             userSelect: 'none',
@@ -117,8 +130,8 @@ export const TypingTest: React.FC<TypingTestProps> = ({
         ref={caretRef}
         style={{
           position: 'absolute',
-          height: '4px',
-          width: `${Math.max(20, fontSize / 5)}px`,
+          height: '3px',
+          width: `${Math.max(20, fontSize / 4)}px`,
           background: getCaretColor(),
           zIndex: 10,
           borderRadius: '2px',

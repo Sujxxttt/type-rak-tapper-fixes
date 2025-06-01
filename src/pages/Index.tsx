@@ -23,6 +23,7 @@ const Index: React.FC = () => {
   const [deleteConfirmState, setDeleteConfirmState] = useState<boolean>(false);
   const [duration, setDuration] = useLocalStorage<number>("typeRakDuration", 60);
   const [fontSize, setFontSize] = useLocalStorage<number>("typeRakFontSize", 150);
+  const [fontStyle, setFontStyle] = useLocalStorage<string>("typeRakFontStyle", 'inter');
   const [sideMenuOpen, setSideMenuOpen] = useState<boolean>(false);
   const [currentScreen, setCurrentScreen] = useState<string>('greeting');
   const [theme, setTheme] = useLocalStorage<string>("typeRakTheme", 'cosmic-nebula');
@@ -56,6 +57,8 @@ const Index: React.FC = () => {
     setLastErrorPos,
     correctCharacters,
     setCorrectCharacters,
+    actualTypedCount,
+    setActualTypedCount,
     timerRef,
     textFlowRef,
     generateWords,
@@ -163,11 +166,21 @@ const Index: React.FC = () => {
     }
     
     const correctChars = correctCharacters;
-    const totalTyped = typedCharacters.length;
+    const totalTyped = actualTypedCount;
     const mins = Math.max(elapsed / 60, 1 / 60);
     const speed = Math.round(Math.max(0, (correctChars / 5) / mins));
     const errorRate = totalTyped > 0 ? ((totalErrors / totalTyped) * 100) : 0;
     const score = Math.round(speed * ((100 - errorRate) / 100) * 10);
+    
+    console.log('Test ended with stats:', {
+      correctChars,
+      totalTyped,
+      totalErrors,
+      speed,
+      errorRate,
+      score,
+      elapsed
+    });
     
     const testResult = {
       name: currentTestName,
@@ -249,7 +262,7 @@ const Index: React.FC = () => {
     const typedChar = e.key;
     
     if (typedChar && typedChar.length === 1) {
-      setTypedCharacters(prev => [...prev, typedChar]);
+      setActualTypedCount(prev => prev + 1);
       
       if (expectedChar === typedChar) {
         // Correct character
@@ -257,13 +270,14 @@ const Index: React.FC = () => {
         chars[pos]?.classList.add("correct");
         setCorrectCharacters(prev => prev + 1);
         setPos(prev => prev + 1);
-        setLastErrorPos(-1); // Reset error position after correct typing
+        setLastErrorPos(-1);
       } else {
         // Incorrect character - only count if not consecutive error
-        if (lastErrorPos !== pos - 1) {
+        if (lastErrorPos !== pos) {
           chars[pos]?.classList.add("incorrect");
-          if (pos > 0) {
-            chars[pos - 1]?.classList.add("error-left");
+          // Add error-left class to previous character for visual feedback
+          if (pos > 0 && chars[pos - 1]) {
+            chars[pos - 1].classList.add("error-left");
           }
           setTotalErrors(prev => prev + 1);
           setLastErrorPos(pos);
@@ -449,7 +463,7 @@ const Index: React.FC = () => {
   };
 
   const getCurrentErrorRate = () => {
-    const totalSigns = typedCharacters.length;
+    const totalSigns = actualTypedCount;
     return totalSigns > 0 ? ((totalErrors / totalSigns) * 100) : 0;
   };
 
@@ -460,9 +474,24 @@ const Index: React.FC = () => {
     return <Introduction onComplete={handleIntroComplete} />;
   }
 
+  const getTitleGradient = () => {
+    if (theme === 'cosmic-nebula') {
+      return 'linear-gradient(90deg, #e454f0 0%, #bd54f0 100%)'; // 20% brighter
+    } else if (theme === 'midnight-black') {
+      return 'linear-gradient(90deg, #c559f7 0%, #7f59f7 100%)';
+    } else if (theme === 'cotton-candy-glow') {
+      return 'linear-gradient(90deg, #ff59e8 0%, #ff52a8 100%)';
+    }
+    return 'linear-gradient(90deg, #c454f0 0%, #7d54f0 100%)';
+  };
+
   return (
     <div style={{
-      fontFamily: "'Inter', sans-serif",
+      fontFamily: fontStyle === 'roboto' ? "'Roboto', sans-serif" :
+                  fontStyle === 'open-sans' ? "'Open Sans', sans-serif" :
+                  fontStyle === 'lato' ? "'Lato', sans-serif" :
+                  fontStyle === 'source-sans' ? "'Source Sans Pro', sans-serif" :
+                  "'Inter', sans-serif",
       fontSize: '112.5%',
       color: 'white',
       background: theme === 'midnight-black' ? '#000000' : 
@@ -488,16 +517,15 @@ const Index: React.FC = () => {
         }}>
           <div>
             <h1 style={{
-              backgroundImage: theme === 'midnight-black' ? 'linear-gradient(90deg, #c559f7 0%, #7f59f7 100%)' :
-                              theme === 'cotton-candy-glow' ? 'linear-gradient(90deg, #ff59e8 0%, #ff52a8 100%)' :
-                              'linear-gradient(90deg, #c454f0 0%, #7d54f0 100%)',
+              backgroundImage: getTitleGradient(),
               WebkitBackgroundClip: 'text',
               backgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               color: 'transparent',
               fontSize: '2.5rem',
               fontWeight: 700,
-              margin: 0
+              margin: 0,
+              fontFamily: "'Inter', sans-serif" // Title always uses Inter
             }}>
               TypeWave
             </h1>
@@ -872,6 +900,7 @@ const Index: React.FC = () => {
               theme={theme}
               onKeyDown={handleKeyDown}
               fontSize={fontSize}
+              fontStyle={fontStyle}
             />
 
             <StatsDisplay
@@ -1071,6 +1100,8 @@ const Index: React.FC = () => {
           getButtonColor={getButtonColor}
           fontSize={fontSize}
           setFontSize={setFontSize}
+          fontStyle={fontStyle}
+          setFontStyle={setFontStyle}
         />
 
         {/* Toast Message */}
@@ -1224,6 +1255,8 @@ const Index: React.FC = () => {
       </div>
 
       <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Open+Sans:wght@300;400;500;700&family=Lato:wght@300;400;700&family=Source+Sans+Pro:wght@300;400;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+
         @keyframes blinkCaret {
           50% { opacity: 0; }
         }
@@ -1231,10 +1264,11 @@ const Index: React.FC = () => {
         .char {
           display: inline-block;
           color: ${theme === 'midnight-black' ? '#f0f0f0' : theme === 'cotton-candy-glow' ? '#555' : '#f5e9f1'};
-          transition: color 0.15s ease-in-out;
+          transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out;
           padding: 0 1px;
           margin: 0;
           letter-spacing: 0.01em;
+          position: relative;
         }
         
         .char.correct {
@@ -1243,12 +1277,19 @@ const Index: React.FC = () => {
         
         .char.incorrect {
           color: #ff1c14 !important;
-          background-color: rgba(255, 28, 20, 0.2);
+          background-color: rgba(255, 28, 20, 0.3);
+          border-radius: 2px;
         }
         
-        .char.error-left {
-          background-color: rgba(255, 28, 20, 0.3);
-          border-left: 2px solid #ff1c14;
+        .char.error-left::before {
+          content: '';
+          position: absolute;
+          left: -2px;
+          top: 0;
+          bottom: 0;
+          width: 2px;
+          background-color: #ff1c14;
+          border-radius: 1px;
         }
       `}</style>
     </div>

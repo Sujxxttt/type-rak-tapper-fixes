@@ -12,6 +12,7 @@ export const useTypingGame = () => {
   const [testText, setTestText] = useState<string>('');
   const [lastErrorPos, setLastErrorPos] = useState<number>(-1);
   const [correctCharacters, setCorrectCharacters] = useState<number>(0);
+  const [actualTypedCount, setActualTypedCount] = useState<number>(0);
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const textFlowRef = useRef<HTMLDivElement>(null);
@@ -38,7 +39,6 @@ export const useTypingGame = () => {
     let generatedText = "";
     let availableWords = [...wordList];
     
-    // If we've used all words once, reset and allow repetition
     if (wordListUsedRef.current) {
       availableWords = [...wordList];
       usedWordsRef.current = [];
@@ -47,7 +47,6 @@ export const useTypingGame = () => {
     
     for (let i = 0; i < count; i++) {
       if (availableWords.length === 0) {
-        // Mark that we've used all words at least once
         wordListUsedRef.current = true;
         availableWords = [...wordList];
         usedWordsRef.current = [];
@@ -121,6 +120,7 @@ export const useTypingGame = () => {
     setTypedCharacters([]);
     setLastErrorPos(-1);
     setCorrectCharacters(0);
+    setActualTypedCount(0);
     usedWordsRef.current = [];
     generatedTextRef.current = '';
     wordListUsedRef.current = false;
@@ -157,6 +157,8 @@ export const useTypingGame = () => {
     setLastErrorPos,
     correctCharacters,
     setCorrectCharacters,
+    actualTypedCount,
+    setActualTypedCount,
     timerRef,
     textFlowRef,
     generateWords,
