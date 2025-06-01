@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect } from 'react';
 
 interface TypingTestProps {
@@ -47,9 +48,9 @@ export const TypingTest: React.FC<TypingTestProps> = ({
       // Apply offset to text flow
       textFlowRef.current.style.transform = `translateX(${offset}px)`;
       
-      // Position caret directly under the current character
+      // Position caret directly below the current character
       caretRef.current.style.left = `${containerCenter}px`;
-      caretRef.current.style.top = `${charRect.top - containerRect.top + charRect.height}px`;
+      caretRef.current.style.top = `${charRect.top - containerRect.top + charRect.height + 2}px`;
     }
   };
 
@@ -98,7 +99,9 @@ export const TypingTest: React.FC<TypingTestProps> = ({
             transition: 'transform 0.15s ease-out',
             color: theme === 'cotton-candy-glow' ? '#333' : '#fff',
             fontWeight: '500',
-            userSelect: 'none'
+            userSelect: 'none',
+            fontSize: '2em',
+            whiteSpace: 'nowrap'
           }}
         >
           {/* Text will be rendered here by useTypingGame hook */}
@@ -108,14 +111,13 @@ export const TypingTest: React.FC<TypingTestProps> = ({
         ref={caretRef}
         style={{
           position: 'absolute',
-          height: '4px',
-          width: '24px',
+          height: '6px',
+          width: '32px',
           background: getCaretColor(),
           fontWeight: '900',
-          fontSize: '2em',
           zIndex: 10,
-          borderRadius: '3px',
-          boxShadow: '0 0 8px rgba(0,0,0,0.3)'
+          borderRadius: '4px',
+          boxShadow: '0 0 12px rgba(0,0,0,0.4)'
         }}
       />
     </div>

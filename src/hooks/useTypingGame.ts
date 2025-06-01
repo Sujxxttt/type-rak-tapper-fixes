@@ -14,6 +14,7 @@ export const useTypingGame = () => {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const textFlowRef = useRef<HTMLDivElement>(null);
   const usedWordsRef = useRef<string[]>([]);
+  const generatedTextRef = useRef<string>('');
 
   const wordList = [
     "the", "quick", "brown", "fox", "jumps", "over", "lazy", "dog", "and", "runs",
@@ -22,7 +23,9 @@ export const useTypingGame = () => {
     "smart", "fast", "escape", "from", "danger", "using", "its", "natural", "instincts",
     "survival", "skills", "that", "have", "been", "developed", "over", "many", "years",
     "evolution", "making", "one", "most", "cunning", "animals", "in", "animal", "kingdom",
-    "able", "outsmart", "even", "most", "experienced", "hunters", "with", "ease", "grace"
+    "able", "outsmart", "even", "most", "experienced", "hunters", "with", "ease", "grace",
+    "amazing", "wonderful", "beautiful", "fantastic", "incredible", "awesome", "brilliant",
+    "excellent", "perfect", "outstanding", "remarkable", "stunning", "magnificent", "spectacular"
   ];
 
   const generateWords = (count: number): string => {
@@ -46,7 +49,17 @@ export const useTypingGame = () => {
         generatedText += " ";
       }
     }
+    
+    // Store the generated text for unlimited flow
+    generatedTextRef.current = generatedText;
     return generatedText;
+  };
+
+  const extendText = () => {
+    // Generate more words when we're close to the end
+    const additionalWords = generateWords(50);
+    generatedTextRef.current += " " + additionalWords;
+    return generatedTextRef.current;
   };
 
   const renderText = (text: string) => {
@@ -67,13 +80,15 @@ export const useTypingGame = () => {
       const span = document.createElement("span");
       span.className = "char";
       span.textContent = char === " " ? "\u00A0" : char;
+      span.style.fontSize = "2em";
+      span.style.fontWeight = "500";
       frag.appendChild(span);
       newChars.push(span);
     }
     
     textFlowElement.appendChild(frag);
     setChars(newChars);
-    console.log('Text rendered:', text.substring(0, 50) + '...');
+    console.log('Text rendered with length:', text.length);
   };
 
   const startTimer = useCallback((duration: number, onComplete: () => void) => {
@@ -96,6 +111,7 @@ export const useTypingGame = () => {
     setTotalErrors(0);
     setTypedCharacters([]);
     usedWordsRef.current = [];
+    generatedTextRef.current = '';
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
@@ -124,6 +140,7 @@ export const useTypingGame = () => {
     generateWords,
     renderText,
     startTimer,
-    resetTest
+    resetTest,
+    extendText
   };
 };

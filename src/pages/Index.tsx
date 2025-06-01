@@ -216,9 +216,9 @@ const Index: React.FC = () => {
     setCurrentScreen('results');
   };
 
-  const handleKey = useCallback((e: KeyboardEvent) => {
-    if (currentScreen !== 'typing' || gameOver) return;
-    
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (gameOver) return;
+
     if (e.key === "Backspace" && !(e.ctrlKey && e.altKey)) {
       e.preventDefault();
       return;
@@ -256,7 +256,7 @@ const Index: React.FC = () => {
     }
     
     updateStats();
-  }, [currentScreen, gameOver, testActive, pos, chars, typedCharacters, duration, testText, totalErrors]);
+  };
 
   const createUser = (username: string) => {
     if (!username.trim()) {
@@ -850,7 +850,7 @@ const Index: React.FC = () => {
               pos={pos}
               chars={chars}
               theme={theme}
-              onKeyDown={handleKey}
+              onKeyDown={handleKeyDown}
             />
 
             <StatsDisplay

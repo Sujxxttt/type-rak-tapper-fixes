@@ -83,7 +83,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
         padding: '20px'
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <h3>Settings</h3>
+          <h3 style={{ color: 'white', margin: 0 }}>Settings</h3>
           <button 
             onClick={() => setSideMenuOpen(false)}
             style={{
@@ -100,7 +100,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
 
         {/* User Management */}
         <div style={{ marginBottom: '30px' }}>
-          <h4 style={{ marginBottom: '15px' }}>Users</h4>
+          <h4 style={{ marginBottom: '15px', color: 'white' }}>Users</h4>
           {usersList.map(user => (
             <div key={user} style={{
               display: 'flex',
@@ -110,7 +110,8 @@ export const SideMenu: React.FC<SideMenuProps> = ({
               background: user === currentActiveUser ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)',
               borderRadius: '6px',
               marginBottom: '8px',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              color: 'white'
             }} onClick={() => switchUser(user)}>
               <span>{user}</span>
               {user === currentActiveUser && <span style={{ fontSize: '0.8rem' }}>✓</span>}
@@ -137,7 +138,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
 
         {/* Duration Settings with Dropdown */}
         <div style={{ marginBottom: '30px' }}>
-          <h4 style={{ marginBottom: '15px' }}>Test Duration</h4>
+          <h4 style={{ marginBottom: '15px', color: 'white' }}>Test Duration</h4>
           <div style={{ position: 'relative' }}>
             <button 
               onClick={() => setDurationDropdownOpen(!durationDropdownOpen)}
@@ -163,7 +164,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
                 top: '100%',
                 left: 0,
                 right: 0,
-                background: 'rgba(255, 255, 255, 0.9)',
+                background: 'rgba(0, 0, 0, 0.9)',
                 backdropFilter: 'blur(10px)',
                 border: '1px solid rgba(255, 255, 255, 0.3)',
                 borderRadius: '6px',
@@ -182,7 +183,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
                     style={{
                       width: '100%',
                       background: duration === option.value ? getButtonColor() : 'transparent',
-                      color: duration === option.value ? 'white' : '#333',
+                      color: 'white',
                       border: 'none',
                       padding: '10px 12px',
                       cursor: 'pointer',
@@ -199,7 +200,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
 
         {/* Theme Settings with Dropdown */}
         <div style={{ marginBottom: '30px' }}>
-          <h4 style={{ marginBottom: '15px' }}>Theme</h4>
+          <h4 style={{ marginBottom: '15px', color: 'white' }}>Theme</h4>
           <div style={{ position: 'relative' }}>
             <button 
               onClick={() => setThemeDropdownOpen(!themeDropdownOpen)}
@@ -225,7 +226,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
                 top: '100%',
                 left: 0,
                 right: 0,
-                background: 'rgba(255, 255, 255, 0.9)',
+                background: 'rgba(0, 0, 0, 0.9)',
                 backdropFilter: 'blur(10px)',
                 border: '1px solid rgba(255, 255, 255, 0.3)',
                 borderRadius: '6px',
@@ -242,7 +243,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
                     style={{
                       width: '100%',
                       background: theme === themeOption.id ? getButtonColor() : 'transparent',
-                      color: theme === themeOption.id ? 'white' : '#333',
+                      color: 'white',
                       border: 'none',
                       padding: '10px 12px',
                       cursor: 'pointer',
@@ -258,7 +259,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
         </div>
 
         {/* History Button */}
-        <div style={{ marginBottom: '30px' }}>
+        <div style={{ marginBottom: '20px' }}>
           <button 
             onClick={() => {
               setSideMenuOpen(false);
@@ -303,7 +304,10 @@ export const SideMenu: React.FC<SideMenuProps> = ({
         {/* Contact Me Button */}
         <div style={{ marginBottom: '15px' }}>
           <button 
-            onClick={handleContactMe}
+            onClick={() => {
+              setSideMenuOpen(false);
+              handleContactMe();
+            }}
             style={{
               width: '100%',
               background: 'rgba(255, 255, 255, 0.1)',
