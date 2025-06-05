@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState } from 'react';
 
 interface TypingTestProps {
@@ -48,22 +47,19 @@ export const TypingTest: React.FC<TypingTestProps> = ({
     const containerRect = container.getBoundingClientRect();
     const containerCenter = containerRect.width / 2;
     
-    // Calculate position based on current position and extra characters
-    const currentIndex = pos + extraChars.length;
-    
     if (pos < testText.length) {
       const currentChar = chars[pos];
       if (!currentChar) return;
       
       const charRect = currentChar.getBoundingClientRect();
       
-      // Calculate offset to keep current character in center
+      // Calculate offset to keep current character centered
       const charLeft = charRect.left - containerRect.left;
       const offset = containerCenter - charLeft - (charRect.width / 2);
       
-      // Apply smooth transform
+      // Apply transform to center the text
       textFlowRef.current.style.transform = `translateX(${offset}px)`;
-      textFlowRef.current.style.transition = 'transform 0.2s ease-out';
+      textFlowRef.current.style.transition = 'transform 0.1s ease-out';
       
       // Position caret below the current character
       caretRef.current.style.left = `${containerCenter}px`;
@@ -94,6 +90,8 @@ export const TypingTest: React.FC<TypingTestProps> = ({
       case 'inter': return "'Inter', sans-serif";
       case 'dancing-script': return "'Dancing Script', cursive";
       case 'pacifico': return "'Pacifico', cursive";
+      case 'lobster': return "'Lobster', cursive";
+      case 'sacramento': return "'Sacramento', cursive";
       default: return "'Inter', sans-serif";
     }
   };
@@ -136,15 +134,22 @@ export const TypingTest: React.FC<TypingTestProps> = ({
             color: theme === 'cotton-candy-glow' ? '#333' : '#fff',
             fontWeight: '500',
             userSelect: 'none',
-            whiteSpace: 'nowrap'
+            whiteSpace: 'nowrap',
+            position: 'relative'
           }}
         >
           {/* Text will be rendered here by useTypingGame hook */}
-          {extraChars.length > 0 && (
-            <span style={{ color: '#ff4444', backgroundColor: 'rgba(255, 68, 68, 0.2)' }}>
-              {extraChars.join('')}
-            </span>
-          )}
+          <span 
+            id="extra-chars"
+            style={{ 
+              color: '#ff4444', 
+              backgroundColor: 'rgba(255, 68, 68, 0.2)',
+              borderRadius: '2px',
+              padding: '0 1px'
+            }}
+          >
+            {extraChars.join('')}
+          </span>
         </div>
       </div>
       <div 

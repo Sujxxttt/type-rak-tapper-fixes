@@ -136,6 +136,14 @@ const Index: React.FC = () => {
 
   const endTest = () => {
     if (gameOver) return;
+    
+    console.log('Ending test with stats:', {
+      correctCharacters,
+      totalErrors,
+      actualTypedCount,
+      elapsed
+    });
+    
     setGameOver(true);
     setTestActive(false);
     if (timerRef.current) {
@@ -150,14 +158,13 @@ const Index: React.FC = () => {
     const errorRate = totalTyped > 0 ? ((totalErrors / totalTyped) * 100) : 0;
     const score = Math.round(speed * ((100 - errorRate) / 100) * 10);
     
-    console.log('Test ended with stats:', {
-      correctChars,
-      totalTyped,
-      totalErrors,
+    console.log('Final calculated stats:', {
       speed,
       errorRate,
       score,
-      elapsed
+      correctChars,
+      totalTyped,
+      totalErrors
     });
     
     const testResult = {
@@ -216,6 +223,8 @@ const Index: React.FC = () => {
   const handleKeyDown = (e: KeyboardEvent) => {
     if (gameOver) return;
 
+    console.log('Key pressed:', e.key, 'Current pos:', pos, 'Expected char:', testText[pos]);
+
     if (e.key === "Backspace" && !(e.ctrlKey && e.altKey)) {
       e.preventDefault();
       
@@ -226,9 +235,11 @@ const Index: React.FC = () => {
         // Move back one position and remove styling
         const newPos = pos - 1;
         setPos(newPos);
-        chars[newPos]?.classList.remove("correct", "incorrect");
-        if (chars[newPos]?.classList.contains("correct")) {
-          setCorrectCharacters(prev => prev - 1);
+        if (chars[newPos]) {
+          if (chars[newPos].classList.contains("correct")) {
+            setCorrectCharacters(prev => prev - 1);
+          }
+          chars[newPos].classList.remove("correct", "incorrect");
         }
       }
       return;
@@ -237,6 +248,7 @@ const Index: React.FC = () => {
     e.preventDefault();
     
     if (!testActive && e.key.length === 1 && pos < chars.length) {
+      console.log('Starting timer');
       startTimer(duration, endTest);
       setTestActive(true);
     }
@@ -253,28 +265,39 @@ const Index: React.FC = () => {
     const typedChar = e.key;
     
     if (typedChar && typedChar.length === 1) {
-      setActualTypedCount(prev => prev + 1);
+      setActualTypedCount(prev => {
+        const newCount = prev + 1;
+        console.log('Incrementing typed count to:', newCount);
+        return newCount;
+      });
       
       if (expectedChar === typedChar && extraChars.length === 0) {
         // Correct character
+        console.log('Correct character typed');
         chars[pos]?.classList.remove("incorrect");
         chars[pos]?.classList.add("correct");
-        setCorrectCharacters(prev => prev + 1);
+        setCorrectCharacters(prev => {
+          const newCount = prev + 1;
+          console.log('Incrementing correct characters to:', newCount);
+          return newCount;
+        });
         setPos(prev => prev + 1);
         setLastErrorPos(-1);
       } else {
-        // Incorrect character - add to extra chars or handle error
-        if (pos < testText.length) {
-          // Only count as error if it's not consecutive to the last error
-          if (lastErrorPos !== pos) {
-            setTotalErrors(prev => prev + 1);
-            setLastErrorPos(pos);
-            chars[pos]?.classList.add("incorrect");
-          }
-          
-          // Add extra character for visual feedback
-          setExtraChars(prev => [...prev, typedChar]);
+        // Incorrect character
+        console.log('Incorrect character typed');
+        if (pos < testText.length && lastErrorPos !== pos) {
+          setTotalErrors(prev => {
+            const newCount = prev + 1;
+            console.log('Incrementing total errors to:', newCount);
+            return newCount;
+          });
+          setLastErrorPos(pos);
+          chars[pos]?.classList.add("incorrect");
         }
+        
+        // Add extra character for visual feedback
+        setExtraChars(prev => [...prev, typedChar]);
       }
     }
   };
@@ -473,6 +496,8 @@ const Index: React.FC = () => {
                   fontStyle === 'source-sans' ? "'Source Sans Pro', sans-serif" :
                   fontStyle === 'dancing-script' ? "'Dancing Script', cursive" :
                   fontStyle === 'pacifico' ? "'Pacifico', cursive" :
+                  fontStyle === 'lobster' ? "'Lobster', cursive" :
+                  fontStyle === 'sacramento' ? "'Sacramento', cursive" :
                   "'Inter', sans-serif",
       fontSize: '112.5%',
       color: 'white',
@@ -1239,7 +1264,7 @@ const Index: React.FC = () => {
       </div>
 
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Open+Sans:wght@300;400;500;700&family=Lato:wght@300;400;700&family=Source+Sans+Pro:wght@300;400;600;700&family=Inter:wght@300;400;500;600;700&family=Dancing+Script:wght@400;500;600;700&family=Pacifico:wght@400&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Open+Sans:wght@300;400;500;700&family=Lato:wght@300;400;700&family=Source+Sans+Pro:wght@300;400;600;700&family=Inter:wght@300;400;500;600;700&family=Dancing+Script:wght@400;500;600;700&family=Pacifico:wght@400&family=Lobster:wght@400&family=Sacramento:wght@400&display=swap');
 
         @keyframes blinkCaret {
           50% { opacity: 0; }
