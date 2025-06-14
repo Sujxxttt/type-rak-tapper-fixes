@@ -45,6 +45,7 @@ const Index: React.FC = () => {
     testActive,
     setTestActive,
     elapsed,
+    setElapsed,
     pos,
     setPos,
     chars,
