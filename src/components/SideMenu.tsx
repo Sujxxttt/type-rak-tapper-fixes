@@ -49,18 +49,34 @@ export const SideMenu: React.FC<SideMenuProps> = ({
   fontStyle,
   setFontStyle
 }) => {
-  const [showCustomDuration, setShowCustomDuration] = useState(false);
+  // New: Add "show" state for smooth open/close animation
+  const [show, setShow] = useState(sideMenuOpen);
 
-  if (!sideMenuOpen) return null;
+  // Track menu open/close so we can animate out smoothly
+  React.useEffect(() => {
+    if (sideMenuOpen) {
+      setShow(true);
+    } else {
+      // Wait for animation before hiding sidebar
+      const timeout = setTimeout(() => setShow(false), 350);
+      return () => clearTimeout(timeout);
+    }
+  }, [sideMenuOpen]);
+
+  // Animate sidebar and backdrop using Tailwind and conditional classes
+  if (!show && !sideMenuOpen) return null;
+
+  const backdropVisible = sideMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none';
+  const sidebarVisible = sideMenuOpen ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0';
 
   const getGlassBackground = () => {
-    // Increase transparency for all themes
+    // Even more transparency for better effect
     if (theme === 'midnight-black') {
-      return 'rgba(20, 20, 20, 0.66)';
+      return 'rgba(20, 20, 20, 0.38)';
     } else if (theme === 'cotton-candy-glow') {
-      return 'rgba(255, 255, 255, 0.16)';
+      return 'rgba(255, 255, 255, 0.11)';
     }
-    return 'rgba(30, 30, 60, 0.66)';
+    return 'rgba(30, 30, 60, 0.38)';
   };
 
   const getTextColor = () => {
@@ -127,40 +143,23 @@ export const SideMenu: React.FC<SideMenuProps> = ({
     <>
       {/* Backdrop */}
       <div
+        className={`fixed top-0 left-0 w-full h-full z-[1000] transition-opacity duration-300 ease-in-out ${backdropVisible}`}
         style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          background: 'rgba(0, 0, 0, 0.5)',
-          backdropFilter: 'blur(4px)',
-          zIndex: 1000,
-          transition: 'opacity 0.3s' // for smooth fade-in/out
+          background: 'rgba(0,0,0,0.44)',
+          backdropFilter: 'blur(4px)'
         }}
         onClick={() => setSideMenuOpen(false)}
       />
 
       {/* Side Menu */}
       <div
+        className={`fixed top-0 right-0 w-[400px] max-w-[90vw] h-full z-[1001] p-5 overflow-y-auto transition-all duration-350 ease-in-out ${sidebarVisible}`}
         style={{
-          position: 'fixed',
-          top: 0,
-          right: 0,
-          width: '400px',
-          maxWidth: '90vw',
-          height: '100vh',
           background: getGlassBackground(),
-          backdropFilter: 'blur(20px)',
-          borderLeft: '1px solid rgba(255, 255, 255, 0.18)',
-          boxShadow: '-10px 0 30px rgba(0, 0, 0, 0.28)',
-          zIndex: 1001,
-          padding: '20px',
-          overflowY: 'auto',
+          backdropFilter: 'blur(24px)',
+          borderLeft: '1px solid rgba(255,255,255,0.18)',
+          boxShadow: '-10px 0 30px rgba(0,0,0,0.28)',
           color: getTextColor(),
-          transform: sideMenuOpen ? 'translateX(0)' : 'translateX(100%)',
-          opacity: sideMenuOpen ? 1 : 0,
-          transition: 'transform 0.40s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.30s cubic-bezier(0.23, 1, 0.32, 1)'
         }}
       >
         {/* Header */}

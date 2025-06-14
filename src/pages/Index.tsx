@@ -327,7 +327,8 @@ const Index: React.FC = () => {
   useEffect(() => {
     if (currentScreen !== 'typing') return;
     if (pendingTextToRender) {
-      // Try to render, if successful, clear buffer to avoid repeated rendering
+      // Debug line to help diagnose text update issues
+      console.log("About to renderText with:", pendingTextToRender);
       renderText(pendingTextToRender);
       setPendingTextToRender(null);
     }
