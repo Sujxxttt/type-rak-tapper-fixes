@@ -2,18 +2,34 @@
 import React from 'react';
 
 interface HistoryPageProps {
-  allTestHistory: any[];
+  username: string;
+  onClose: () => void;
   theme: string;
-  onBack: () => void;
-  getButtonColor: () => string;
 }
 
 export const HistoryPage: React.FC<HistoryPageProps> = ({
-  allTestHistory,
-  theme,
-  onBack,
-  getButtonColor
+  username,
+  onClose,
+  theme
 }) => {
+  const getButtonColor = () => {
+    switch (theme) {
+      case 'midnight-black':
+        return 'linear-gradient(135deg, #868686 0%, #3b3b3b 100%)';
+      case 'cotton-candy-glow':
+        return 'linear-gradient(135deg, #ffcce7 0%, #ff99c6 100%)';
+      default:
+        return 'linear-gradient(135deg, #6366f1 0%, #4338ca 100%)';
+    }
+  };
+
+  const getHistory = () => {
+    const existingHistory = localStorage.getItem(`${username}-history`);
+    return existingHistory ? JSON.parse(existingHistory) : [];
+  };
+
+  const allTestHistory = getHistory();
+
   return (
     <div style={{
       width: '100%',
@@ -34,9 +50,9 @@ export const HistoryPage: React.FC<HistoryPageProps> = ({
         padding: '30px'
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
-          <h2 style={{ margin: 0, fontSize: '2rem' }}>Test History</h2>
+          <h2 style={{ margin: 0, fontSize: '2rem', color: 'white' }}>Test History - {username}</h2>
           <button 
-            onClick={onBack}
+            onClick={onClose}
             style={{
               background: getButtonColor(),
               color: 'white',
@@ -53,7 +69,7 @@ export const HistoryPage: React.FC<HistoryPageProps> = ({
         
         {allTestHistory.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '40px' }}>
-            <p style={{ fontSize: '1.2rem', opacity: 0.8 }}>No test history available.</p>
+            <p style={{ fontSize: '1.2rem', opacity: 0.8, color: 'white' }}>No test history available.</p>
           </div>
         ) : (
           <div style={{ maxHeight: '65vh', overflowY: 'auto' }}>
@@ -65,16 +81,17 @@ export const HistoryPage: React.FC<HistoryPageProps> = ({
               padding: '15px',
               background: 'rgba(255, 255, 255, 0.05)',
               borderRadius: '8px',
-              fontWeight: 'bold'
+              fontWeight: 'bold',
+              color: 'white'
             }}>
-              <div>Test Name & Date</div>
+              <div>Date & Time</div>
               <div style={{ textAlign: 'center' }}>WPM</div>
-              <div style={{ textAlign: 'center' }}>Error Rate</div>
-              <div style={{ textAlign: 'center' }}>Score</div>
-              <div style={{ textAlign: 'center' }}>Time</div>
+              <div style={{ textAlign: 'center' }}>Errors</div>
+              <div style={{ textAlign: 'center' }}>Accuracy</div>
+              <div style={{ textAlign: 'center' }}>Duration</div>
             </div>
             
-            {allTestHistory.slice().reverse().map((test, index) => (
+            {allTestHistory.slice().reverse().map((test: any, index: number) => (
               <div key={index} style={{
                 display: 'grid',
                 gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr',
@@ -84,25 +101,26 @@ export const HistoryPage: React.FC<HistoryPageProps> = ({
                 padding: '15px',
                 borderRadius: '8px',
                 marginBottom: '10px',
-                transition: 'background 0.2s ease'
+                transition: 'background 0.2s ease',
+                color: 'white'
               }}>
                 <div>
-                  <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>{test.name}</div>
+                  <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>{test.date}</div>
                   <div style={{ fontSize: '0.85rem', opacity: 0.7 }}>
-                    {new Date(test.date).toLocaleString()}
+                    {test.time}
                   </div>
                 </div>
-                <div style={{ textAlign: 'center', fontWeight: 'bold', color: getButtonColor() }}>
+                <div style={{ textAlign: 'center', fontWeight: 'bold', color: '#6366f1' }}>
                   {test.wpm}
                 </div>
-                <div style={{ textAlign: 'center', fontWeight: 'bold', color: getButtonColor() }}>
-                  {test.errorRate}%
+                <div style={{ textAlign: 'center', fontWeight: 'bold', color: '#6366f1' }}>
+                  {test.errors}
                 </div>
-                <div style={{ textAlign: 'center', fontWeight: 'bold', color: getButtonColor() }}>
-                  {test.score}
+                <div style={{ textAlign: 'center', fontWeight: 'bold', color: '#6366f1' }}>
+                  {test.accuracy}%
                 </div>
-                <div style={{ textAlign: 'center', fontWeight: 'bold', color: getButtonColor() }}>
-                  {Math.floor(test.time / 60)}:{(test.time % 60).toString().padStart(2, '0')}
+                <div style={{ textAlign: 'center', fontWeight: 'bold', color: '#6366f1' }}>
+                  {test.duration}s
                 </div>
               </div>
             ))}
