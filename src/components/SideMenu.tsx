@@ -151,8 +151,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
           height: '100%',
           background: 'rgba(0, 0, 0, 0.4)',
           backdropFilter: 'blur(8px)',
-          zIndex: 1000,
-          transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
+          zIndex: 1000
         }}
         onClick={() => setSideMenuOpen(false)}
       />
@@ -174,8 +173,6 @@ export const SideMenu: React.FC<SideMenuProps> = ({
           padding: '24px',
           overflowY: 'auto',
           color: getTextColor(),
-          transform: sideMenuOpen ? 'translateX(0)' : 'translateX(100%)',
-          transition: 'all 0.5s cubic-bezier(0.23, 1, 0.32, 1)',
           boxShadow: '-20px 0 40px rgba(0, 0, 0, 0.15)'
         }}
       >
@@ -186,14 +183,12 @@ export const SideMenu: React.FC<SideMenuProps> = ({
           alignItems: 'center',
           marginBottom: '32px',
           paddingBottom: '16px',
-          borderBottom: `1px solid ${getBorderColor()}`,
-          transition: 'all 0.3s ease'
+          borderBottom: `1px solid ${getBorderColor()}`
         }}>
           <h2 style={{
             margin: 0,
             fontSize: '1.5rem',
-            fontWeight: 'bold',
-            transition: 'all 0.3s ease'
+            fontWeight: 'bold'
           }}>
             Settings
           </h2>
@@ -208,17 +203,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
               borderRadius: '8px',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
-              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-              transform: 'scale(1)'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-              e.currentTarget.style.transform = 'scale(1.05)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'none';
-              e.currentTarget.style.transform = 'scale(1)';
+              justifyContent: 'center'
             }}
           >
             <X size={24} />
@@ -231,8 +216,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
             marginBottom: '16px',
             fontSize: '1.1rem',
             fontWeight: '600',
-            opacity: 0.9,
-            transition: 'all 0.3s ease'
+            opacity: 0.9
           }}>
             Users
           </h3>
@@ -241,8 +225,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
             borderRadius: '16px',
             padding: '18px',
             border: getCardBorder(),
-            backdropFilter: 'blur(12px)',
-            transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
+            backdropFilter: 'blur(12px)'
           }}>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -259,20 +242,11 @@ export const SideMenu: React.FC<SideMenuProps> = ({
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     marginBottom: '12px',
-                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                     backdropFilter: 'blur(8px)'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
-                    e.currentTarget.style.transform = 'translateY(-1px)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = getDropdownBackground();
-                    e.currentTarget.style.transform = 'translateY(0)';
                   }}
                 >
                   {currentActiveUser || 'Select User'}
-                  <ChevronDown size={16} style={{ transition: 'transform 0.3s ease' }} />
+                  <ChevronDown size={16} />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
@@ -294,7 +268,6 @@ export const SideMenu: React.FC<SideMenuProps> = ({
                       cursor: 'pointer',
                       padding: '10px 16px',
                       background: user === currentActiveUser ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
-                      transition: 'all 0.2s ease',
                       borderRadius: '6px',
                       margin: '2px'
                     }}
@@ -314,15 +287,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
                 borderRadius: '10px',
                 cursor: 'pointer',
                 fontSize: '0.9rem',
-                width: '100%',
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                transform: 'scale(1)'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'scale(1.02)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'scale(1)';
+                width: '100%'
               }}
             >
               {deleteConfirmState ? 'Confirm Delete?' : 'Delete Current User'}
@@ -336,8 +301,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
             marginBottom: '16px',
             fontSize: '1.1rem',
             fontWeight: '600',
-            opacity: 0.9,
-            transition: 'all 0.3s ease'
+            opacity: 0.9
           }}>
             Test Duration
           </h3>
@@ -346,8 +310,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
             borderRadius: '16px',
             padding: '18px',
             border: getCardBorder(),
-            backdropFilter: 'blur(12px)',
-            transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
+            backdropFilter: 'blur(12px)'
           }}>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -363,20 +326,11 @@ export const SideMenu: React.FC<SideMenuProps> = ({
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                     backdropFilter: 'blur(8px)'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
-                    e.currentTarget.style.transform = 'translateY(-1px)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = getDropdownBackground();
-                    e.currentTarget.style.transform = 'translateY(0)';
                   }}
                 >
                   {getCurrentDurationLabel()}
-                  <ChevronDown size={16} style={{ transition: 'transform 0.3s ease' }} />
+                  <ChevronDown size={16} />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
@@ -405,7 +359,6 @@ export const SideMenu: React.FC<SideMenuProps> = ({
                       cursor: 'pointer',
                       padding: '10px 16px',
                       background: duration === option.value ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
-                      transition: 'all 0.2s ease',
                       borderRadius: '6px',
                       margin: '2px'
                     }}
@@ -416,12 +369,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
               </DropdownMenuContent>
             </DropdownMenu>
             {showCustomDuration && (
-              <div style={{ 
-                marginTop: '12px',
-                opacity: showCustomDuration ? 1 : 0,
-                transform: showCustomDuration ? 'translateY(0)' : 'translateY(-10px)',
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
-              }}>
+              <div style={{ marginTop: '12px' }}>
                 <CustomDurationSlider
                   value={duration}
                   onChange={(value) => setDuration(value)}
@@ -438,8 +386,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
             marginBottom: '16px',
             fontSize: '1.1rem',
             fontWeight: '600',
-            opacity: 0.9,
-            transition: 'all 0.3s ease'
+            opacity: 0.9
           }}>
             Font Size
           </h3>
@@ -448,8 +395,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
             borderRadius: '16px',
             padding: '18px',
             border: getCardBorder(),
-            backdropFilter: 'blur(12px)',
-            transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
+            backdropFilter: 'blur(12px)'
           }}>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -465,20 +411,11 @@ export const SideMenu: React.FC<SideMenuProps> = ({
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                     backdropFilter: 'blur(8px)'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
-                    e.currentTarget.style.transform = 'translateY(-1px)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = getDropdownBackground();
-                    e.currentTarget.style.transform = 'translateY(0)';
                   }}
                 >
                   {fontSize}%
-                  <ChevronDown size={16} style={{ transition: 'transform 0.3s ease' }} />
+                  <ChevronDown size={16} />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
@@ -500,7 +437,6 @@ export const SideMenu: React.FC<SideMenuProps> = ({
                       cursor: 'pointer',
                       padding: '10px 16px',
                       background: fontSize === size ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
-                      transition: 'all 0.2s ease',
                       borderRadius: '6px',
                       margin: '2px'
                     }}
@@ -519,8 +455,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
             marginBottom: '16px',
             fontSize: '1.1rem',
             fontWeight: '600',
-            opacity: 0.9,
-            transition: 'all 0.3s ease'
+            opacity: 0.9
           }}>
             Font Style
           </h3>
@@ -529,8 +464,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
             borderRadius: '16px',
             padding: '18px',
             border: getCardBorder(),
-            backdropFilter: 'blur(12px)',
-            transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
+            backdropFilter: 'blur(12px)'
           }}>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -546,20 +480,11 @@ export const SideMenu: React.FC<SideMenuProps> = ({
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                     backdropFilter: 'blur(8px)'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
-                    e.currentTarget.style.transform = 'translateY(-1px)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = getDropdownBackground();
-                    e.currentTarget.style.transform = 'translateY(0)';
                   }}
                 >
                   {fontStyleOptions.find(f => f.id === fontStyle)?.name || 'Inter'}
-                  <ChevronDown size={16} style={{ transition: 'transform 0.3s ease' }} />
+                  <ChevronDown size={16} />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
@@ -581,7 +506,6 @@ export const SideMenu: React.FC<SideMenuProps> = ({
                       cursor: 'pointer',
                       padding: '10px 16px',
                       background: fontStyle === font.id ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
-                      transition: 'all 0.2s ease',
                       borderRadius: '6px',
                       margin: '2px',
                       fontFamily: getFontFamily(font.id)
@@ -601,8 +525,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
             marginBottom: '16px',
             fontSize: '1.1rem',
             fontWeight: '600',
-            opacity: 0.9,
-            transition: 'all 0.3s ease'
+            opacity: 0.9
           }}>
             Theme
           </h3>
@@ -611,8 +534,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
             borderRadius: '16px',
             padding: '18px',
             border: getCardBorder(),
-            backdropFilter: 'blur(12px)',
-            transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
+            backdropFilter: 'blur(12px)'
           }}>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -628,20 +550,11 @@ export const SideMenu: React.FC<SideMenuProps> = ({
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                     backdropFilter: 'blur(8px)'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
-                    e.currentTarget.style.transform = 'translateY(-1px)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = getDropdownBackground();
-                    e.currentTarget.style.transform = 'translateY(0)';
                   }}
                 >
                   {themeOptions.find(t => t.id === theme)?.name || 'Cosmic Nebula'}
-                  <ChevronDown size={16} style={{ transition: 'transform 0.3s ease' }} />
+                  <ChevronDown size={16} />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
@@ -663,7 +576,6 @@ export const SideMenu: React.FC<SideMenuProps> = ({
                       cursor: 'pointer',
                       padding: '10px 16px',
                       background: theme === themeOption.id ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
-                      transition: 'all 0.2s ease',
                       borderRadius: '6px',
                       margin: '2px'
                     }}
@@ -682,8 +594,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
           borderRadius: '16px',
           padding: '18px',
           border: getCardBorder(),
-          backdropFilter: 'blur(12px)',
-          transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
+          backdropFilter: 'blur(12px)'
         }}>
           <button
             onClick={handleHistoryClick}
@@ -696,15 +607,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
               cursor: 'pointer',
               fontSize: '1rem',
               width: '100%',
-              marginBottom: '12px',
-              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-              transform: 'scale(1)'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'scale(1.02)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'scale(1)';
+              marginBottom: '12px'
             }}
           >
             View History
@@ -719,15 +622,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
               borderRadius: '10px',
               cursor: 'pointer',
               fontSize: '1rem',
-              width: '100%',
-              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-              transform: 'scale(1)'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'scale(1.02)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'scale(1)';
+              width: '100%'
             }}
           >
             Contact Developer
