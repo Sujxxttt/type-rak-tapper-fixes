@@ -12,67 +12,101 @@ export const useTypingGame = () => {
   const [totalErrors, setTotalErrors] = useState<number>(0);
   const [actualTypedCount, setActualTypedCount] = useState<number>(0);
   const [lastErrorPos, setLastErrorPos] = useState<number>(-1);
-  
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  const commonWords = [
-    'the', 'be', 'to', 'of', 'and', 'a', 'in', 'that', 'have', 'i', 'it', 'for', 'not', 'on', 'with', 'he', 'as', 'you', 'do', 'at', 'this', 'but', 'his', 'by', 'from', 'they', 'we', 'say', 'her', 'she', 'or', 'an', 'will', 'my', 'one', 'all', 'would', 'there', 'their', 'what', 'so', 'up', 'out', 'if', 'about', 'who', 'get', 'which', 'go', 'me', 'when', 'make', 'can', 'like', 'time', 'no', 'just', 'him', 'know', 'take', 'people', 'into', 'year', 'your', 'good', 'some', 'could', 'them', 'see', 'other', 'than', 'then', 'now', 'look', 'only', 'come', 'its', 'over', 'think', 'also', 'back', 'after', 'use', 'two', 'how', 'our', 'work', 'first', 'well', 'way', 'even', 'new', 'want', 'because', 'any', 'these', 'give', 'day', 'most', 'us', 'is', 'was', 'are', 'been', 'has', 'had', 'were', 'said', 'each', 'which', 'where', 'did', 'very', 'what', 'why', 'how'
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const textFlowRef = useRef<HTMLDivElement>(null);
+  const usedWordsRef = useRef<string[]>([]);
+  const generatedTextRef = useRef<string>('');
+  const wordListUsedRef = useRef<boolean>(false);
+
+  const wordList = [
+    "the", "quick", "brown", "fox", "jumps", "over", "lazy", "dog", "and", "runs",
+    "through", "forest", "with", "great", "speed", "while", "being", "chased", "by",
+    "hunter", "who", "wants", "catch", "for", "his", "dinner", "but", "fox", "too",
+    "smart", "fast", "escape", "from", "danger", "using", "its", "natural", "instincts",
+    "survival", "skills", "that", "have", "been", "developed", "over", "many", "years",
+    "evolution", "making", "one", "most", "cunning", "animals", "in", "animal", "kingdom",
+    "able", "outsmart", "even", "most", "experienced", "hunters", "with", "ease", "grace",
+    "amazing", "wonderful", "beautiful", "fantastic", "incredible", "awesome", "brilliant",
+    "excellent", "perfect", "outstanding", "remarkable", "stunning", "magnificent", "spectacular",
+    "powerful", "strong", "mighty", "fierce", "brave", "bold", "confident", "determined",
+    "focused", "dedicated", "passionate", "creative", "innovative", "intelligent", "wise",
+    "clever", "skilled", "talented", "gifted", "capable", "efficient", "effective", "successful"
   ];
 
-  const generateWords = useCallback((wordCount: number = 50): string => {
-    console.log('Generating words with count:', wordCount);
-    const words = [];
-    for (let i = 0; i < wordCount; i++) {
-      const randomWord = commonWords[Math.floor(Math.random() * commonWords.length)];
-      words.push(randomWord);
-    }
-    const generatedText = words.join(' ');
-    console.log('Generated text:', generatedText.substring(0, 100) + '...');
-    return generatedText;
-  }, []);
-
-  const renderText = useCallback((text: string) => {
-    console.log('Rendering text with length:', text.length);
-    setTestText(text);
+  const generateWords = (count: number): string => {
+    let generatedText = "";
+    let availableWords = [...wordList];
     
-    const textFlow = document.getElementById('text-flow');
-    if (!textFlow) {
-      console.log('Text flow element not found, retrying...');
-      setTimeout(() => renderText(text), 100);
+    if (wordListUsedRef.current) {
+      availableWords = [...wordList];
+      usedWordsRef.current = [];
+      wordListUsedRef.current = false;
+    }
+    
+    for (let i = 0; i < count; i++) {
+      if (availableWords.length === 0) {
+        wordListUsedRef.current = true;
+        availableWords = [...wordList];
+        usedWordsRef.current = [];
+      }
+      
+      const randomIndex = Math.floor(Math.random() * availableWords.length);
+      const selectedWord = availableWords[randomIndex];
+      availableWords.splice(randomIndex, 1);
+      usedWordsRef.current.push(selectedWord);
+      
+      generatedText += selectedWord;
+      if (i < count - 1) {
+        generatedText += " ";
+      }
+    }
+    
+    generatedTextRef.current = generatedText;
+    return generatedText;
+  };
+
+  const extendText = () => {
+    const additionalWords = generateWords(50);
+    generatedTextRef.current += " " + additionalWords;
+    return generatedTextRef.current;
+  };
+
+  const renderText = (text: string) => {
+    const textFlowElement = document.getElementById('text-flow');
+    if (!textFlowElement) {
+      console.log('Text flow element not found');
       return;
     }
-
-    textFlow.innerHTML = '';
-    const charElements: HTMLElement[] = [];
-
+    
+    setTestText(text);
+    textFlowElement.innerHTML = "";
+    const newChars: HTMLElement[] = [];
+    const frag = document.createDocumentFragment();
+    
     for (let i = 0; i < text.length; i++) {
-      const span = document.createElement('span');
-      span.textContent = text[i];
-      span.className = 'char';
-      span.id = `char-${i}`;
-      textFlow.appendChild(span);
-      charElements.push(span);
+      const char = text[i];
+      const span = document.createElement("span");
+      span.className = "char";
+      span.textContent = char === " " ? "\u00A0" : char;
+      frag.appendChild(span);
+      newChars.push(span);
     }
-
-    setChars(charElements);
-    console.log('Rendered', charElements.length, 'characters');
-  }, []);
+    
+    textFlowElement.appendChild(frag);
+    setChars(newChars);
+    console.log('Text rendered with length:', text.length);
+  };
 
   const startTimer = useCallback((duration: number, onComplete: () => void) => {
-    console.log('Starting timer for duration:', duration);
-    setElapsed(0);
-    
     if (timerRef.current) {
       clearInterval(timerRef.current);
     }
-    
     timerRef.current = setInterval(() => {
       setElapsed(prev => {
         const newElapsed = prev + 1;
-        console.log('Timer elapsed:', newElapsed);
         if (newElapsed >= duration) {
           clearInterval(timerRef.current!);
-          timerRef.current = null;
           onComplete();
         }
         return newElapsed;
@@ -80,49 +114,40 @@ export const useTypingGame = () => {
     }, 1000);
   }, []);
 
-  const resetTest = useCallback(() => {
-    console.log('Resetting test');
+  const resetTest = () => {
     setGameOver(false);
     setTestActive(false);
     setElapsed(0);
     setPos(0);
-    setCorrectCharacters(0);
     setTotalErrors(0);
+    setCorrectCharacters(0);
     setActualTypedCount(0);
     setLastErrorPos(-1);
+    usedWordsRef.current = [];
+    generatedTextRef.current = '';
+    wordListUsedRef.current = false;
     
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
+    
+    // Clear all character styling
+    const allChars = document.querySelectorAll('.char');
+    allChars.forEach(char => {
+      char.classList.remove('correct', 'incorrect', 'extra');
+    });
+  };
 
-    // Clear text flow
-    const textFlow = document.getElementById('text-flow');
-    if (textFlow) {
-      textFlow.innerHTML = '';
-    }
-    setChars([]);
-    setTestText('');
-  }, []);
-
-  const extendText = useCallback((): string => {
-    console.log('Extending text');
-    const newWords = generateWords(50);
-    const extendedText = testText + ' ' + newWords;
-    setTestText(extendedText);
-    return extendedText;
-  }, [testText, generateWords]);
-
-  const getCurrentWPM = useCallback((): number => {
+  const getCurrentWPM = () => {
     if (elapsed === 0) return 0;
-    const minutes = elapsed / 60;
-    return Math.round((correctCharacters / 5) / minutes);
-  }, [correctCharacters, elapsed]);
+    return Math.round((correctCharacters / 5) / (elapsed / 60));
+  };
 
-  const getCurrentErrorRate = useCallback((): number => {
+  const getCurrentErrorRate = () => {
     if (actualTypedCount === 0) return 0;
     return (totalErrors / actualTypedCount) * 100;
-  }, [totalErrors, actualTypedCount]);
+  };
 
   return {
     gameOver,
@@ -144,6 +169,7 @@ export const useTypingGame = () => {
     lastErrorPos,
     setLastErrorPos,
     timerRef,
+    textFlowRef,
     generateWords,
     renderText,
     startTimer,

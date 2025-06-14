@@ -1,5 +1,4 @@
-
-import React, { useEffect } from 'react';
+import React, { useRef, useEffect } from 'react';
 
 interface TypingTestProps {
   testText: string;
@@ -20,27 +19,63 @@ export const TypingTest: React.FC<TypingTestProps> = ({
   fontSize,
   fontStyle
 }) => {
+  const textFlowRef = useRef<HTMLDivElement>(null);
+  const caretRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       onKeyDown(e);
     };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
   }, [onKeyDown]);
 
   useEffect(() => {
-    if (chars.length > 0 && pos < chars.length) {
-      const currentChar = chars[pos];
-      if (currentChar) {
-        currentChar.scrollIntoView({
-          behavior: 'smooth',
-          block: 'center',
-          inline: 'center'
-        });
-      }
+    adjustCaretPosition();
+  }, [pos, chars, fontSize]);
+
+  const adjustCaretPosition = () => {
+    if (!caretRef.current || !chars || chars.length === 0 || !textFlowRef.current || !containerRef.current) {
+      return;
     }
-  }, [pos, chars]);
+    
+    const container = containerRef.current;
+    const containerRect = container.getBoundingClientRect();
+    const containerCenter = containerRect.width / 2;
+    
+    if (pos < testText.length && chars[pos]) {
+      const currentChar = chars[pos];
+      const charRect = currentChar.getBoundingClientRect();
+      
+      // Calculate offset to keep current character in center
+      const charLeft = charRect.left - containerRect.left;
+      const offset = containerCenter - charLeft - (charRect.width / 2);
+      
+      // Apply smooth transform
+      textFlowRef.current.style.transform = `translateX(${offset}px)`;
+      textFlowRef.current.style.transition = 'transform 0.1s ease-out';
+      
+      // Position caret below the current character
+      caretRef.current.style.left = `${containerCenter}px`;
+      caretRef.current.style.top = `${charRect.bottom - containerRect.top + 4}px`;
+      caretRef.current.style.display = 'block';
+    } else {
+      caretRef.current.style.display = 'none';
+    }
+  };
+
+  const getCaretColor = () => {
+    switch (theme) {
+      case 'midnight-black':
+        return 'linear-gradient(90deg, #e559f7 0%, #9f59f7 100%)';
+      case 'cotton-candy-glow':
+        return 'linear-gradient(90deg, #ff59e8 0%, #ff52a8 100%)';
+      default:
+        return 'linear-gradient(90deg, #e454f0 0%, #9d54f0 100%)';
+    }
+  };
 
   const getFontFamily = () => {
     switch (fontStyle) {
@@ -55,74 +90,63 @@ export const TypingTest: React.FC<TypingTestProps> = ({
     }
   };
 
-  if (!testText) {
-    return (
-      <div style={{
-        width: '90%',
-        maxWidth: '1000px',
-        margin: '2rem auto',
-        padding: '2rem',
-        background: theme === 'cotton-candy-glow' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.1)',
-        borderRadius: '16px',
-        backdropFilter: 'blur(10px)',
-        border: '1px solid rgba(255, 255, 255, 0.2)',
-        textAlign: 'center',
-        color: theme === 'cotton-candy-glow' ? '#333' : 'white'
-      }}>
-        Loading text...
-      </div>
-    );
-  }
-
   return (
-    <div style={{
-      width: '90%',
-      maxWidth: '1000px',
-      margin: '2rem auto',
-      padding: '2rem',
-      background: theme === 'cotton-candy-glow' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.1)',
-      borderRadius: '16px',
-      backdropFilter: 'blur(10px)',
-      border: '1px solid rgba(255, 255, 255, 0.2)',
-      // Removed box-shadow
-      position: 'relative',
-      fontSize: `${fontSize}%`,
-      fontFamily: getFontFamily(),
-      lineHeight: '1.6',
-      letterSpacing: '0.02em'
-    }}>
-      <div
-        id="text-flow"
-        style={{
-          color: theme === 'cotton-candy-glow' ? '#333' : 'white',
-          outline: 'none',
-          fontSize: 'inherit',
-          fontFamily: 'inherit',
-          lineHeight: 'inherit',
-          letterSpacing: 'inherit',
-          wordBreak: 'break-word',
-          overflowWrap: 'break-word',
-          userSelect: 'none',
-          cursor: 'text'
-        }}
-        tabIndex={0}
-      />
-      
-      {pos < chars.length && (
-        <div
-          style={{
-            position: 'absolute',
-            width: '2px',
-            height: '1.5em',
-            backgroundColor: theme === 'cotton-candy-glow' ? '#ff1fbc' : '#21b1ff',
-            animation: 'blinkCaret 1s infinite',
-            zIndex: 10,
-            pointerEvents: 'none',
-            transform: 'translateY(-10%)'
+    <div 
+      ref={containerRef}
+      style={{
+        position: 'relative',
+        width: '95%',
+        maxWidth: '1400px',
+        background: theme === 'cotton-candy-glow' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)',
+        borderRadius: '16px',
+        overflow: 'hidden',
+        marginBottom: '3rem',
+        marginTop: '4rem',
+        padding: '3rem',
+        minHeight: '180px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}
+    >
+      <div style={{
+        position: 'relative',
+        fontSize: `${fontSize}%`,
+        lineHeight: '1.6',
+        letterSpacing: '0.02em',
+        width: '100%',
+        textAlign: 'center',
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        fontFamily: getFontFamily()
+      }}>
+        <div 
+          ref={textFlowRef} 
+          id="text-flow"
+          style={{ 
+            display: 'inline-block',
+            color: theme === 'cotton-candy-glow' ? '#333' : '#fff',
+            fontWeight: '500',
+            userSelect: 'none',
+            whiteSpace: 'nowrap'
           }}
-          id="typing-cursor"
-        />
-      )}
+        >
+          {/* Text will be rendered here by useTypingGame hook */}
+        </div>
+      </div>
+      <div 
+        ref={caretRef}
+        style={{
+          position: 'absolute',
+          height: '3px',
+          width: `${Math.max(20, fontSize / 4)}px`,
+          background: getCaretColor(),
+          zIndex: 10,
+          borderRadius: '2px',
+          boxShadow: '0 0 8px rgba(0,0,0,0.3)',
+          display: 'none'
+        }}
+      />
     </div>
   );
 };

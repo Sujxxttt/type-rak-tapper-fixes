@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Slider } from '@/components/ui/slider';
+import { Slider } from '../components/ui/slider';
 
 interface CustomDurationSliderProps {
   value: number;
@@ -13,47 +13,55 @@ export const CustomDurationSlider: React.FC<CustomDurationSliderProps> = ({
   onChange,
   theme
 }) => {
-  const getSliderAccent = () => {
-    switch (theme) {
-      case 'cosmic-nebula':
-        return '#f364f0';
-      case 'midnight-black':
-        return '#c559f7';
-      case 'cotton-candy-glow':
-        return '#ff59e8';
-      default:
-        return '#c454f0';
+  const formatDuration = (seconds: number) => {
+    if (seconds < 60) {
+      return `${seconds}s`;
+    } else if (seconds < 3600) {
+      const minutes = Math.floor(seconds / 60);
+      const remainingSeconds = seconds % 60;
+      return remainingSeconds > 0 ? `${minutes}m ${remainingSeconds}s` : `${minutes}m`;
+    } else {
+      const hours = Math.floor(seconds / 3600);
+      const remainingMinutes = Math.floor((seconds % 3600) / 60);
+      return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`;
     }
   };
 
-  const formatTime = (seconds: number) => {
-    if (seconds < 60) return `${seconds}s`;
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    if (remainingSeconds === 0) return `${minutes}m`;
-    return `${minutes}m ${remainingSeconds}s`;
-  };
-
   return (
-    <div className="space-y-4 p-4">
-      <div className="flex justify-between items-center">
-        <span className="text-sm opacity-80">Duration:</span>
-        <span className="font-medium">{formatTime(value)}</span>
+    <div style={{
+      background: 'rgba(255, 255, 255, 0.1)',
+      backdropFilter: 'blur(10px)',
+      border: '1px solid rgba(255, 255, 255, 0.3)',
+      borderRadius: '12px',
+      padding: '20px',
+      marginTop: '10px'
+    }}>
+      <div style={{ 
+        color: 'white', 
+        marginBottom: '15px', 
+        textAlign: 'center',
+        fontSize: '1.1rem',
+        fontWeight: '500'
+      }}>
+        Custom Duration: {formatDuration(value)}
       </div>
       <Slider
         value={[value]}
-        onValueChange={(values) => onChange(values[0])}
-        min={15}
-        max={7200} // 2 hours
-        step={15}
+        onValueChange={(newValue) => onChange(newValue[0])}
+        min={30}
+        max={7200} // 120 minutes
+        step={30}
         className="w-full"
-        style={{
-          '--slider-accent': getSliderAccent()
-        } as React.CSSProperties}
       />
-      <div className="flex justify-between text-xs opacity-60">
-        <span>15s</span>
-        <span>2h</span>
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        color: 'rgba(255, 255, 255, 0.7)',
+        fontSize: '0.8rem',
+        marginTop: '10px'
+      }}>
+        <span>30s</span>
+        <span>120m</span>
       </div>
     </div>
   );
