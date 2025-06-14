@@ -16,7 +16,16 @@ export const StatsDisplay: React.FC<StatsDisplayProps> = ({
   currentErrorRate,
   theme
 }) => {
+  // Calculate WPM properly - correctSigns is already the correct character count
   const currentWPM = Math.round(Math.max(0, (correctSigns / 5) / Math.max(elapsed / 60, 1 / 60)));
+
+  console.log('StatsDisplay data:', {
+    elapsed,
+    correctSigns,
+    totalErrors,
+    currentErrorRate,
+    calculatedWPM: currentWPM
+  });
 
   return (
     <div style={{
