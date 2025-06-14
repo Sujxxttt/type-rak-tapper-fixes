@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { X } from 'lucide-react';
 import { TypingTest } from '../components/TypingTest';
@@ -45,6 +46,7 @@ const Index: React.FC = () => {
     testActive,
     setTestActive,
     elapsed,
+    setElapsed,
     pos,
     setPos,
     chars,
