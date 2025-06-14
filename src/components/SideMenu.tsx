@@ -49,6 +49,9 @@ export const SideMenu: React.FC<SideMenuProps> = ({
   fontStyle,
   setFontStyle
 }) => {
+  // Fix: Define showCustomDuration state for the custom duration slider
+  const [showCustomDuration, setShowCustomDuration] = useState(false);
+
   // New: Add "show" state for smooth open/close animation
   const [show, setShow] = useState(sideMenuOpen);
 
