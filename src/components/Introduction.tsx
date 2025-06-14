@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
 interface IntroductionProps {
   onCreateUser: (username: string) => void;
@@ -7,9 +7,6 @@ interface IntroductionProps {
 }
 
 export const Introduction: React.FC<IntroductionProps> = ({ onCreateUser, theme }) => {
-  const [currentTheme, setCurrentTheme] = useState(0);
-  const [animationPhase, setAnimationPhase] = useState('themes'); // 'themes' or 'moving'
-  const [titlePosition, setTitlePosition] = useState('center');
   const [username, setUsername] = useState('');
 
   const themes = [
@@ -30,38 +27,13 @@ export const Introduction: React.FC<IntroductionProps> = ({ onCreateUser, theme 
     }
   ];
 
-  useEffect(() => {
-    let themeInterval: NodeJS.Timeout;
-    let phaseTimeout: NodeJS.Timeout;
-
-    // Theme switching phase
-    themeInterval = setInterval(() => {
-      setCurrentTheme(prev => (prev + 1) % themes.length);
-    }, 1500);
-
-    // After 3 theme cycles (4.5 seconds), switch to moving phase
-    phaseTimeout = setTimeout(() => {
-      clearInterval(themeInterval);
-      setAnimationPhase('moving');
-      setTitlePosition('top-left');
-    }, 4500);
-
-    return () => {
-      clearInterval(themeInterval);
-      clearTimeout(phaseTimeout);
-    };
-  }, []);
-
   const getDefaultTheme = () => {
     return theme || 'cosmic-nebula';
   };
 
   const getCurrentThemeData = () => {
-    if (animationPhase === 'moving') {
-      const defaultTheme = getDefaultTheme();
-      return themes.find(t => t.id === defaultTheme) || themes[0];
-    }
-    return themes[currentTheme];
+    const defaultTheme = getDefaultTheme();
+    return themes.find(t => t.id === defaultTheme) || themes[0];
   };
 
   const currentThemeData = getCurrentThemeData();
@@ -81,14 +53,11 @@ export const Introduction: React.FC<IntroductionProps> = ({ onCreateUser, theme 
         right: 0,
         bottom: 0,
         background: currentThemeData.background,
-        transition: animationPhase === 'themes' ? 'background 1s ease-in-out' : 'background 2s ease-in-out',
         display: 'flex',
         flexDirection: 'column',
-        alignItems: titlePosition === 'center' ? 'center' : 'flex-start',
-        justifyContent: titlePosition === 'center' ? 'center' : 'flex-start',
-        zIndex: 9999,
-        paddingTop: titlePosition === 'top-left' ? '20px' : '0',
-        paddingLeft: titlePosition === 'top-left' ? '20px' : '0'
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 9999
       }}
     >
       <h1 
@@ -98,70 +67,51 @@ export const Introduction: React.FC<IntroductionProps> = ({ onCreateUser, theme 
           backgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
           color: 'transparent',
-          fontSize: titlePosition === 'center' ? '5rem' : '2.5rem',
+          fontSize: '5rem',
           fontWeight: 700,
           margin: 0,
-          transition: animationPhase === 'themes' ? 
-            'background-image 1s ease-in-out' : 
-            'all 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), background-image 2s ease-in-out',
-          textAlign: 'center',
-          animation: animationPhase === 'themes' ? 'colorWave 1.5s ease-in-out infinite' : 'none'
+          textAlign: 'center'
         }}
       >
         TypeWave
       </h1>
       
-      {titlePosition === 'center' && (
-        <div style={{ marginTop: '40px', textAlign: 'center' }}>
-          <input
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            placeholder="Enter your username"
-            style={{
-              padding: '15px 25px',
-              fontSize: '1.2rem',
-              borderRadius: '25px',
-              border: '1px solid rgba(255, 255, 255, 0.3)',
-              background: 'rgba(255, 255, 255, 0.1)',
-              color: 'white',
-              marginBottom: '20px',
-              minWidth: '300px',
-              textAlign: 'center'
-            }}
-            onKeyPress={(e) => e.key === 'Enter' && handleCreateUser()}
-          />
-          <br />
-          <button
-            onClick={handleCreateUser}
-            style={{
-              padding: '15px 30px',
-              fontSize: '1.1rem',
-              borderRadius: '25px',
-              border: 'none',
-              background: currentThemeData.titleGradient,
-              color: 'white',
-              cursor: 'pointer',
-              minWidth: '200px'
-            }}
-          >
-            Start Typing
-          </button>
-        </div>
-      )}
-      
-      <style>{`
-        @keyframes colorWave {
-          0%, 100% { 
-            background-position: 0% 50%;
-            transform: scale(1);
-          }
-          50% { 
-            background-position: 100% 50%;
-            transform: scale(1.02);
-          }
-        }
-      `}</style>
+      <div style={{ marginTop: '40px', textAlign: 'center' }}>
+        <input
+          type="text"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          placeholder="Enter your username"
+          style={{
+            padding: '15px 25px',
+            fontSize: '1.2rem',
+            borderRadius: '25px',
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            background: 'rgba(255, 255, 255, 0.1)',
+            color: 'white',
+            marginBottom: '20px',
+            minWidth: '300px',
+            textAlign: 'center'
+          }}
+          onKeyPress={(e) => e.key === 'Enter' && handleCreateUser()}
+        />
+        <br />
+        <button
+          onClick={handleCreateUser}
+          style={{
+            padding: '15px 30px',
+            fontSize: '1.1rem',
+            borderRadius: '25px',
+            border: 'none',
+            background: currentThemeData.titleGradient,
+            color: 'white',
+            cursor: 'pointer',
+            minWidth: '200px'
+          }}
+        >
+          Start Typing
+        </button>
+      </div>
     </div>
   );
 };
