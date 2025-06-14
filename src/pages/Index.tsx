@@ -36,6 +36,9 @@ const Index: React.FC = () => {
   const [continueTestMode, setContinueTestMode] = useState<boolean>(false);
   const [extraChars, setExtraChars] = useState<string[]>([]);
 
+  // ADD THIS STATE TO BUFFER THE GENERATED TEXT
+  const [pendingTextToRender, setPendingTextToRender] = useState<string | null>(null);
+
   const messageTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
   // Use the typing game hook
@@ -313,14 +316,24 @@ const Index: React.FC = () => {
     resetTest();
     setShowReturnConfirm(false);
     setContinueTestMode(false);
-    
-    setTimeout(() => {
-      const textToUse = generateWords(100);
-      console.log('Generated text for test:', textToUse.substring(0, 50) + '...');
-      renderText(textToUse);
-    }, 200);
+
+    // Instead of using setTimeout with renderText, set the pending text
+    const textToUse = generateWords(100);
+    setPendingTextToRender(textToUse);
+    // Do not call renderText here!
   };
 
+  // ADD THIS useEffect TO CALL renderText AFTER TypingTest is mounted
+  useEffect(() => {
+    if (currentScreen !== 'typing') return;
+    if (pendingTextToRender) {
+      // Try to render, if successful, clear buffer to avoid repeated rendering
+      renderText(pendingTextToRender);
+      setPendingTextToRender(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentScreen, pendingTextToRender]);
+  
   const continueTest = (testName?: string) => {
     if (testName) {
       startNewTest(testName);
@@ -906,10 +919,9 @@ const Index: React.FC = () => {
                   resetTest();
                   setExtraChars([]);
                   setShowReturnConfirm(false);
-                  setTimeout(() => {
-                    const textToUse = generateWords(100);
-                    renderText(textToUse);
-                  }, 100);
+                  // Instead of setTimeout, do same as startNewTest
+                  const textToUse = generateWords(100);
+                  setPendingTextToRender(textToUse);
                 }}
                 style={{
                   background: getButtonColor(),
