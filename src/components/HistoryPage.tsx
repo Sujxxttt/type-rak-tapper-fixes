@@ -2,18 +2,28 @@
 import React from 'react';
 
 interface HistoryPageProps {
-  allTestHistory: any[];
-  theme: string;
+  currentUser: string;
   onBack: () => void;
-  getButtonColor: () => string;
+  theme: string;
 }
 
 export const HistoryPage: React.FC<HistoryPageProps> = ({
-  allTestHistory,
+  currentUser,
   theme,
-  onBack,
-  getButtonColor
+  onBack
 }) => {
+  const getButtonColor = () => {
+    switch (theme) {
+      case 'cosmic-nebula': return '#667eea';
+      case 'midnight-black': return '#34495e';
+      case 'cotton-candy-glow': return '#fd79a8';
+      default: return '#667eea';
+    }
+  };
+
+  // Get user's test history
+  const history = JSON.parse(localStorage.getItem(`history_${currentUser}`) || '[]');
+
   return (
     <div style={{
       width: '100%',
@@ -34,7 +44,7 @@ export const HistoryPage: React.FC<HistoryPageProps> = ({
         padding: '30px'
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
-          <h2 style={{ margin: 0, fontSize: '2rem' }}>Test History</h2>
+          <h2 style={{ margin: 0, fontSize: '2rem', color: 'white' }}>Test History for {currentUser}</h2>
           <button 
             onClick={onBack}
             style={{
@@ -51,9 +61,9 @@ export const HistoryPage: React.FC<HistoryPageProps> = ({
           </button>
         </div>
         
-        {allTestHistory.length === 0 ? (
+        {history.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '40px' }}>
-            <p style={{ fontSize: '1.2rem', opacity: 0.8 }}>No test history available.</p>
+            <p style={{ fontSize: '1.2rem', opacity: 0.8, color: 'white' }}>No test history available.</p>
           </div>
         ) : (
           <div style={{ maxHeight: '65vh', overflowY: 'auto' }}>
@@ -65,16 +75,17 @@ export const HistoryPage: React.FC<HistoryPageProps> = ({
               padding: '15px',
               background: 'rgba(255, 255, 255, 0.05)',
               borderRadius: '8px',
-              fontWeight: 'bold'
+              fontWeight: 'bold',
+              color: 'white'
             }}>
-              <div>Test Name & Date</div>
+              <div>Date</div>
               <div style={{ textAlign: 'center' }}>WPM</div>
-              <div style={{ textAlign: 'center' }}>Error Rate</div>
-              <div style={{ textAlign: 'center' }}>Score</div>
-              <div style={{ textAlign: 'center' }}>Time</div>
+              <div style={{ textAlign: 'center' }}>Accuracy</div>
+              <div style={{ textAlign: 'center' }}>Errors</div>
+              <div style={{ textAlign: 'center' }}>Duration</div>
             </div>
             
-            {allTestHistory.slice().reverse().map((test, index) => (
+            {history.map((test: any, index: number) => (
               <div key={index} style={{
                 display: 'grid',
                 gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr',
@@ -84,10 +95,10 @@ export const HistoryPage: React.FC<HistoryPageProps> = ({
                 padding: '15px',
                 borderRadius: '8px',
                 marginBottom: '10px',
-                transition: 'background 0.2s ease'
+                transition: 'background 0.2s ease',
+                color: 'white'
               }}>
                 <div>
-                  <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>{test.name}</div>
                   <div style={{ fontSize: '0.85rem', opacity: 0.7 }}>
                     {new Date(test.date).toLocaleString()}
                   </div>
@@ -96,13 +107,13 @@ export const HistoryPage: React.FC<HistoryPageProps> = ({
                   {test.wpm}
                 </div>
                 <div style={{ textAlign: 'center', fontWeight: 'bold', color: getButtonColor() }}>
-                  {test.errorRate}%
+                  {test.accuracy}%
                 </div>
                 <div style={{ textAlign: 'center', fontWeight: 'bold', color: getButtonColor() }}>
-                  {test.score}
+                  {test.errors}
                 </div>
                 <div style={{ textAlign: 'center', fontWeight: 'bold', color: getButtonColor() }}>
-                  {Math.floor(test.time / 60)}:{(test.time % 60).toString().padStart(2, '0')}
+                  {test.duration}s
                 </div>
               </div>
             ))}

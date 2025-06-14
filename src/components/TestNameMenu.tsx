@@ -2,104 +2,80 @@
 import React from 'react';
 
 interface TestNameMenuProps {
-  showTestNameMenu: boolean;
-  newTestName: string;
-  setNewTestName: (name: string) => void;
-  onConfirm: () => void;
-  onCancel: () => void;
-  getButtonColor: () => string;
+  currentUser: string;
+  onOpenSideMenu: () => void;
+  theme: string;
 }
 
 export const TestNameMenu: React.FC<TestNameMenuProps> = ({
-  showTestNameMenu,
-  newTestName,
-  setNewTestName,
-  onConfirm,
-  onCancel,
-  getButtonColor
+  currentUser,
+  onOpenSideMenu,
+  theme
 }) => {
-  if (!showTestNameMenu) return null;
+  const getButtonColor = () => {
+    switch (theme) {
+      case 'cosmic-nebula': return '#667eea';
+      case 'midnight-black': return '#34495e';
+      case 'cotton-candy-glow': return '#fd79a8';
+      default: return '#667eea';
+    }
+  };
 
   return (
-    <>
-      <div 
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(0, 0, 0, 0.4)',
-          zIndex: 999
-        }}
-        onClick={onCancel}
-      />
-      <div style={{
-        position: 'fixed',
-        top: '50%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)',
-        background: 'rgba(255, 255, 255, 0.15)',
-        borderRadius: '16px',
-        backdropFilter: 'blur(20px)',
-        border: '1px solid rgba(255, 255, 255, 0.3)',
-        padding: '30px',
-        zIndex: 1000,
-        minWidth: '400px'
+    <div style={{
+      position: 'fixed',
+      top: '20px',
+      left: '20px',
+      right: '20px',
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      zIndex: 100
+    }}>
+      <h1 style={{
+        margin: 0,
+        fontSize: '2.5rem',
+        fontWeight: 700,
+        background: theme === 'cosmic-nebula' ? 'linear-gradient(90deg, #c454f0 0%, #7d54f0 100%)' :
+                   theme === 'midnight-black' ? 'linear-gradient(90deg, #c559f7 0%, #7f59f7 100%)' :
+                   'linear-gradient(90deg, #ff59e8 0%, #ff52a8 100%)',
+        WebkitBackgroundClip: 'text',
+        backgroundClip: 'text',
+        WebkitTextFillColor: 'transparent',
+        color: 'transparent'
       }}>
-        <h3 style={{ marginBottom: '20px', textAlign: 'center' }}>Create New Test</h3>
-        <input
-          type="text"
-          value={newTestName}
-          onChange={(e) => setNewTestName(e.target.value)}
-          placeholder="Enter test name..."
+        TypeWave
+      </h1>
+      
+      <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+        <span style={{ 
+          color: 'white', 
+          fontSize: '1.2rem',
+          background: 'rgba(255, 255, 255, 0.1)',
+          padding: '8px 16px',
+          borderRadius: '20px',
+          backdropFilter: 'blur(10px)'
+        }}>
+          {currentUser}
+        </span>
+        
+        <button
+          onClick={onOpenSideMenu}
           style={{
-            width: '100%',
-            padding: '12px',
-            marginBottom: '20px',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            borderRadius: '8px',
-            background: 'rgba(255, 255, 255, 0.1)',
+            background: getButtonColor(),
             color: 'white',
+            border: 'none',
+            padding: '12px 24px',
+            borderRadius: '25px',
             fontSize: '1rem',
-            backdropFilter: 'blur(10px)'
+            cursor: 'pointer',
+            boxShadow: '0 4px 15px rgba(0, 0, 0, 0.2)',
+            transition: 'all 0.3s ease'
           }}
-          onKeyPress={(e) => e.key === 'Enter' && onConfirm()}
-          autoFocus
-        />
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button
-            onClick={onConfirm}
-            style={{
-              flex: 1,
-              background: getButtonColor(),
-              color: 'white',
-              border: 'none',
-              padding: '12px',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontSize: '1rem'
-            }}
-          >
-            Start Test
-          </button>
-          <button
-            onClick={onCancel}
-            style={{
-              flex: 1,
-              background: 'rgba(108, 117, 125, 0.8)',
-              color: 'white',
-              border: 'none',
-              padding: '12px',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontSize: '1rem'
-            }}
-          >
-            Cancel
-          </button>
-        </div>
+        >
+          Settings
+        </button>
       </div>
-    </>
+    </div>
   );
 };

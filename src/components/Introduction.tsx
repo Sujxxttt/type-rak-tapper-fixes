@@ -9,39 +9,40 @@ interface IntroductionProps {
 export const Introduction: React.FC<IntroductionProps> = ({ onCreateUser, theme }) => {
   const [username, setUsername] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const themes = [
+    {
+      id: 'cosmic-nebula',
+      background: 'linear-gradient(45deg, #3f034a, #004a7a)',
+      titleGradient: 'linear-gradient(90deg, #c454f0 0%, #7d54f0 100%)'
+    },
+    {
+      id: 'midnight-black',
+      background: '#000000',
+      titleGradient: 'linear-gradient(90deg, #c559f7 0%, #7f59f7 100%)'
+    },
+    {
+      id: 'cotton-candy-glow',
+      background: 'linear-gradient(45deg, #3e8cb9, #2f739d)',
+      titleGradient: 'linear-gradient(90deg, #ff59e8 0%, #ff52a8 100%)'
+    }
+  ];
+
+  const getDefaultTheme = () => {
+    return theme || 'cosmic-nebula';
+  };
+
+  const getCurrentThemeData = () => {
+    const defaultTheme = getDefaultTheme();
+    return themes.find(t => t.id === defaultTheme) || themes[0];
+  };
+
+  const currentThemeData = getCurrentThemeData();
+
+  const handleCreateUser = () => {
     if (username.trim()) {
       onCreateUser(username.trim());
     }
   };
-
-  const getThemeStyles = () => {
-    switch (theme) {
-      case 'cosmic-nebula':
-        return {
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-          titleColor: 'linear-gradient(90deg, #c454f0 0%, #7d54f0 100%)'
-        };
-      case 'midnight-black':
-        return {
-          background: 'linear-gradient(135deg, #2c3e50 0%, #000000 100%)',
-          titleColor: 'linear-gradient(90deg, #c559f7 0%, #7f59f7 100%)'
-        };
-      case 'cotton-candy-glow':
-        return {
-          background: 'linear-gradient(135deg, #ffeaa7 0%, #fab1a0 50%, #fd79a8 100%)',
-          titleColor: 'linear-gradient(90deg, #ff59e8 0%, #ff52a8 100%)'
-        };
-      default:
-        return {
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-          titleColor: 'linear-gradient(90deg, #c454f0 0%, #7d54f0 100%)'
-        };
-    }
-  };
-
-  const themeStyles = getThemeStyles();
 
   return (
     <div 
@@ -51,65 +52,68 @@ export const Introduction: React.FC<IntroductionProps> = ({ onCreateUser, theme 
         left: 0,
         right: 0,
         bottom: 0,
-        background: themeStyles.background,
+        background: currentThemeData.background,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
         zIndex: 9999,
-        padding: '20px'
+        width: '100vw',
+        height: '100vh'
       }}
     >
       <h1 
         style={{
-          backgroundImage: themeStyles.titleColor,
+          backgroundImage: currentThemeData.titleGradient,
           WebkitBackgroundClip: 'text',
           backgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
           color: 'transparent',
-          fontSize: '4rem',
+          fontSize: '5rem',
           fontWeight: 700,
-          marginBottom: '2rem',
+          margin: 0,
           textAlign: 'center'
         }}
       >
         TypeWave
       </h1>
       
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+      <div style={{ marginTop: '40px', textAlign: 'center' }}>
         <input
           type="text"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           placeholder="Enter your username"
           style={{
-            padding: '12px 20px',
+            padding: '15px 25px',
+            fontSize: '1.2rem',
+            borderRadius: '25px',
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            background: 'rgba(255, 255, 255, 0.1)',
+            color: 'white',
+            marginBottom: '20px',
+            minWidth: '300px',
+            textAlign: 'center'
+          }}
+          onKeyPress={(e) => e.key === 'Enter' && handleCreateUser()}
+        />
+        <br />
+        <button
+          onClick={handleCreateUser}
+          style={{
+            padding: '15px 30px',
+            fontSize: '1.1rem',
             borderRadius: '25px',
             border: 'none',
-            fontSize: '1.1rem',
-            textAlign: 'center',
-            background: 'rgba(255, 255, 255, 0.9)',
-            color: '#333',
-            outline: 'none',
-            minWidth: '250px'
-          }}
-        />
-        <button
-          type="submit"
-          style={{
-            background: 'rgba(255, 255, 255, 0.2)',
+            background: currentThemeData.titleGradient,
             color: 'white',
-            border: '2px solid rgba(255, 255, 255, 0.3)',
-            padding: '12px 30px',
-            borderRadius: '25px',
-            fontSize: '1.1rem',
             cursor: 'pointer',
-            transition: 'all 0.3s ease'
+            minWidth: '200px'
           }}
         >
           Start Typing
         </button>
-      </form>
+      </div>
     </div>
   );
 };

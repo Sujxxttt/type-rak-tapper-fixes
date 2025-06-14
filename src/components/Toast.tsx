@@ -5,10 +5,20 @@ import { X } from 'lucide-react';
 interface ToastProps {
   message: string;
   onClose: () => void;
+  theme: string;
 }
 
-export const Toast: React.FC<ToastProps> = ({ message, onClose }) => {
+export const Toast: React.FC<ToastProps> = ({ message, onClose, theme }) => {
   if (!message) return null;
+
+  const getAccentColor = () => {
+    switch (theme) {
+      case 'cosmic-nebula': return '#667eea';
+      case 'midnight-black': return '#34495e';
+      case 'cotton-candy-glow': return '#fd79a8';
+      default: return '#667eea';
+    }
+  };
 
   return (
     <div style={{
@@ -18,7 +28,7 @@ export const Toast: React.FC<ToastProps> = ({ message, onClose }) => {
       transform: 'translateX(-50%)',
       background: 'rgba(255, 255, 255, 0.15)',
       backdropFilter: 'blur(20px)',
-      border: '1px solid rgba(255, 255, 255, 0.3)',
+      border: `1px solid ${getAccentColor()}`,
       color: 'white',
       padding: '12px 24px 12px 24px',
       borderRadius: '12px',
