@@ -102,12 +102,14 @@ export const useTypingGame = () => {
     if (timerRef.current) {
       clearInterval(timerRef.current);
     }
+    setElapsed(0); // Reset elapsed time when starting
     timerRef.current = setInterval(() => {
       setElapsed(prev => {
         const newElapsed = prev + 1;
         if (newElapsed >= duration) {
           clearInterval(timerRef.current!);
           onComplete();
+          return newElapsed;
         }
         return newElapsed;
       });
