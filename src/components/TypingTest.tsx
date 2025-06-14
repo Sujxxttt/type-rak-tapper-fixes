@@ -86,21 +86,21 @@ export const TypingTest: React.FC<TypingTestProps> = ({
     switch (theme) {
       case 'midnight-black':
         return {
-          untyped: '#888888',
+          untyped: '#FFFFFF',
           correct: '#22c55e',
           incorrect: '#f87171',
           background: 'rgba(0, 0, 0, 0.1)'
         };
       case 'cotton-candy-glow':
         return {
-          untyped: '#666666',
+          untyped: '#333333',
           correct: '#059669',
           incorrect: '#dc2626',
           background: 'rgba(255, 255, 255, 0.2)'
         };
       default:
         return {
-          untyped: '#CCCCCC',
+          untyped: '#FFFFFF',
           correct: '#4ade80',
           incorrect: '#ef4444',
           background: 'rgba(0, 0, 0, 0.1)'
