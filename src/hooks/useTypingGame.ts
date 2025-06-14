@@ -75,7 +75,6 @@ export const useTypingGame = () => {
   const renderText = (text: string) => {
     console.log('Rendering text with length:', text.length);
     
-    // Wait for next tick to ensure DOM is ready
     setTimeout(() => {
       const textFlowElement = document.getElementById('text-flow');
       if (!textFlowElement) {
@@ -140,7 +139,6 @@ export const useTypingGame = () => {
       timerRef.current = null;
     }
     
-    // Clear all character styling
     const allChars = document.querySelectorAll('.char');
     allChars.forEach(char => {
       char.classList.remove('correct', 'incorrect', 'extra');
@@ -163,7 +161,7 @@ export const useTypingGame = () => {
     testActive,
     setTestActive,
     elapsed,
-    setElapsed,
+    setElapsed, // This was missing!
     pos,
     setPos,
     chars,

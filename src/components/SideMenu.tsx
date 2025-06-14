@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { X, ChevronDown } from 'lucide-react';
 import {
   DropdownMenu,
@@ -7,6 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { CustomDurationSlider } from './CustomDurationSlider';
 
 interface SideMenuProps {
   sideMenuOpen: boolean;
@@ -49,6 +50,8 @@ export const SideMenu: React.FC<SideMenuProps> = ({
   fontStyle,
   setFontStyle
 }) => {
+  const [showCustomDuration, setShowCustomDuration] = useState(false);
+
   if (!sideMenuOpen) return null;
 
   const getGlassBackground = () => {
@@ -87,6 +90,38 @@ export const SideMenu: React.FC<SideMenuProps> = ({
     { id: 'dancing-script', name: 'Dancing Script' },
     { id: 'pacifico', name: 'Pacifico' }
   ];
+
+  const durationOptions = [
+    { label: '30 seconds', value: 30 },
+    { label: '1 Minute', value: 60 },
+    { label: '2 Minutes', value: 120 },
+    { label: '3 Minutes', value: 180 },
+    { label: '5 Minutes', value: 300 },
+    { label: '10 Minutes', value: 600 },
+    { label: '30 Minutes', value: 1800 },
+    { label: '45 Minutes', value: 2700 },
+    { label: '60 Minutes', value: 3600 },
+    { label: 'Custom', value: -1 }
+  ];
+
+  const themeOptions = [
+    { id: 'cosmic-nebula', name: 'Cosmic Nebula' },
+    { id: 'midnight-black', name: 'Midnight Black' },
+    { id: 'cotton-candy-glow', name: 'Cotton Candy Glow' }
+  ];
+
+  const formatDuration = (seconds: number) => {
+    if (seconds < 60) return `${seconds} seconds`;
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    if (remainingSeconds === 0) return `${minutes} Minute${minutes > 1 ? 's' : ''}`;
+    return `${minutes}m ${remainingSeconds}s`;
+  };
+
+  const getCurrentDurationLabel = () => {
+    const option = durationOptions.find(opt => opt.value === duration);
+    return option ? option.label : formatDuration(duration);
+  };
 
   return (
     <>
@@ -183,41 +218,52 @@ export const SideMenu: React.FC<SideMenuProps> = ({
             padding: '15px',
             border: '1px solid rgba(255, 255, 255, 0.1)'
           }}>
-            {usersList.map((user) => (
-              <div
-                key={user}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    borderRadius: '6px',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    color: getTextColor(),
+                    cursor: 'pointer',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '10px'
+                  }}
+                >
+                  {currentActiveUser || 'Select User'}
+                  <ChevronDown size={16} />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
                 style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  padding: '8px 0',
-                  borderBottom: user !== usersList[usersList.length - 1] ? '1px solid rgba(255, 255, 255, 0.1)' : 'none'
+                  background: getGlassBackground(),
+                  backdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  borderRadius: '8px',
+                  color: getTextColor(),
+                  zIndex: 1002
                 }}
               >
-                <span style={{
-                  fontWeight: user === currentActiveUser ? 'bold' : 'normal',
-                  opacity: user === currentActiveUser ? 1 : 0.8
-                }}>
-                  {user} {user === currentActiveUser && '(Active)'}
-                </span>
-                {user !== currentActiveUser && (
-                  <button
+                {usersList.map((user) => (
+                  <DropdownMenuItem
+                    key={user}
                     onClick={() => switchUser(user)}
                     style={{
-                      background: getButtonColor(),
-                      color: 'white',
-                      border: 'none',
-                      padding: '4px 8px',
-                      borderRadius: '4px',
                       cursor: 'pointer',
-                      fontSize: '0.8rem'
+                      padding: '8px 12px',
+                      background: user === currentActiveUser ? 'rgba(255, 255, 255, 0.2)' : 'transparent'
                     }}
                   >
-                    Switch
-                  </button>
-                )}
-              </div>
-            ))}
+                    {user} {user === currentActiveUser && '(Active)'}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
             <button
               onClick={handleDeleteUser}
               style={{
@@ -228,7 +274,6 @@ export const SideMenu: React.FC<SideMenuProps> = ({
                 borderRadius: '6px',
                 cursor: 'pointer',
                 fontSize: '0.9rem',
-                marginTop: '10px',
                 width: '100%'
               }}
             >
@@ -253,25 +298,67 @@ export const SideMenu: React.FC<SideMenuProps> = ({
             padding: '15px',
             border: '1px solid rgba(255, 255, 255, 0.1)'
           }}>
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              {[15, 30, 60, 120].map((time) => (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
                 <button
-                  key={time}
-                  onClick={() => setDuration(time)}
                   style={{
-                    background: duration === time ? getButtonColor() : 'rgba(255, 255, 255, 0.1)',
-                    color: 'white',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    width: '100%',
                     padding: '8px 12px',
                     borderRadius: '6px',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    color: getTextColor(),
                     cursor: 'pointer',
-                    fontSize: '0.9rem'
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
                   }}
                 >
-                  {time}s
+                  {getCurrentDurationLabel()}
+                  <ChevronDown size={16} />
                 </button>
-              ))}
-            </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                style={{
+                  background: getGlassBackground(),
+                  backdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  borderRadius: '8px',
+                  color: getTextColor(),
+                  zIndex: 1002
+                }}
+              >
+                {durationOptions.map((option) => (
+                  <DropdownMenuItem
+                    key={option.label}
+                    onClick={() => {
+                      if (option.value === -1) {
+                        setShowCustomDuration(true);
+                      } else {
+                        setDuration(option.value);
+                        setShowCustomDuration(false);
+                      }
+                    }}
+                    style={{
+                      cursor: 'pointer',
+                      padding: '8px 12px',
+                      background: duration === option.value ? 'rgba(255, 255, 255, 0.2)' : 'transparent'
+                    }}
+                  >
+                    {option.label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+            {showCustomDuration && (
+              <div style={{ marginTop: '10px' }}>
+                <CustomDurationSlider
+                  value={duration}
+                  onChange={(value) => setDuration(value)}
+                  theme={theme}
+                />
+              </div>
+            )}
           </div>
         </div>
 
@@ -420,30 +507,51 @@ export const SideMenu: React.FC<SideMenuProps> = ({
             padding: '15px',
             border: '1px solid rgba(255, 255, 255, 0.1)'
           }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {[
-                { id: 'cosmic-nebula', name: 'Cosmic Nebula' },
-                { id: 'midnight-black', name: 'Midnight Black' },
-                { id: 'cotton-candy-glow', name: 'Cotton Candy Glow' }
-              ].map((themeOption) => (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
                 <button
-                  key={themeOption.id}
-                  onClick={() => applyTheme(themeOption.id)}
                   style={{
-                    background: theme === themeOption.id ? getButtonColor() : 'rgba(255, 255, 255, 0.1)',
-                    color: 'white',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    padding: '10px',
+                    width: '100%',
+                    padding: '8px 12px',
                     borderRadius: '6px',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    color: getTextColor(),
                     cursor: 'pointer',
-                    fontSize: '0.9rem',
-                    textAlign: 'left'
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
                   }}
                 >
-                  {themeOption.name}
+                  {themeOptions.find(t => t.id === theme)?.name || 'Cosmic Nebula'}
+                  <ChevronDown size={16} />
                 </button>
-              ))}
-            </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                style={{
+                  background: getGlassBackground(),
+                  backdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  borderRadius: '8px',
+                  color: getTextColor(),
+                  zIndex: 1002
+                }}
+              >
+                {themeOptions.map((themeOption) => (
+                  <DropdownMenuItem
+                    key={themeOption.id}
+                    onClick={() => applyTheme(themeOption.id)}
+                    style={{
+                      cursor: 'pointer',
+                      padding: '8px 12px',
+                      background: theme === themeOption.id ? 'rgba(255, 255, 255, 0.2)' : 'transparent'
+                    }}
+                  >
+                    {themeOption.name}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 
