@@ -214,6 +214,8 @@ const Index: React.FC = () => {
   };
 
   const handleKeyDown = (e: KeyboardEvent) => {
+    console.log('Key pressed:', e.key, 'Test active:', testActive, 'Game over:', gameOver);
+    
     if (gameOver) return;
 
     // Disable backspace completely during active tests
@@ -225,6 +227,7 @@ const Index: React.FC = () => {
     e.preventDefault();
     
     if (!testActive && e.key.length === 1 && pos < chars.length) {
+      console.log('Starting test with first keypress');
       startTimer(duration, endTest);
       setTestActive(true);
     }
@@ -241,19 +244,32 @@ const Index: React.FC = () => {
     const typedChar = e.key;
     
     if (typedChar && typedChar.length === 1) {
-      setActualTypedCount(prev => prev + 1);
+      console.log('Processing character:', typedChar, 'Expected:', expectedChar);
+      setActualTypedCount(prev => {
+        const newCount = prev + 1;
+        console.log('Total typed count:', newCount);
+        return newCount;
+      });
       
       if (expectedChar === typedChar) {
         // Correct character
         chars[pos]?.classList.remove("incorrect");
         chars[pos]?.classList.add("correct");
-        setCorrectCharacters(prev => prev + 1);
+        setCorrectCharacters(prev => {
+          const newCorrect = prev + 1;
+          console.log('Correct characters:', newCorrect);
+          return newCorrect;
+        });
         setPos(prev => prev + 1);
         setLastErrorPos(-1);
       } else {
         // Incorrect character - only count as error if it's not consecutive to the last error
         if (lastErrorPos !== pos) {
-          setTotalErrors(prev => prev + 1);
+          setTotalErrors(prev => {
+            const newErrors = prev + 1;
+            console.log('Total errors:', newErrors);
+            return newErrors;
+          });
           setLastErrorPos(pos);
         }
         chars[pos]?.classList.add("incorrect");
@@ -290,6 +306,7 @@ const Index: React.FC = () => {
   };
 
   const startNewTest = (testName: string) => {
+    console.log('Starting new test:', testName);
     setCurrentTestName(testName);
     setCurrentScreen('typing');
     resetTest();
@@ -298,8 +315,9 @@ const Index: React.FC = () => {
     
     setTimeout(() => {
       const textToUse = generateWords(100);
+      console.log('Generated text for test:', textToUse.substring(0, 50) + '...');
       renderText(textToUse);
-    }, 100);
+    }, 200);
   };
 
   const continueTest = (testName?: string) => {

@@ -42,25 +42,38 @@ export const TypingTest: React.FC<TypingTestProps> = ({
     }
     
     const container = containerRef.current;
+    const textFlow = textFlowRef.current;
     const containerRect = container.getBoundingClientRect();
     const containerCenter = containerRect.width / 2;
     
     if (pos < testText.length && chars[pos]) {
       const currentChar = chars[pos];
       const charRect = currentChar.getBoundingClientRect();
+      const textFlowRect = textFlow.getBoundingClientRect();
       
-      // Calculate offset to keep current character in center
-      const charLeft = charRect.left - containerRect.left;
-      const offset = containerCenter - charLeft - (charRect.width / 2);
+      // Calculate how much to move the text to keep current character centered
+      const charOffsetFromTextStart = charRect.left - textFlowRect.left;
+      const desiredTextLeft = containerCenter - charOffsetFromTextStart - (charRect.width / 2);
+      const currentTextLeft = textFlowRect.left - containerRect.left;
+      const translateAmount = desiredTextLeft - currentTextLeft;
       
-      // Apply smooth transform
-      textFlowRef.current.style.transform = `translateX(${offset}px)`;
-      textFlowRef.current.style.transition = 'transform 0.1s ease-out';
+      // Apply smooth transform with reduced frequency of updates
+      const currentTransform = textFlow.style.transform;
+      const currentTranslateMatch = currentTransform.match(/translateX\(([^)]+)\)/);
+      const currentTranslateX = currentTranslateMatch ? parseFloat(currentTranslateMatch[1]) : 0;
+      const newTranslateX = currentTranslateX + translateAmount;
       
-      // Position caret below the current character
-      caretRef.current.style.left = `${containerCenter}px`;
-      caretRef.current.style.top = `${charRect.bottom - containerRect.top + 4}px`;
+      // Only update if the change is significant enough (reduces jitter)
+      if (Math.abs(translateAmount) > 2) {
+        textFlow.style.transform = `translateX(${newTranslateX}px)`;
+        textFlow.style.transition = 'transform 0.15s ease-out';
+      }
+      
+      // Position caret at center
+      caretRef.current.style.left = `${containerCenter - (charRect.width / 2)}px`;
+      caretRef.current.style.top = `${charRect.bottom - containerRect.top + 6}px`;
       caretRef.current.style.display = 'block';
+      caretRef.current.style.width = `${Math.max(charRect.width, 2)}px`;
     } else {
       caretRef.current.style.display = 'none';
     }
@@ -97,8 +110,11 @@ export const TypingTest: React.FC<TypingTestProps> = ({
         position: 'relative',
         width: '95%',
         maxWidth: '1400px',
-        background: theme === 'cotton-candy-glow' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)',
-        borderRadius: '16px',
+        background: theme === 'cotton-candy-glow' 
+          ? 'rgba(255, 255, 255, 0.15)' 
+          : 'rgba(255, 255, 255, 0.08)',
+        backdropFilter: 'blur(12px)',
+        borderRadius: '20px',
         overflow: 'hidden',
         marginBottom: '3rem',
         marginTop: '4rem',
@@ -106,7 +122,9 @@ export const TypingTest: React.FC<TypingTestProps> = ({
         minHeight: '180px',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'center'
+        justifyContent: 'center',
+        border: '1px solid rgba(255, 255, 255, 0.2)',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
       }}
     >
       <div style={{
@@ -128,7 +146,8 @@ export const TypingTest: React.FC<TypingTestProps> = ({
             color: theme === 'cotton-candy-glow' ? '#333' : '#fff',
             fontWeight: '500',
             userSelect: 'none',
-            whiteSpace: 'nowrap'
+            whiteSpace: 'nowrap',
+            willChange: 'transform'
           }}
         >
           {/* Text will be rendered here by useTypingGame hook */}
@@ -139,12 +158,12 @@ export const TypingTest: React.FC<TypingTestProps> = ({
         style={{
           position: 'absolute',
           height: '3px',
-          width: `${Math.max(20, fontSize / 4)}px`,
           background: getCaretColor(),
           zIndex: 10,
           borderRadius: '2px',
-          boxShadow: '0 0 8px rgba(0,0,0,0.3)',
-          display: 'none'
+          boxShadow: '0 0 12px rgba(0,0,0,0.4)',
+          display: 'none',
+          animation: 'blinkCaret 1s infinite'
         }}
       />
     </div>
