@@ -6,6 +6,7 @@ import { SideMenu } from '../components/SideMenu';
 import { HistoryPage } from '../components/HistoryPage';
 import { Introduction } from '../components/Introduction';
 import { TestNameMenu } from '../components/TestNameMenu';
+import { ResultsPage } from '../components/ResultsPage';
 import { Toast } from '../components/Toast';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
@@ -14,6 +15,7 @@ const Index = () => {
   const [showHistory, setShowHistory] = useState<boolean>(false);
   const [showIntroduction, setShowIntroduction] = useState<boolean>(true);
   const [showNameMenu, setShowNameMenu] = useState<boolean>(false);
+  const [showResults, setShowResults] = useState<boolean>(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [users, setUsers] = useLocalStorage<string[]>('users', []);
   const [currentActiveUser, setCurrentActiveUser] = useLocalStorage<string | null>('activeUser', null);
@@ -24,10 +26,22 @@ const Index = () => {
   const [fontStyle, setFontStyle] = useLocalStorage<string>('fontStyle', 'inter');
   const [extraChars, setExtraChars] = useState<string[]>([]);
 
-  const themes: { [key: string]: { background: string; color: string } } = {
-    'cosmic-nebula': { background: '#0F172A', color: '#E2E8F0' },
-    'midnight-black': { background: '#1E1E1E', color: '#FFFFFF' },
-    'cotton-candy-glow': { background: '#FFDBE9', color: '#333333' }
+  const themes: { [key: string]: { background: string; color: string; accent: string; } } = {
+    'cosmic-nebula': { 
+      background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)', 
+      color: '#E2E8F0',
+      accent: '#00D4FF'
+    },
+    'midnight-black': { 
+      background: 'linear-gradient(135deg, #1E1E1E 0%, #2D2D2D 50%, #1A1A1A 100%)', 
+      color: '#FFFFFF',
+      accent: '#e559f7'
+    },
+    'cotton-candy-glow': { 
+      background: 'linear-gradient(135deg, #FFE5F1 0%, #FFD1E3 50%, #FFBDD6 100%)', 
+      color: '#333333',
+      accent: '#FF6B9D'
+    }
   };
 
   const {
@@ -36,6 +50,7 @@ const Index = () => {
     testActive,
     setTestActive,
     elapsed,
+    setElapsed,
     pos,
     setPos,
     chars,
@@ -59,6 +74,14 @@ const Index = () => {
     getCurrentErrorRate
   } = useTypingGame();
 
+  const calculateScore = () => {
+    const wpm = getCurrentWPM();
+    const accuracy = Math.max(0, 100 - getCurrentErrorRate());
+    // Score calculation: WPM contributes 70%, accuracy contributes 30%
+    const score = Math.round((wpm * 7) + (accuracy * 3));
+    return Math.min(1000, Math.max(0, score));
+  };
+
   const saveResults = useCallback(() => {
     if (!currentActiveUser) return;
     const newResult = {
@@ -67,14 +90,15 @@ const Index = () => {
       wpm: getCurrentWPM(),
       errors: totalErrors,
       accuracy: Math.max(0, 100 - getCurrentErrorRate()),
-      duration: elapsed
+      duration: elapsed,
+      score: calculateScore()
     };
 
     const existingHistory = localStorage.getItem(`${currentActiveUser}-history`);
     const history = existingHistory ? JSON.parse(existingHistory) : [];
     history.push(newResult);
     localStorage.setItem(`${currentActiveUser}-history`, JSON.stringify(history));
-  }, [currentActiveUser, getCurrentWPM, totalErrors, getCurrentErrorRate, elapsed]);
+  }, [currentActiveUser, getCurrentWPM, totalErrors, getCurrentErrorRate, elapsed, calculateScore]);
 
   const createUser = useCallback((username: string) => {
     if (users.includes(username)) {
@@ -126,16 +150,16 @@ const Index = () => {
   const getButtonColor = () => {
     switch (theme) {
       case 'midnight-black':
-        return 'linear-gradient(135deg, #868686 0%, #3b3b3b 100%)';
+        return 'linear-gradient(135deg, #e559f7 0%, #9f59f7 100%)';
       case 'cotton-candy-glow':
-        return 'linear-gradient(135deg, #ffcce7 0%, #ff99c6 100%)';
+        return 'linear-gradient(135deg, #FF6B9D 0%, #FF8FA3 100%)';
       default:
-        return 'linear-gradient(135deg, #6366f1 0%, #4338ca 100%)';
+        return 'linear-gradient(135deg, #00D4FF 0%, #0099CC 100%)';
     }
   };
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    if (gameOver || showHistory || showIntroduction || showNameMenu) return;
+    if (gameOver || showHistory || showIntroduction || showNameMenu || showResults) return;
 
     if (!testActive && e.key.length === 1) {
       setTestActive(true);
@@ -143,6 +167,7 @@ const Index = () => {
         setGameOver(true);
         setTestActive(false);
         saveResults();
+        setShowResults(true);
       });
     }
 
@@ -150,9 +175,11 @@ const Index = () => {
 
     if (e.key === 'Escape') {
       resetTest();
+      setShowResults(false);
       return;
     }
 
+    // Block backspace during test
     if (e.key === 'Backspace') {
       e.preventDefault();
       return;
@@ -189,7 +216,7 @@ const Index = () => {
         }
       }
     }
-  }, [gameOver, showHistory, showIntroduction, showNameMenu, testActive, duration, startTimer, pos, testText, chars, lastErrorPos, setTestActive, setActualTypedCount, setCorrectCharacters, setPos, setTotalErrors, setLastErrorPos, extendText, renderText, resetTest, saveResults]);
+  }, [gameOver, showHistory, showIntroduction, showNameMenu, showResults, testActive, duration, startTimer, pos, testText, chars, lastErrorPos, setTestActive, setActualTypedCount, setCorrectCharacters, setPos, setTotalErrors, setLastErrorPos, extendText, renderText, resetTest, saveResults]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
@@ -208,6 +235,11 @@ const Index = () => {
     const initialText = generateWords(250);
     renderText(initialText);
   }, []);
+
+  const handleResultsClose = () => {
+    setShowResults(false);
+    resetTest();
+  };
 
   return (
     <div 
@@ -291,8 +323,18 @@ const Index = () => {
             theme={theme}
           />
         )}
+        {showResults && (
+          <ResultsPage
+            wpm={getCurrentWPM()}
+            accuracy={Math.max(0, 100 - getCurrentErrorRate())}
+            errors={totalErrors}
+            score={calculateScore()}
+            onClose={handleResultsClose}
+            theme={theme}
+          />
+        )}
 
-        {!showIntroduction && !showHistory && !currentActiveUser && (
+        {!showIntroduction && !showHistory && !showResults && !currentActiveUser && (
           <div style={{
             textAlign: 'center',
             color: themes[theme].color,
@@ -326,16 +368,8 @@ const Index = () => {
           </div>
         )}
 
-        {currentActiveUser && !showIntroduction && !showHistory && (
+        {currentActiveUser && !showIntroduction && !showHistory && !showResults && (
           <>
-            <StatsDisplay
-              elapsed={elapsed}
-              correctSigns={correctCharacters}
-              totalErrors={totalErrors}
-              currentErrorRate={getCurrentErrorRate()}
-              theme={theme}
-            />
-
             <TypingTest
               testText={testText}
               pos={pos}
@@ -345,6 +379,14 @@ const Index = () => {
               fontSize={fontSize}
               fontStyle={fontStyle}
               extraChars={extraChars}
+            />
+
+            <StatsDisplay
+              elapsed={elapsed}
+              correctSigns={correctCharacters}
+              totalErrors={totalErrors}
+              currentErrorRate={getCurrentErrorRate()}
+              theme={theme}
             />
           </>
         )}

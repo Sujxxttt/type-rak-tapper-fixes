@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect, useState } from 'react';
 
 interface TypingTestProps {
@@ -75,9 +76,35 @@ export const TypingTest: React.FC<TypingTestProps> = ({
       case 'midnight-black':
         return 'linear-gradient(90deg, #e559f7 0%, #9f59f7 100%)';
       case 'cotton-candy-glow':
-        return 'linear-gradient(90deg, #ff59e8 0%, #ff52a8 100%)';
+        return 'linear-gradient(90deg, #FF6B9D 0%, #FF8FA3 100%)';
       default:
-        return 'linear-gradient(90deg, #e454f0 0%, #9d54f0 100%)';
+        return 'linear-gradient(90deg, #00D4FF 0%, #0099CC 100%)';
+    }
+  };
+
+  const getThemeColors = () => {
+    switch (theme) {
+      case 'midnight-black':
+        return {
+          untyped: '#666666',
+          correct: '#e559f7',
+          incorrect: '#ff4444',
+          background: 'rgba(255, 255, 255, 0.05)'
+        };
+      case 'cotton-candy-glow':
+        return {
+          untyped: '#999999',
+          correct: '#FF6B9D',
+          incorrect: '#ff4444',
+          background: 'rgba(255, 255, 255, 0.3)'
+        };
+      default:
+        return {
+          untyped: '#666666',
+          correct: '#00D4FF',
+          incorrect: '#ff4444',
+          background: 'rgba(255, 255, 255, 0.1)'
+        };
     }
   };
 
@@ -96,6 +123,31 @@ export const TypingTest: React.FC<TypingTestProps> = ({
     }
   };
 
+  const colors = getThemeColors();
+
+  useEffect(() => {
+    // Apply CSS styles for character states
+    const style = document.createElement('style');
+    style.textContent = `
+      .char {
+        color: ${colors.untyped};
+        transition: color 0.1s ease;
+      }
+      .char.correct {
+        color: ${colors.correct} !important;
+      }
+      .char.incorrect {
+        color: ${colors.incorrect} !important;
+        background-color: rgba(255, 68, 68, 0.2);
+      }
+    `;
+    document.head.appendChild(style);
+    
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, [theme]);
+
   return (
     <div 
       ref={containerRef}
@@ -103,16 +155,18 @@ export const TypingTest: React.FC<TypingTestProps> = ({
         position: 'relative',
         width: '95%',
         maxWidth: '1400px',
-        background: theme === 'cotton-candy-glow' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)',
+        background: colors.background,
         borderRadius: '16px',
         overflow: 'hidden',
-        marginBottom: '3rem',
+        marginBottom: '1rem',
         marginTop: '4rem',
         padding: '3rem',
         minHeight: '180px',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'center'
+        justifyContent: 'center',
+        backdropFilter: 'blur(10px)',
+        border: `1px solid ${theme === 'cotton-candy-glow' ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.2)'}`
       }}
     >
       <div style={{
@@ -131,7 +185,6 @@ export const TypingTest: React.FC<TypingTestProps> = ({
           id="text-flow"
           style={{ 
             display: 'inline-block',
-            color: theme === 'cotton-candy-glow' ? '#333' : '#fff',
             fontWeight: '500',
             userSelect: 'none',
             whiteSpace: 'nowrap',
