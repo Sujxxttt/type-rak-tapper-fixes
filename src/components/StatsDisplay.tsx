@@ -18,31 +18,6 @@ export const StatsDisplay: React.FC<StatsDisplayProps> = ({
 }) => {
   const currentWPM = Math.round(Math.max(0, (correctSigns / 5) / Math.max(elapsed / 60, 1 / 60)));
 
-  const getThemeColors = () => {
-    switch (theme) {
-      case 'midnight-black':
-        return {
-          background: 'rgba(0, 0, 0, 0.1)',
-          text: '#FFFFFF',
-          border: 'rgba(255, 255, 255, 0.1)'
-        };
-      case 'cotton-candy-glow':
-        return {
-          background: 'rgba(255, 255, 255, 0.2)',
-          text: '#333333',
-          border: 'rgba(0, 0, 0, 0.1)'
-        };
-      default:
-        return {
-          background: 'rgba(0, 0, 0, 0.1)',
-          text: '#FFFFFF',
-          border: 'rgba(255, 255, 255, 0.1)'
-        };
-    }
-  };
-
-  const colors = getThemeColors();
-
   return (
     <div style={{
       display: 'flex',
@@ -55,16 +30,14 @@ export const StatsDisplay: React.FC<StatsDisplayProps> = ({
       marginBottom: '4rem'
     }}>
       <div style={{
-        background: colors.background,
+        background: theme === 'cotton-candy-glow' ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.3)',
         padding: '0.8rem 1.2rem',
-        borderRadius: '12px',
+        borderRadius: '6px',
         textAlign: 'center',
-        color: colors.text,
+        color: theme === 'cotton-candy-glow' ? '#333' : 'white',
         flexGrow: 1,
         flexBasis: '150px',
-        minWidth: '120px',
-        backdropFilter: 'blur(10px)',
-        border: `1px solid ${colors.border}`
+        minWidth: '120px'
       }}>
         <span style={{ display: 'block', fontSize: '0.9rem', opacity: 0.8, marginBottom: '0.25rem' }}>Time:</span>
         <span style={{ fontWeight: 'bold', fontSize: '1.2em' }}>
@@ -72,46 +45,40 @@ export const StatsDisplay: React.FC<StatsDisplayProps> = ({
         </span>
       </div>
       <div style={{
-        background: colors.background,
+        background: theme === 'cotton-candy-glow' ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.3)',
         padding: '0.8rem 1.2rem',
-        borderRadius: '12px',
+        borderRadius: '6px',
         textAlign: 'center',
-        color: colors.text,
+        color: theme === 'cotton-candy-glow' ? '#333' : 'white',
         flexGrow: 1,
         flexBasis: '150px',
-        minWidth: '120px',
-        backdropFilter: 'blur(10px)',
-        border: `1px solid ${colors.border}`
+        minWidth: '120px'
       }}>
         <span style={{ display: 'block', fontSize: '0.9rem', opacity: 0.8, marginBottom: '0.25rem' }}>Speed:</span>
         <span style={{ fontWeight: 'bold', fontSize: '1.2em' }}>{currentWPM} WPM</span>
       </div>
       <div style={{
-        background: colors.background,
+        background: theme === 'cotton-candy-glow' ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.3)',
         padding: '0.8rem 1.2rem',
-        borderRadius: '12px',
+        borderRadius: '6px',
         textAlign: 'center',
-        color: colors.text,
+        color: theme === 'cotton-candy-glow' ? '#333' : 'white',
         flexGrow: 1,
         flexBasis: '150px',
-        minWidth: '120px',
-        backdropFilter: 'blur(10px)',
-        border: `1px solid ${colors.border}`
+        minWidth: '120px'
       }}>
         <span style={{ display: 'block', fontSize: '0.9rem', opacity: 0.8, marginBottom: '0.25rem' }}>Errors:</span>
         <span style={{ fontWeight: 'bold', fontSize: '1.2em' }}>{totalErrors}</span>
       </div>
       <div style={{
-        background: colors.background,
+        background: theme === 'cotton-candy-glow' ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.3)',
         padding: '0.8rem 1.2rem',
-        borderRadius: '12px',
+        borderRadius: '6px',
         textAlign: 'center',
-        color: colors.text,
+        color: theme === 'cotton-candy-glow' ? '#333' : 'white',
         flexGrow: 1,
         flexBasis: '150px',
-        minWidth: '120px',
-        backdropFilter: 'blur(10px)',
-        border: `1px solid ${colors.border}`
+        minWidth: '120px'
       }}>
         <span style={{ display: 'block', fontSize: '0.9rem', opacity: 0.8, marginBottom: '0.25rem' }}>Error Rate:</span>
         <span style={{ fontWeight: 'bold', fontSize: '1.2em' }}>
@@ -119,18 +86,16 @@ export const StatsDisplay: React.FC<StatsDisplayProps> = ({
         </span>
       </div>
       <div style={{
-        background: colors.background,
+        background: theme === 'cotton-candy-glow' ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.3)',
         padding: '0.8rem 1.2rem',
-        borderRadius: '12px',
+        borderRadius: '6px',
         textAlign: 'center',
-        color: colors.text,
+        color: theme === 'cotton-candy-glow' ? '#333' : 'white',
         flexGrow: 1,
         flexBasis: '150px',
-        minWidth: '120px',
-        backdropFilter: 'blur(10px)',
-        border: `1px solid ${colors.border}`
+        minWidth: '120px'
       }}>
-        <span style={{ display: 'block', fontSize: '0.9rem', opacity: 0.8, marginBottom: '0.25rem' }}>Characters:</span>
+        <span style={{ display: 'block', fontSize: '0.9rem', opacity: 0.8, marginBottom: '0.25rem' }}>Signs:</span>
         <span style={{ fontWeight: 'bold', fontSize: '1.2em' }}>{correctSigns}</span>
       </div>
     </div>

@@ -95,21 +95,19 @@ export const useTypingGame = () => {
     
     textFlowElement.appendChild(frag);
     setChars(newChars);
-    console.log('Text rendered. Length:', text.length, 'First few chars:', text.substring(0, 20));
+    console.log('Text rendered with length:', text.length);
   };
 
   const startTimer = useCallback((duration: number, onComplete: () => void) => {
     if (timerRef.current) {
       clearInterval(timerRef.current);
     }
-    setElapsed(0); // Reset elapsed time when starting
     timerRef.current = setInterval(() => {
       setElapsed(prev => {
         const newElapsed = prev + 1;
         if (newElapsed >= duration) {
           clearInterval(timerRef.current!);
           onComplete();
-          return newElapsed;
         }
         return newElapsed;
       });
@@ -117,7 +115,6 @@ export const useTypingGame = () => {
   }, []);
 
   const resetTest = () => {
-    console.log('Resetting test');
     setGameOver(false);
     setTestActive(false);
     setElapsed(0);
@@ -140,23 +137,16 @@ export const useTypingGame = () => {
     allChars.forEach(char => {
       char.classList.remove('correct', 'incorrect', 'extra');
     });
-    
-    // Clear extra characters
-    const extraCharsContainer = document.getElementById('extra-chars');
-    if (extraCharsContainer) {
-      extraCharsContainer.innerHTML = '';
-    }
   };
 
   const getCurrentWPM = () => {
     if (elapsed === 0) return 0;
-    const minutes = elapsed / 60;
-    return Math.round((correctCharacters / 5) / minutes);
+    return Math.round((correctCharacters / 5) / (elapsed / 60));
   };
 
   const getCurrentErrorRate = () => {
     if (actualTypedCount === 0) return 0;
-    return Math.round((totalErrors / actualTypedCount) * 100 * 100) / 100;
+    return (totalErrors / actualTypedCount) * 100;
   };
 
   return {

@@ -4,11 +4,10 @@ import { X } from 'lucide-react';
 
 interface ToastProps {
   message: string;
-  type: 'success' | 'error';
   onClose: () => void;
 }
 
-export const Toast: React.FC<ToastProps> = ({ message, type, onClose }) => {
+export const Toast: React.FC<ToastProps> = ({ message, onClose }) => {
   if (!message) return null;
 
   return (

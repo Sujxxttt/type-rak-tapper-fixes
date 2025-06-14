@@ -48,19 +48,22 @@ export const TypingTest: React.FC<TypingTestProps> = ({
     const containerRect = container.getBoundingClientRect();
     const containerCenter = containerRect.width / 2;
     
+    // Calculate position based on current position and extra characters
+    const currentIndex = pos + extraChars.length;
+    
     if (pos < testText.length) {
       const currentChar = chars[pos];
       if (!currentChar) return;
       
       const charRect = currentChar.getBoundingClientRect();
       
-      // Calculate offset to keep current character centered
+      // Calculate offset to keep current character in center
       const charLeft = charRect.left - containerRect.left;
       const offset = containerCenter - charLeft - (charRect.width / 2);
       
-      // Apply transform to center the text
+      // Apply smooth transform
       textFlowRef.current.style.transform = `translateX(${offset}px)`;
-      textFlowRef.current.style.transition = 'transform 0.1s ease-out';
+      textFlowRef.current.style.transition = 'transform 0.2s ease-out';
       
       // Position caret below the current character
       caretRef.current.style.left = `${containerCenter}px`;
@@ -82,32 +85,6 @@ export const TypingTest: React.FC<TypingTestProps> = ({
     }
   };
 
-  const getThemeColors = () => {
-    switch (theme) {
-      case 'midnight-black':
-        return {
-          untyped: '#FFFFFF',
-          correct: '#22c55e',
-          incorrect: '#f87171',
-          background: 'rgba(0, 0, 0, 0.1)'
-        };
-      case 'cotton-candy-glow':
-        return {
-          untyped: '#333333',
-          correct: '#059669',
-          incorrect: '#dc2626',
-          background: 'rgba(255, 255, 255, 0.2)'
-        };
-      default:
-        return {
-          untyped: '#FFFFFF',
-          correct: '#4ade80',
-          incorrect: '#ef4444',
-          background: 'rgba(0, 0, 0, 0.1)'
-        };
-    }
-  };
-
   const getFontFamily = () => {
     switch (fontStyle) {
       case 'roboto': return "'Roboto', sans-serif";
@@ -117,36 +94,9 @@ export const TypingTest: React.FC<TypingTestProps> = ({
       case 'inter': return "'Inter', sans-serif";
       case 'dancing-script': return "'Dancing Script', cursive";
       case 'pacifico': return "'Pacifico', cursive";
-      case 'lobster': return "'Lobster', cursive";
-      case 'sacramento': return "'Sacramento', cursive";
       default: return "'Inter', sans-serif";
     }
   };
-
-  const colors = getThemeColors();
-
-  useEffect(() => {
-    // Apply CSS styles for character states
-    const style = document.createElement('style');
-    style.textContent = `
-      .char {
-        color: ${colors.untyped};
-        transition: color 0.1s ease;
-      }
-      .char.correct {
-        color: ${colors.correct} !important;
-      }
-      .char.incorrect {
-        color: ${colors.incorrect} !important;
-        background-color: rgba(255, 68, 68, 0.2);
-      }
-    `;
-    document.head.appendChild(style);
-    
-    return () => {
-      document.head.removeChild(style);
-    };
-  }, [theme]);
 
   return (
     <div 
@@ -155,18 +105,16 @@ export const TypingTest: React.FC<TypingTestProps> = ({
         position: 'relative',
         width: '95%',
         maxWidth: '1400px',
-        background: colors.background,
+        background: theme === 'cotton-candy-glow' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)',
         borderRadius: '16px',
         overflow: 'hidden',
-        marginBottom: '1rem',
+        marginBottom: '3rem',
         marginTop: '4rem',
         padding: '3rem',
         minHeight: '180px',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'center',
-        backdropFilter: 'blur(10px)',
-        border: `1px solid ${theme === 'cotton-candy-glow' ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)'}`
+        justifyContent: 'center'
       }}
     >
       <div style={{
@@ -185,24 +133,18 @@ export const TypingTest: React.FC<TypingTestProps> = ({
           id="text-flow"
           style={{ 
             display: 'inline-block',
+            color: theme === 'cotton-candy-glow' ? '#333' : '#fff',
             fontWeight: '500',
             userSelect: 'none',
-            whiteSpace: 'nowrap',
-            position: 'relative'
+            whiteSpace: 'nowrap'
           }}
         >
           {/* Text will be rendered here by useTypingGame hook */}
-          <span 
-            id="extra-chars"
-            style={{ 
-              color: colors.incorrect, 
-              backgroundColor: 'rgba(255, 68, 68, 0.2)',
-              borderRadius: '2px',
-              padding: '0 1px'
-            }}
-          >
-            {extraChars.join('')}
-          </span>
+          {extraChars.length > 0 && (
+            <span style={{ color: '#ff4444', backgroundColor: 'rgba(255, 68, 68, 0.2)' }}>
+              {extraChars.join('')}
+            </span>
+          )}
         </div>
       </div>
       <div 

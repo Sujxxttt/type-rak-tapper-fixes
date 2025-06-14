@@ -1,29 +1,24 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 
 interface TestNameMenuProps {
-  onCreate: (username: string) => boolean;
-  onClose: () => void;
+  showTestNameMenu: boolean;
+  newTestName: string;
+  setNewTestName: (name: string) => void;
+  onConfirm: () => void;
+  onCancel: () => void;
+  getButtonColor: () => string;
 }
 
 export const TestNameMenu: React.FC<TestNameMenuProps> = ({
-  onCreate,
-  onClose
+  showTestNameMenu,
+  newTestName,
+  setNewTestName,
+  onConfirm,
+  onCancel,
+  getButtonColor
 }) => {
-  const [newTestName, setNewTestName] = useState('');
-
-  const handleConfirm = () => {
-    if (newTestName.trim()) {
-      const success = onCreate(newTestName.trim());
-      if (success) {
-        onClose();
-      }
-    }
-  };
-
-  const getButtonColor = () => {
-    return 'linear-gradient(135deg, #6366f1 0%, #4338ca 100%)';
-  };
+  if (!showTestNameMenu) return null;
 
   return (
     <>
@@ -37,7 +32,7 @@ export const TestNameMenu: React.FC<TestNameMenuProps> = ({
           background: 'rgba(0, 0, 0, 0.4)',
           zIndex: 999
         }}
-        onClick={onClose}
+        onClick={onCancel}
       />
       <div style={{
         position: 'fixed',
@@ -52,12 +47,12 @@ export const TestNameMenu: React.FC<TestNameMenuProps> = ({
         zIndex: 1000,
         minWidth: '400px'
       }}>
-        <h3 style={{ marginBottom: '20px', textAlign: 'center', color: 'white' }}>Create User Profile</h3>
+        <h3 style={{ marginBottom: '20px', textAlign: 'center' }}>Create New Test</h3>
         <input
           type="text"
           value={newTestName}
           onChange={(e) => setNewTestName(e.target.value)}
-          placeholder="Enter username..."
+          placeholder="Enter test name..."
           style={{
             width: '100%',
             padding: '12px',
@@ -69,12 +64,12 @@ export const TestNameMenu: React.FC<TestNameMenuProps> = ({
             fontSize: '1rem',
             backdropFilter: 'blur(10px)'
           }}
-          onKeyPress={(e) => e.key === 'Enter' && handleConfirm()}
+          onKeyPress={(e) => e.key === 'Enter' && onConfirm()}
           autoFocus
         />
         <div style={{ display: 'flex', gap: '10px' }}>
           <button
-            onClick={handleConfirm}
+            onClick={onConfirm}
             style={{
               flex: 1,
               background: getButtonColor(),
@@ -86,10 +81,10 @@ export const TestNameMenu: React.FC<TestNameMenuProps> = ({
               fontSize: '1rem'
             }}
           >
-            Create Profile
+            Start Test
           </button>
           <button
-            onClick={onClose}
+            onClick={onCancel}
             style={{
               flex: 1,
               background: 'rgba(108, 117, 125, 0.8)',

@@ -2,11 +2,10 @@
 import React, { useState, useEffect } from 'react';
 
 interface IntroductionProps {
-  onClose: () => void;
-  theme: string;
+  onComplete: () => void;
 }
 
-export const Introduction: React.FC<IntroductionProps> = ({ onClose, theme }) => {
+export const Introduction: React.FC<IntroductionProps> = ({ onComplete }) => {
   const [currentTheme, setCurrentTheme] = useState(0);
   const [animationPhase, setAnimationPhase] = useState('themes'); // 'themes' or 'moving'
   const [titlePosition, setTitlePosition] = useState('center');
@@ -48,7 +47,7 @@ export const Introduction: React.FC<IntroductionProps> = ({ onClose, theme }) =>
 
     // Complete animation after title moves to top-left
     completeTimeout = setTimeout(() => {
-      onClose();
+      onComplete();
     }, 6000);
 
     return () => {
@@ -56,7 +55,7 @@ export const Introduction: React.FC<IntroductionProps> = ({ onClose, theme }) =>
       clearTimeout(phaseTimeout);
       clearTimeout(completeTimeout);
     };
-  }, [onClose]);
+  }, [onComplete]);
 
   const getDefaultTheme = () => {
     const savedTheme = localStorage.getItem("typeRakTheme");
