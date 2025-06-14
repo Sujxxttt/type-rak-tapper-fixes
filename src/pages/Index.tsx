@@ -36,10 +36,8 @@ const Index: React.FC = () => {
   const [continueTestMode, setContinueTestMode] = useState<boolean>(false);
   const [extraChars, setExtraChars] = useState<string[]>([]);
 
-  // ADD THIS STATE TO BUFFER THE GENERATED TEXT
-  const [pendingTextToRender, setPendingTextToRender] = useState<string | null>(null);
-
   const messageTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+  const textFlowRef = React.useRef<HTMLDivElement>(null);
 
   // Use the typing game hook
   const {
@@ -317,26 +315,17 @@ const Index: React.FC = () => {
     setShowReturnConfirm(false);
     setContinueTestMode(false);
 
-    // Instead of using setTimeout with renderText, set the pending text
+    // Generate text and trigger rendering after component mounts
     const textToUse = generateWords(100);
-    setPendingTextToRender(textToUse);
-    // Do not call renderText here!
+    console.log('Generated text for new test:', textToUse.substring(0, 50) + '...');
+    
+    // Wait for the component to mount and then render the text
+    setTimeout(() => {
+      console.log('Attempting to render text, ref available:', !!textFlowRef.current);
+      renderText(textToUse, textFlowRef);
+    }, 100);
   };
 
-  // ADD THIS useEffect TO CALL renderText AFTER TypingTest is mounted
-  const textFlowRef = React.useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (currentScreen !== 'typing') return;
-    if (pendingTextToRender && textFlowRef.current) {
-      // Debug line to help diagnose text update issues
-      console.log("About to renderText with:", pendingTextToRender, "ref:", textFlowRef.current);
-      renderText(pendingTextToRender, textFlowRef);
-      setPendingTextToRender(null);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentScreen, pendingTextToRender, textFlowRef.current, renderText]);
-  
   const continueTest = (testName?: string) => {
     if (testName) {
       startNewTest(testName);
@@ -592,7 +581,6 @@ const Index: React.FC = () => {
           getButtonColor={getButtonColor}
         />
 
-        {/* Main Content Areas */}
         {currentScreen === 'greeting' && (
           <div style={{
             width: '100%',
@@ -931,9 +919,11 @@ const Index: React.FC = () => {
                   resetTest();
                   setExtraChars([]);
                   setShowReturnConfirm(false);
-                  // Instead of setTimeout, do same as startNewTest
+                  // Generate new text and render it
                   const textToUse = generateWords(100);
-                  setPendingTextToRender(textToUse);
+                  setTimeout(() => {
+                    renderText(textToUse, textFlowRef);
+                  }, 100);
                 }}
                 style={{
                   background: getButtonColor(),
@@ -1116,7 +1106,6 @@ const Index: React.FC = () => {
         {/* Toast Message */}
         <Toast message={message} onClose={closeToast} />
 
-        {/* Footer */}
         <footer style={{
           marginTop: 'auto',
           display: 'flex',
