@@ -1,6 +1,12 @@
 
 import React from 'react';
-import { X } from 'lucide-react';
+import { X, ChevronDown } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface SideMenuProps {
   sideMenuOpen: boolean;
@@ -57,6 +63,30 @@ export const SideMenu: React.FC<SideMenuProps> = ({
   const getTextColor = () => {
     return theme === 'cotton-candy-glow' ? '#333' : '#fff';
   };
+
+  const getFontFamily = (style: string) => {
+    switch (style) {
+      case 'roboto': return "'Roboto', sans-serif";
+      case 'open-sans': return "'Open Sans', sans-serif";
+      case 'lato': return "'Lato', sans-serif";
+      case 'source-sans': return "'Source Sans Pro', sans-serif";
+      case 'inter': return "'Inter', sans-serif";
+      case 'dancing-script': return "'Dancing Script', cursive";
+      case 'pacifico': return "'Pacifico', cursive";
+      default: return "'Inter', sans-serif";
+    }
+  };
+
+  const fontSizeOptions = [80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200];
+  const fontStyleOptions = [
+    { id: 'inter', name: 'Inter' },
+    { id: 'roboto', name: 'Roboto' },
+    { id: 'open-sans', name: 'Open Sans' },
+    { id: 'lato', name: 'Lato' },
+    { id: 'source-sans', name: 'Source Sans Pro' },
+    { id: 'dancing-script', name: 'Dancing Script' },
+    { id: 'pacifico', name: 'Pacifico' }
+  ];
 
   return (
     <>
@@ -253,7 +283,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
             fontWeight: '600',
             opacity: 0.9
           }}>
-            Font Size: {fontSize}%
+            Font Size
           </h3>
           <div style={{
             background: 'rgba(255, 255, 255, 0.1)',
@@ -261,21 +291,51 @@ export const SideMenu: React.FC<SideMenuProps> = ({
             padding: '15px',
             border: '1px solid rgba(255, 255, 255, 0.1)'
           }}>
-            <input
-              type="range"
-              min="80"
-              max="200"
-              value={fontSize}
-              onChange={(e) => setFontSize(Number(e.target.value))}
-              style={{
-                width: '100%',
-                height: '6px',
-                borderRadius: '3px',
-                background: 'rgba(255, 255, 255, 0.2)',
-                outline: 'none',
-                cursor: 'pointer'
-              }}
-            />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    borderRadius: '6px',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    color: getTextColor(),
+                    cursor: 'pointer',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
+                  }}
+                >
+                  {fontSize}%
+                  <ChevronDown size={16} />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                style={{
+                  background: getGlassBackground(),
+                  backdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  borderRadius: '8px',
+                  color: getTextColor(),
+                  zIndex: 1002
+                }}
+              >
+                {fontSizeOptions.map((size) => (
+                  <DropdownMenuItem
+                    key={size}
+                    onClick={() => setFontSize(size)}
+                    style={{
+                      cursor: 'pointer',
+                      padding: '8px 12px',
+                      background: fontSize === size ? 'rgba(255, 255, 255, 0.2)' : 'transparent'
+                    }}
+                  >
+                    {size}%
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 
@@ -295,27 +355,52 @@ export const SideMenu: React.FC<SideMenuProps> = ({
             padding: '15px',
             border: '1px solid rgba(255, 255, 255, 0.1)'
           }}>
-            <select
-              value={fontStyle}
-              onChange={(e) => setFontStyle(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '8px',
-                borderRadius: '6px',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
-                background: 'rgba(255, 255, 255, 0.1)',
-                color: getTextColor(),
-                cursor: 'pointer'
-              }}
-            >
-              <option value="inter">Inter</option>
-              <option value="roboto">Roboto</option>
-              <option value="open-sans">Open Sans</option>
-              <option value="lato">Lato</option>
-              <option value="source-sans">Source Sans Pro</option>
-              <option value="dancing-script">Dancing Script</option>
-              <option value="pacifico">Pacifico</option>
-            </select>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    borderRadius: '6px',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    color: getTextColor(),
+                    cursor: 'pointer',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
+                  }}
+                >
+                  {fontStyleOptions.find(f => f.id === fontStyle)?.name || 'Inter'}
+                  <ChevronDown size={16} />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                style={{
+                  background: getGlassBackground(),
+                  backdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  borderRadius: '8px',
+                  color: getTextColor(),
+                  zIndex: 1002
+                }}
+              >
+                {fontStyleOptions.map((font) => (
+                  <DropdownMenuItem
+                    key={font.id}
+                    onClick={() => setFontStyle(font.id)}
+                    style={{
+                      cursor: 'pointer',
+                      padding: '8px 12px',
+                      background: fontStyle === font.id ? 'rgba(255, 255, 255, 0.2)' : 'transparent',
+                      fontFamily: getFontFamily(font.id)
+                    }}
+                  >
+                    {font.name}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 
