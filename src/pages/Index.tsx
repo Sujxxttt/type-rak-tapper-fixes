@@ -28,19 +28,19 @@ const Index = () => {
 
   const themes: { [key: string]: { background: string; color: string; accent: string; } } = {
     'cosmic-nebula': { 
-      background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)', 
-      color: '#E2E8F0',
-      accent: '#00D4FF'
+      background: 'linear-gradient(135deg, #0c0c1e 0%, #1a1a3e 50%, #2d1b4e 100%)', 
+      color: '#FFFFFF',
+      accent: '#8b5cf6'
     },
     'midnight-black': { 
-      background: 'linear-gradient(135deg, #1E1E1E 0%, #2D2D2D 50%, #1A1A1A 100%)', 
+      background: '#000000', 
       color: '#FFFFFF',
-      accent: '#e559f7'
+      accent: '#6366f1'
     },
     'cotton-candy-glow': { 
-      background: 'linear-gradient(135deg, #FFE5F1 0%, #FFD1E3 50%, #FFBDD6 100%)', 
+      background: 'linear-gradient(135deg, #fef7ff 0%, #f8fafc 50%, #e879f9 100%)', 
       color: '#333333',
-      accent: '#FF6B9D'
+      accent: '#f472b6'
     }
   };
 
@@ -150,11 +150,11 @@ const Index = () => {
   const getButtonColor = () => {
     switch (theme) {
       case 'midnight-black':
-        return 'linear-gradient(135deg, #e559f7 0%, #9f59f7 100%)';
+        return 'linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%)';
       case 'cotton-candy-glow':
-        return 'linear-gradient(135deg, #FF6B9D 0%, #FF8FA3 100%)';
+        return 'linear-gradient(90deg, #f472b6 0%, #ec4899 100%)';
       default:
-        return 'linear-gradient(135deg, #00D4FF 0%, #0099CC 100%)';
+        return 'linear-gradient(90deg, #8b5cf6 0%, #a855f7 100%)';
     }
   };
 
@@ -284,7 +284,18 @@ const Index = () => {
         zIndex: 100
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 'bold' }}>TypeWave</h1>
+          <h1 style={{ 
+            margin: 0, 
+            fontSize: '1.5rem', 
+            fontWeight: 'bold',
+            background: theme === 'cosmic-nebula' ? 'linear-gradient(90deg, #e454f0 0%, #9d54f0 100%)' :
+                       theme === 'midnight-black' ? 'linear-gradient(90deg, #e559f7 0%, #9f59f7 100%)' :
+                       'linear-gradient(90deg, #ff59e8 0%, #ff52a8 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent'
+          }}>
+            TypeWave
+          </h1>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -341,9 +352,11 @@ const Index = () => {
             maxWidth: '800px',
             margin: '0 auto',
             padding: '2rem',
-            background: theme === 'cotton-candy-glow' ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.3)',
+            background: theme === 'cotton-candy-glow' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)',
             borderRadius: '16px',
-            marginBottom: '2rem'
+            marginBottom: '2rem',
+            backdropFilter: 'blur(10px)',
+            border: `1px solid ${theme === 'cotton-candy-glow' ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)'}`
           }}>
             <h2 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '1rem' }}>Welcome to TypeWave!</h2>
             <p style={{ fontSize: '1.1rem', lineHeight: '1.6' }}>

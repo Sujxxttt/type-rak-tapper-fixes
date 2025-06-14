@@ -76,9 +76,9 @@ export const TypingTest: React.FC<TypingTestProps> = ({
       case 'midnight-black':
         return 'linear-gradient(90deg, #e559f7 0%, #9f59f7 100%)';
       case 'cotton-candy-glow':
-        return 'linear-gradient(90deg, #FF6B9D 0%, #FF8FA3 100%)';
+        return 'linear-gradient(90deg, #ff59e8 0%, #ff52a8 100%)';
       default:
-        return 'linear-gradient(90deg, #00D4FF 0%, #0099CC 100%)';
+        return 'linear-gradient(90deg, #e454f0 0%, #9d54f0 100%)';
     }
   };
 
@@ -86,24 +86,24 @@ export const TypingTest: React.FC<TypingTestProps> = ({
     switch (theme) {
       case 'midnight-black':
         return {
-          untyped: '#666666',
-          correct: '#e559f7',
-          incorrect: '#ff4444',
-          background: 'rgba(255, 255, 255, 0.05)'
+          untyped: '#888888',
+          correct: '#22c55e',
+          incorrect: '#f87171',
+          background: 'rgba(0, 0, 0, 0.1)'
         };
       case 'cotton-candy-glow':
         return {
-          untyped: '#999999',
-          correct: '#FF6B9D',
-          incorrect: '#ff4444',
-          background: 'rgba(255, 255, 255, 0.3)'
+          untyped: '#666666',
+          correct: '#059669',
+          incorrect: '#dc2626',
+          background: 'rgba(255, 255, 255, 0.2)'
         };
       default:
         return {
-          untyped: '#666666',
-          correct: '#00D4FF',
-          incorrect: '#ff4444',
-          background: 'rgba(255, 255, 255, 0.1)'
+          untyped: '#CCCCCC',
+          correct: '#4ade80',
+          incorrect: '#ef4444',
+          background: 'rgba(0, 0, 0, 0.1)'
         };
     }
   };
@@ -166,7 +166,7 @@ export const TypingTest: React.FC<TypingTestProps> = ({
         alignItems: 'center',
         justifyContent: 'center',
         backdropFilter: 'blur(10px)',
-        border: `1px solid ${theme === 'cotton-candy-glow' ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.2)'}`
+        border: `1px solid ${theme === 'cotton-candy-glow' ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)'}`
       }}
     >
       <div style={{
@@ -195,7 +195,7 @@ export const TypingTest: React.FC<TypingTestProps> = ({
           <span 
             id="extra-chars"
             style={{ 
-              color: '#ff4444', 
+              color: colors.incorrect, 
               backgroundColor: 'rgba(255, 68, 68, 0.2)',
               borderRadius: '2px',
               padding: '0 1px'
