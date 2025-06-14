@@ -216,21 +216,9 @@ const Index: React.FC = () => {
   const handleKeyDown = (e: KeyboardEvent) => {
     if (gameOver) return;
 
-    if (e.key === "Backspace" && !(e.ctrlKey && e.altKey)) {
+    // Disable backspace completely during active tests
+    if (e.key === "Backspace") {
       e.preventDefault();
-      
-      if (extraChars.length > 0) {
-        // Remove last extra character
-        setExtraChars(prev => prev.slice(0, -1));
-      } else if (pos > 0) {
-        // Move back one position and remove styling
-        const newPos = pos - 1;
-        setPos(newPos);
-        chars[newPos]?.classList.remove("correct", "incorrect");
-        if (chars[newPos]?.classList.contains("correct")) {
-          setCorrectCharacters(prev => prev - 1);
-        }
-      }
       return;
     }
     
@@ -255,7 +243,7 @@ const Index: React.FC = () => {
     if (typedChar && typedChar.length === 1) {
       setActualTypedCount(prev => prev + 1);
       
-      if (expectedChar === typedChar && extraChars.length === 0) {
+      if (expectedChar === typedChar) {
         // Correct character
         chars[pos]?.classList.remove("incorrect");
         chars[pos]?.classList.add("correct");
@@ -263,18 +251,14 @@ const Index: React.FC = () => {
         setPos(prev => prev + 1);
         setLastErrorPos(-1);
       } else {
-        // Incorrect character - add to extra chars or handle error
-        if (pos < testText.length) {
-          // Only count as error if it's not consecutive to the last error
-          if (lastErrorPos !== pos) {
-            setTotalErrors(prev => prev + 1);
-            setLastErrorPos(pos);
-            chars[pos]?.classList.add("incorrect");
-          }
-          
-          // Add extra character for visual feedback
-          setExtraChars(prev => [...prev, typedChar]);
+        // Incorrect character - only count as error if it's not consecutive to the last error
+        if (lastErrorPos !== pos) {
+          setTotalErrors(prev => prev + 1);
+          setLastErrorPos(pos);
         }
+        chars[pos]?.classList.add("incorrect");
+        // Still advance position to continue typing
+        setPos(prev => prev + 1);
       }
     }
   };
@@ -309,7 +293,6 @@ const Index: React.FC = () => {
     setCurrentTestName(testName);
     setCurrentScreen('typing');
     resetTest();
-    setExtraChars([]);
     setShowReturnConfirm(false);
     setContinueTestMode(false);
     
@@ -883,7 +866,6 @@ const Index: React.FC = () => {
               onKeyDown={handleKeyDown}
               fontSize={fontSize}
               fontStyle={fontStyle}
-              extraChars={extraChars}
             />
 
             <StatsDisplay
