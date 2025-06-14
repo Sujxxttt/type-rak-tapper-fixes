@@ -1,4 +1,3 @@
-
 import { useState, useRef, useCallback } from 'react';
 
 export const useTypingGame = () => {
@@ -161,7 +160,7 @@ export const useTypingGame = () => {
     testActive,
     setTestActive,
     elapsed,
-    setElapsed, // This was missing!
+    setElapsed,
     pos,
     setPos,
     chars,

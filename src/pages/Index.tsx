@@ -331,7 +331,7 @@ const Index: React.FC = () => {
     if (pendingTextToRender && textFlowRef.current) {
       // Debug line to help diagnose text update issues
       console.log("About to renderText with:", pendingTextToRender, "ref:", textFlowRef.current);
-      renderText(pendingTextToRender, textFlowRef.current);
+      renderText(pendingTextToRender);
       setPendingTextToRender(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
