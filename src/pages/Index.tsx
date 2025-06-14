@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { X } from 'lucide-react';
 import { TypingTest } from '../components/TypingTest';
 import { StatsDisplay } from '../components/StatsDisplay';
@@ -324,16 +324,18 @@ const Index: React.FC = () => {
   };
 
   // ADD THIS useEffect TO CALL renderText AFTER TypingTest is mounted
+  const textFlowRef = React.useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     if (currentScreen !== 'typing') return;
-    if (pendingTextToRender) {
+    if (pendingTextToRender && textFlowRef.current) {
       // Debug line to help diagnose text update issues
-      console.log("About to renderText with:", pendingTextToRender);
-      renderText(pendingTextToRender);
+      console.log("About to renderText with:", pendingTextToRender, "ref:", textFlowRef.current);
+      renderText(pendingTextToRender, textFlowRef.current);
       setPendingTextToRender(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentScreen, pendingTextToRender]);
+  }, [currentScreen, pendingTextToRender, textFlowRef.current]);
   
   const continueTest = (testName?: string) => {
     if (testName) {
@@ -899,6 +901,7 @@ const Index: React.FC = () => {
               onKeyDown={handleKeyDown}
               fontSize={fontSize}
               fontStyle={fontStyle}
+              textFlowRef={textFlowRef}
             />
 
             <StatsDisplay

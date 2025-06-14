@@ -1,5 +1,5 @@
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 
 interface TypingTestProps {
   testText: string;
@@ -9,6 +9,7 @@ interface TypingTestProps {
   onKeyDown: (e: KeyboardEvent) => void;
   fontSize: number;
   fontStyle: string;
+  textFlowRef: React.RefObject<HTMLDivElement>; // NEW PROP
 }
 
 export const TypingTest: React.FC<TypingTestProps> = ({
@@ -19,34 +20,32 @@ export const TypingTest: React.FC<TypingTestProps> = ({
   onKeyDown,
   fontSize,
   fontStyle,
+  textFlowRef
 }) => {
-  const scrollRef = useRef<HTMLDivElement>(null);
-
+  // Remove local scrollRef; use textFlowRef everywhere it was used.
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       onKeyDown(e);
     };
-
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [onKeyDown]);
 
   // Scroll current character into view (horizontal only)
   useEffect(() => {
-    if (!scrollRef.current) return;
+    if (!textFlowRef.current) return;
     if (chars.length > 0 && pos < chars.length) {
       const currentChar = chars[pos];
       if (currentChar) {
-        const container = scrollRef.current;
+        const container = textFlowRef.current;
         const offsetLeft = currentChar.offsetLeft;
-        // 20px is some margin so cursor isn't right at the border
         container.scrollTo({
           left: Math.max(offsetLeft - 20, 0),
           behavior: 'smooth',
         });
       }
     }
-  }, [pos, chars]);
+  }, [pos, chars, textFlowRef]);
 
   const getFontFamily = () => {
     switch (fontStyle) {
@@ -98,7 +97,7 @@ export const TypingTest: React.FC<TypingTestProps> = ({
     }}>
       <div
         id="text-flow"
-        ref={scrollRef}
+        ref={textFlowRef} // USE THE EXTERNAL REF!
         style={{
           display: 'flex',
           overflowX: 'auto',
@@ -113,10 +112,9 @@ export const TypingTest: React.FC<TypingTestProps> = ({
           cursor: 'text',
           width: '100%',
           alignItems: 'center',
-          scrollbarWidth: 'none', // Firefox
+          scrollbarWidth: 'none',
         }}
         tabIndex={0}
-        // Hide scroll bar (chromium/safari)
         className="no-scrollbar"
       />
       {pos < chars.length && (
@@ -131,8 +129,7 @@ export const TypingTest: React.FC<TypingTestProps> = ({
             pointerEvents: 'none',
             left: (() => {
               if (chars[pos] && chars[pos].offsetLeft !== undefined) {
-                // fallback if chars are not yet populated
-                return chars[pos].offsetLeft - (scrollRef.current?.scrollLeft ?? 0);
+                return chars[pos].offsetLeft - (textFlowRef.current?.scrollLeft ?? 0);
               }
               return '0px';
             })(),
