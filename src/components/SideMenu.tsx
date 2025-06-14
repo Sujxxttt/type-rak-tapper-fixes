@@ -54,9 +54,13 @@ export const SideMenu: React.FC<SideMenuProps> = ({
 
   if (!sideMenuOpen) return null;
 
-  // Glass translucent styling
   const getGlassBackground = () => {
-    return 'rgba(255, 255, 255, 0.08)';
+    if (theme === 'midnight-black') {
+      return 'rgba(20, 20, 20, 0.9)';
+    } else if (theme === 'cotton-candy-glow') {
+      return 'rgba(255, 255, 255, 0.25)';
+    }
+    return 'rgba(30, 30, 60, 0.9)';
   };
 
   const getTextColor = () => {
@@ -64,23 +68,38 @@ export const SideMenu: React.FC<SideMenuProps> = ({
   };
 
   const getBorderColor = () => {
-    return 'rgba(255, 255, 255, 0.12)';
+    if (theme === 'cotton-candy-glow') {
+      return 'rgba(26, 54, 93, 0.3)';
+    }
+    return 'rgba(255, 255, 255, 0.2)';
   };
 
   const getCardBackground = () => {
-    return 'rgba(255, 255, 255, 0.06)';
+    if (theme === 'cotton-candy-glow') {
+      return 'rgba(255, 255, 255, 0.4)';
+    }
+    return 'rgba(255, 255, 255, 0.1)';
   };
 
   const getCardBorder = () => {
-    return '1px solid rgba(255, 255, 255, 0.08)';
+    if (theme === 'cotton-candy-glow') {
+      return '1px solid rgba(26, 54, 93, 0.2)';
+    }
+    return '1px solid rgba(255, 255, 255, 0.1)';
   };
 
   const getDropdownBackground = () => {
+    if (theme === 'cotton-candy-glow') {
+      return 'rgba(255, 255, 255, 0.5)';
+    }
     return 'rgba(255, 255, 255, 0.1)';
   };
 
   const getDropdownBorder = () => {
-    return '1px solid rgba(255, 255, 255, 0.15)';
+    if (theme === 'cotton-candy-glow') {
+      return '1px solid rgba(26, 54, 93, 0.25)';
+    }
+    return '1px solid rgba(255, 255, 255, 0.2)';
   };
 
   const getFontFamily = (style: string) => {
@@ -149,8 +168,8 @@ export const SideMenu: React.FC<SideMenuProps> = ({
           left: 0,
           width: '100%',
           height: '100%',
-          background: 'rgba(0, 0, 0, 0.4)',
-          backdropFilter: 'blur(8px)',
+          background: 'rgba(0, 0, 0, 0.5)',
+          backdropFilter: 'blur(4px)',
           zIndex: 1000
         }}
         onClick={() => setSideMenuOpen(false)}
@@ -162,18 +181,21 @@ export const SideMenu: React.FC<SideMenuProps> = ({
           position: 'fixed',
           top: 0,
           right: 0,
-          width: '420px',
+          width: '400px',
           maxWidth: '90vw',
           height: '100vh',
           background: getGlassBackground(),
-          backdropFilter: 'blur(24px)',
-          border: `1px solid ${getBorderColor()}`,
-          borderRight: 'none',
+          backdropFilter: 'blur(20px)',
+          borderLeft: getBorderColor(),
+          boxShadow: theme === 'cotton-candy-glow' ? 
+            '-10px 0 30px rgba(26, 54, 93, 0.2)' : 
+            '-10px 0 30px rgba(0, 0, 0, 0.3)',
           zIndex: 1001,
-          padding: '24px',
+          padding: '20px',
           overflowY: 'auto',
           color: getTextColor(),
-          boxShadow: '-20px 0 40px rgba(0, 0, 0, 0.15)'
+          transform: sideMenuOpen ? 'translateX(0)' : 'translateX(100%)',
+          transition: 'transform 0.3s ease-in-out'
         }}
       >
         {/* Header */}
@@ -181,8 +203,8 @@ export const SideMenu: React.FC<SideMenuProps> = ({
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          marginBottom: '32px',
-          paddingBottom: '16px',
+          marginBottom: '30px',
+          paddingBottom: '15px',
           borderBottom: `1px solid ${getBorderColor()}`
         }}>
           <h2 style={{
@@ -199,11 +221,19 @@ export const SideMenu: React.FC<SideMenuProps> = ({
               border: 'none',
               color: getTextColor(),
               cursor: 'pointer',
-              padding: '10px',
-              borderRadius: '8px',
+              padding: '8px',
+              borderRadius: '6px',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center'
+              justifyContent: 'center',
+              transition: 'background 0.2s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = theme === 'cotton-candy-glow' ? 
+                'rgba(26, 54, 93, 0.1)' : 'rgba(255, 255, 255, 0.1)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'none';
             }}
           >
             <X size={24} />
@@ -211,9 +241,9 @@ export const SideMenu: React.FC<SideMenuProps> = ({
         </div>
 
         {/* Users Section */}
-        <div style={{ marginBottom: '28px' }}>
+        <div style={{ marginBottom: '25px' }}>
           <h3 style={{
-            marginBottom: '16px',
+            marginBottom: '15px',
             fontSize: '1.1rem',
             fontWeight: '600',
             opacity: 0.9
@@ -222,18 +252,17 @@ export const SideMenu: React.FC<SideMenuProps> = ({
           </h3>
           <div style={{
             background: getCardBackground(),
-            borderRadius: '16px',
-            padding: '18px',
-            border: getCardBorder(),
-            backdropFilter: 'blur(12px)'
+            borderRadius: '12px',
+            padding: '15px',
+            border: getCardBorder()
           }}>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
                   style={{
                     width: '100%',
-                    padding: '12px 16px',
-                    borderRadius: '10px',
+                    padding: '8px 12px',
+                    borderRadius: '6px',
                     border: getDropdownBorder(),
                     background: getDropdownBackground(),
                     color: getTextColor(),
@@ -241,8 +270,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    marginBottom: '12px',
-                    backdropFilter: 'blur(8px)'
+                    marginBottom: '10px'
                   }}
                 >
                   {currentActiveUser || 'Select User'}
@@ -252,12 +280,11 @@ export const SideMenu: React.FC<SideMenuProps> = ({
               <DropdownMenuContent
                 style={{
                   background: getGlassBackground(),
-                  backdropFilter: 'blur(24px)',
+                  backdropFilter: 'blur(20px)',
                   border: getBorderColor(),
-                  borderRadius: '12px',
+                  borderRadius: '8px',
                   color: getTextColor(),
-                  zIndex: 1002,
-                  boxShadow: '0 10px 40px rgba(0, 0, 0, 0.2)'
+                  zIndex: 1002
                 }}
               >
                 {usersList.map((user) => (
@@ -266,10 +293,10 @@ export const SideMenu: React.FC<SideMenuProps> = ({
                     onClick={() => switchUser(user)}
                     style={{
                       cursor: 'pointer',
-                      padding: '10px 16px',
-                      background: user === currentActiveUser ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
-                      borderRadius: '6px',
-                      margin: '2px'
+                      padding: '8px 12px',
+                      background: user === currentActiveUser ? 
+                        (theme === 'cotton-candy-glow' ? 'rgba(26, 54, 93, 0.2)' : 'rgba(255, 255, 255, 0.2)') : 
+                        'transparent'
                     }}
                   >
                     {user} {user === currentActiveUser && '(Active)'}
@@ -283,8 +310,8 @@ export const SideMenu: React.FC<SideMenuProps> = ({
                 background: deleteConfirmState ? '#e74c3c' : '#6c757d',
                 color: 'white',
                 border: 'none',
-                padding: '10px 18px',
-                borderRadius: '10px',
+                padding: '8px 16px',
+                borderRadius: '6px',
                 cursor: 'pointer',
                 fontSize: '0.9rem',
                 width: '100%'
@@ -296,9 +323,9 @@ export const SideMenu: React.FC<SideMenuProps> = ({
         </div>
 
         {/* Test Duration */}
-        <div style={{ marginBottom: '28px' }}>
+        <div style={{ marginBottom: '25px' }}>
           <h3 style={{
-            marginBottom: '16px',
+            marginBottom: '15px',
             fontSize: '1.1rem',
             fontWeight: '600',
             opacity: 0.9
@@ -307,26 +334,24 @@ export const SideMenu: React.FC<SideMenuProps> = ({
           </h3>
           <div style={{
             background: getCardBackground(),
-            borderRadius: '16px',
-            padding: '18px',
-            border: getCardBorder(),
-            backdropFilter: 'blur(12px)'
+            borderRadius: '12px',
+            padding: '15px',
+            border: getCardBorder()
           }}>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
                   style={{
                     width: '100%',
-                    padding: '12px 16px',
-                    borderRadius: '10px',
+                    padding: '8px 12px',
+                    borderRadius: '6px',
                     border: getDropdownBorder(),
                     background: getDropdownBackground(),
                     color: getTextColor(),
                     cursor: 'pointer',
                     display: 'flex',
                     justifyContent: 'space-between',
-                    alignItems: 'center',
-                    backdropFilter: 'blur(8px)'
+                    alignItems: 'center'
                   }}
                 >
                   {getCurrentDurationLabel()}
@@ -336,12 +361,11 @@ export const SideMenu: React.FC<SideMenuProps> = ({
               <DropdownMenuContent
                 style={{
                   background: getGlassBackground(),
-                  backdropFilter: 'blur(24px)',
+                  backdropFilter: 'blur(20px)',
                   border: getBorderColor(),
-                  borderRadius: '12px',
+                  borderRadius: '8px',
                   color: getTextColor(),
-                  zIndex: 1002,
-                  boxShadow: '0 10px 40px rgba(0, 0, 0, 0.2)'
+                  zIndex: 1002
                 }}
               >
                 {durationOptions.map((option) => (
@@ -357,10 +381,10 @@ export const SideMenu: React.FC<SideMenuProps> = ({
                     }}
                     style={{
                       cursor: 'pointer',
-                      padding: '10px 16px',
-                      background: duration === option.value ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
-                      borderRadius: '6px',
-                      margin: '2px'
+                      padding: '8px 12px',
+                      background: duration === option.value ? 
+                        (theme === 'cotton-candy-glow' ? 'rgba(26, 54, 93, 0.2)' : 'rgba(255, 255, 255, 0.2)') : 
+                        'transparent'
                     }}
                   >
                     {option.label}
@@ -369,7 +393,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
               </DropdownMenuContent>
             </DropdownMenu>
             {showCustomDuration && (
-              <div style={{ marginTop: '12px' }}>
+              <div style={{ marginTop: '10px' }}>
                 <CustomDurationSlider
                   value={duration}
                   onChange={(value) => setDuration(value)}
@@ -381,9 +405,9 @@ export const SideMenu: React.FC<SideMenuProps> = ({
         </div>
 
         {/* Font Size */}
-        <div style={{ marginBottom: '28px' }}>
+        <div style={{ marginBottom: '25px' }}>
           <h3 style={{
-            marginBottom: '16px',
+            marginBottom: '15px',
             fontSize: '1.1rem',
             fontWeight: '600',
             opacity: 0.9
@@ -392,26 +416,24 @@ export const SideMenu: React.FC<SideMenuProps> = ({
           </h3>
           <div style={{
             background: getCardBackground(),
-            borderRadius: '16px',
-            padding: '18px',
-            border: getCardBorder(),
-            backdropFilter: 'blur(12px)'
+            borderRadius: '12px',
+            padding: '15px',
+            border: getCardBorder()
           }}>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
                   style={{
                     width: '100%',
-                    padding: '12px 16px',
-                    borderRadius: '10px',
+                    padding: '8px 12px',
+                    borderRadius: '6px',
                     border: getDropdownBorder(),
                     background: getDropdownBackground(),
                     color: getTextColor(),
                     cursor: 'pointer',
                     display: 'flex',
                     justifyContent: 'space-between',
-                    alignItems: 'center',
-                    backdropFilter: 'blur(8px)'
+                    alignItems: 'center'
                   }}
                 >
                   {fontSize}%
@@ -421,12 +443,11 @@ export const SideMenu: React.FC<SideMenuProps> = ({
               <DropdownMenuContent
                 style={{
                   background: getGlassBackground(),
-                  backdropFilter: 'blur(24px)',
+                  backdropFilter: 'blur(20px)',
                   border: getBorderColor(),
-                  borderRadius: '12px',
+                  borderRadius: '8px',
                   color: getTextColor(),
-                  zIndex: 1002,
-                  boxShadow: '0 10px 40px rgba(0, 0, 0, 0.2)'
+                  zIndex: 1002
                 }}
               >
                 {fontSizeOptions.map((size) => (
@@ -435,10 +456,10 @@ export const SideMenu: React.FC<SideMenuProps> = ({
                     onClick={() => setFontSize(size)}
                     style={{
                       cursor: 'pointer',
-                      padding: '10px 16px',
-                      background: fontSize === size ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
-                      borderRadius: '6px',
-                      margin: '2px'
+                      padding: '8px 12px',
+                      background: fontSize === size ? 
+                        (theme === 'cotton-candy-glow' ? 'rgba(26, 54, 93, 0.2)' : 'rgba(255, 255, 255, 0.2)') : 
+                        'transparent'
                     }}
                   >
                     {size}%
@@ -450,9 +471,9 @@ export const SideMenu: React.FC<SideMenuProps> = ({
         </div>
 
         {/* Font Style */}
-        <div style={{ marginBottom: '28px' }}>
+        <div style={{ marginBottom: '25px' }}>
           <h3 style={{
-            marginBottom: '16px',
+            marginBottom: '15px',
             fontSize: '1.1rem',
             fontWeight: '600',
             opacity: 0.9
@@ -461,26 +482,24 @@ export const SideMenu: React.FC<SideMenuProps> = ({
           </h3>
           <div style={{
             background: getCardBackground(),
-            borderRadius: '16px',
-            padding: '18px',
-            border: getCardBorder(),
-            backdropFilter: 'blur(12px)'
+            borderRadius: '12px',
+            padding: '15px',
+            border: getCardBorder()
           }}>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
                   style={{
                     width: '100%',
-                    padding: '12px 16px',
-                    borderRadius: '10px',
+                    padding: '8px 12px',
+                    borderRadius: '6px',
                     border: getDropdownBorder(),
                     background: getDropdownBackground(),
                     color: getTextColor(),
                     cursor: 'pointer',
                     display: 'flex',
                     justifyContent: 'space-between',
-                    alignItems: 'center',
-                    backdropFilter: 'blur(8px)'
+                    alignItems: 'center'
                   }}
                 >
                   {fontStyleOptions.find(f => f.id === fontStyle)?.name || 'Inter'}
@@ -490,12 +509,11 @@ export const SideMenu: React.FC<SideMenuProps> = ({
               <DropdownMenuContent
                 style={{
                   background: getGlassBackground(),
-                  backdropFilter: 'blur(24px)',
+                  backdropFilter: 'blur(20px)',
                   border: getBorderColor(),
-                  borderRadius: '12px',
+                  borderRadius: '8px',
                   color: getTextColor(),
-                  zIndex: 1002,
-                  boxShadow: '0 10px 40px rgba(0, 0, 0, 0.2)'
+                  zIndex: 1002
                 }}
               >
                 {fontStyleOptions.map((font) => (
@@ -504,10 +522,10 @@ export const SideMenu: React.FC<SideMenuProps> = ({
                     onClick={() => setFontStyle(font.id)}
                     style={{
                       cursor: 'pointer',
-                      padding: '10px 16px',
-                      background: fontStyle === font.id ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
-                      borderRadius: '6px',
-                      margin: '2px',
+                      padding: '8px 12px',
+                      background: fontStyle === font.id ? 
+                        (theme === 'cotton-candy-glow' ? 'rgba(26, 54, 93, 0.2)' : 'rgba(255, 255, 255, 0.2)') : 
+                        'transparent',
                       fontFamily: getFontFamily(font.id)
                     }}
                   >
@@ -520,9 +538,9 @@ export const SideMenu: React.FC<SideMenuProps> = ({
         </div>
 
         {/* Theme */}
-        <div style={{ marginBottom: '28px' }}>
+        <div style={{ marginBottom: '25px' }}>
           <h3 style={{
-            marginBottom: '16px',
+            marginBottom: '15px',
             fontSize: '1.1rem',
             fontWeight: '600',
             opacity: 0.9
@@ -531,26 +549,24 @@ export const SideMenu: React.FC<SideMenuProps> = ({
           </h3>
           <div style={{
             background: getCardBackground(),
-            borderRadius: '16px',
-            padding: '18px',
-            border: getCardBorder(),
-            backdropFilter: 'blur(12px)'
+            borderRadius: '12px',
+            padding: '15px',
+            border: getCardBorder()
           }}>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
                   style={{
                     width: '100%',
-                    padding: '12px 16px',
-                    borderRadius: '10px',
+                    padding: '8px 12px',
+                    borderRadius: '6px',
                     border: getDropdownBorder(),
                     background: getDropdownBackground(),
                     color: getTextColor(),
                     cursor: 'pointer',
                     display: 'flex',
                     justifyContent: 'space-between',
-                    alignItems: 'center',
-                    backdropFilter: 'blur(8px)'
+                    alignItems: 'center'
                   }}
                 >
                   {themeOptions.find(t => t.id === theme)?.name || 'Cosmic Nebula'}
@@ -560,12 +576,11 @@ export const SideMenu: React.FC<SideMenuProps> = ({
               <DropdownMenuContent
                 style={{
                   background: getGlassBackground(),
-                  backdropFilter: 'blur(24px)',
+                  backdropFilter: 'blur(20px)',
                   border: getBorderColor(),
-                  borderRadius: '12px',
+                  borderRadius: '8px',
                   color: getTextColor(),
-                  zIndex: 1002,
-                  boxShadow: '0 10px 40px rgba(0, 0, 0, 0.2)'
+                  zIndex: 1002
                 }}
               >
                 {themeOptions.map((themeOption) => (
@@ -574,10 +589,10 @@ export const SideMenu: React.FC<SideMenuProps> = ({
                     onClick={() => applyTheme(themeOption.id)}
                     style={{
                       cursor: 'pointer',
-                      padding: '10px 16px',
-                      background: theme === themeOption.id ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
-                      borderRadius: '6px',
-                      margin: '2px'
+                      padding: '8px 12px',
+                      background: theme === themeOption.id ? 
+                        (theme === 'cotton-candy-glow' ? 'rgba(26, 54, 93, 0.2)' : 'rgba(255, 255, 255, 0.2)') : 
+                        'transparent'
                     }}
                   >
                     {themeOption.name}
@@ -591,10 +606,9 @@ export const SideMenu: React.FC<SideMenuProps> = ({
         {/* Actions */}
         <div style={{
           background: getCardBackground(),
-          borderRadius: '16px',
-          padding: '18px',
-          border: getCardBorder(),
-          backdropFilter: 'blur(12px)'
+          borderRadius: '12px',
+          padding: '15px',
+          border: getCardBorder()
         }}>
           <button
             onClick={handleHistoryClick}
@@ -602,12 +616,12 @@ export const SideMenu: React.FC<SideMenuProps> = ({
               background: getButtonColor(),
               color: 'white',
               border: 'none',
-              padding: '14px',
-              borderRadius: '10px',
+              padding: '12px',
+              borderRadius: '6px',
               cursor: 'pointer',
               fontSize: '1rem',
               width: '100%',
-              marginBottom: '12px'
+              marginBottom: '10px'
             }}
           >
             View History
@@ -618,8 +632,8 @@ export const SideMenu: React.FC<SideMenuProps> = ({
               background: getDropdownBackground(),
               color: getTextColor(),
               border: getDropdownBorder(),
-              padding: '14px',
-              borderRadius: '10px',
+              padding: '12px',
+              borderRadius: '6px',
               cursor: 'pointer',
               fontSize: '1rem',
               width: '100%'
