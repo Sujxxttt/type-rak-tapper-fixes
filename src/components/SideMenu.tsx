@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { X, ChevronDown } from 'lucide-react';
 import {
@@ -55,12 +54,13 @@ export const SideMenu: React.FC<SideMenuProps> = ({
   if (!sideMenuOpen) return null;
 
   const getGlassBackground = () => {
+    // Increase transparency for all themes
     if (theme === 'midnight-black') {
-      return 'rgba(20, 20, 20, 0.9)';
+      return 'rgba(20, 20, 20, 0.66)';
     } else if (theme === 'cotton-candy-glow') {
-      return 'rgba(255, 255, 255, 0.2)';
+      return 'rgba(255, 255, 255, 0.16)';
     }
-    return 'rgba(30, 30, 60, 0.9)';
+    return 'rgba(30, 30, 60, 0.66)';
   };
 
   const getTextColor = () => {
@@ -135,7 +135,8 @@ export const SideMenu: React.FC<SideMenuProps> = ({
           height: '100%',
           background: 'rgba(0, 0, 0, 0.5)',
           backdropFilter: 'blur(4px)',
-          zIndex: 1000
+          zIndex: 1000,
+          transition: 'opacity 0.3s' // for smooth fade-in/out
         }}
         onClick={() => setSideMenuOpen(false)}
       />
@@ -151,14 +152,15 @@ export const SideMenu: React.FC<SideMenuProps> = ({
           height: '100vh',
           background: getGlassBackground(),
           backdropFilter: 'blur(20px)',
-          borderLeft: '1px solid rgba(255, 255, 255, 0.2)',
-          boxShadow: '-10px 0 30px rgba(0, 0, 0, 0.3)',
+          borderLeft: '1px solid rgba(255, 255, 255, 0.18)',
+          boxShadow: '-10px 0 30px rgba(0, 0, 0, 0.28)',
           zIndex: 1001,
           padding: '20px',
           overflowY: 'auto',
           color: getTextColor(),
           transform: sideMenuOpen ? 'translateX(0)' : 'translateX(100%)',
-          transition: 'transform 0.3s ease-in-out'
+          opacity: sideMenuOpen ? 1 : 0,
+          transition: 'transform 0.40s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.30s cubic-bezier(0.23, 1, 0.32, 1)'
         }}
       >
         {/* Header */}
