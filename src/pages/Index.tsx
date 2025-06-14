@@ -241,7 +241,7 @@ const Index: React.FC = () => {
     // Check if we need to extend text
     if (pos >= testText.length - 100) {
       const newText = extendText();
-      renderText(newText);
+      renderText(newText, textFlowRef);
     }
     
     const expectedChar = testText[pos];
@@ -331,11 +331,11 @@ const Index: React.FC = () => {
     if (pendingTextToRender && textFlowRef.current) {
       // Debug line to help diagnose text update issues
       console.log("About to renderText with:", pendingTextToRender, "ref:", textFlowRef.current);
-      renderText(pendingTextToRender);
+      renderText(pendingTextToRender, textFlowRef);
       setPendingTextToRender(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentScreen, pendingTextToRender, textFlowRef.current]);
+  }, [currentScreen, pendingTextToRender, textFlowRef.current, renderText]);
   
   const continueTest = (testName?: string) => {
     if (testName) {
@@ -500,6 +500,14 @@ const Index: React.FC = () => {
       minHeight: '100vh',
       overflowX: 'hidden'
     }}>
+      {/* Overlay for sidebar */}
+      {sideMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 animate-fade-in"
+          onClick={() => setSideMenuOpen(false)}
+        />
+      )}
+
       <div style={{
         display: 'flex',
         flexDirection: 'column',
@@ -1083,7 +1091,7 @@ const Index: React.FC = () => {
           />
         )}
 
-        {/* Side Menu */}
+        {/* Side Menu with smooth animations */}
         <SideMenu
           sideMenuOpen={sideMenuOpen}
           setSideMenuOpen={setSideMenuOpen}
@@ -1260,6 +1268,39 @@ const Index: React.FC = () => {
 
         @keyframes blinkCaret {
           50% { opacity: 0; }
+        }
+
+        @keyframes fade-in {
+          0% {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          100% {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes slide-in-right {
+          0% { transform: translateX(100%); }
+          100% { transform: translateX(0); }
+        }
+
+        @keyframes slide-out-right {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(100%); }
+        }
+
+        .animate-fade-in {
+          animation: fade-in 0.3s ease-out;
+        }
+
+        .animate-slide-in-right {
+          animation: slide-in-right 0.3s ease-out;
+        }
+
+        .animate-slide-out-right {
+          animation: slide-out-right 0.3s ease-out;
         }
         
         .char {

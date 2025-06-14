@@ -71,14 +71,14 @@ export const useTypingGame = () => {
     return generatedTextRef.current;
   };
 
-  const renderText = (text: string) => {
+  const renderText = (text: string, elementRef?: React.RefObject<HTMLDivElement>) => {
     console.log('Rendering text with length:', text.length);
     
-    setTimeout(() => {
-      const textFlowElement = document.getElementById('text-flow');
+    const tryRender = () => {
+      const textFlowElement = elementRef?.current || document.getElementById('text-flow');
       if (!textFlowElement) {
         console.log('Text flow element not found, retrying...');
-        setTimeout(() => renderText(text), 100);
+        setTimeout(tryRender, 50);
         return;
       }
       
@@ -99,7 +99,9 @@ export const useTypingGame = () => {
       textFlowElement.appendChild(frag);
       setChars(newChars);
       console.log('Text successfully rendered with', newChars.length, 'characters');
-    }, 50);
+    };
+
+    tryRender();
   };
 
   const startTimer = useCallback((duration: number, onComplete: () => void) => {
