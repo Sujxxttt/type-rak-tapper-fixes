@@ -2,13 +2,15 @@
 import React, { useState, useEffect } from 'react';
 
 interface IntroductionProps {
-  onComplete: () => void;
+  onCreateUser: (username: string) => void;
+  theme: string;
 }
 
-export const Introduction: React.FC<IntroductionProps> = ({ onComplete }) => {
+export const Introduction: React.FC<IntroductionProps> = ({ onCreateUser, theme }) => {
   const [currentTheme, setCurrentTheme] = useState(0);
   const [animationPhase, setAnimationPhase] = useState('themes'); // 'themes' or 'moving'
   const [titlePosition, setTitlePosition] = useState('center');
+  const [username, setUsername] = useState('');
 
   const themes = [
     {
@@ -31,7 +33,6 @@ export const Introduction: React.FC<IntroductionProps> = ({ onComplete }) => {
   useEffect(() => {
     let themeInterval: NodeJS.Timeout;
     let phaseTimeout: NodeJS.Timeout;
-    let completeTimeout: NodeJS.Timeout;
 
     // Theme switching phase
     themeInterval = setInterval(() => {
@@ -45,21 +46,14 @@ export const Introduction: React.FC<IntroductionProps> = ({ onComplete }) => {
       setTitlePosition('top-left');
     }, 4500);
 
-    // Complete animation after title moves to top-left
-    completeTimeout = setTimeout(() => {
-      onComplete();
-    }, 6000);
-
     return () => {
       clearInterval(themeInterval);
       clearTimeout(phaseTimeout);
-      clearTimeout(completeTimeout);
     };
-  }, [onComplete]);
+  }, []);
 
   const getDefaultTheme = () => {
-    const savedTheme = localStorage.getItem("typeRakTheme");
-    return savedTheme || 'cosmic-nebula';
+    return theme || 'cosmic-nebula';
   };
 
   const getCurrentThemeData = () => {
@@ -72,6 +66,12 @@ export const Introduction: React.FC<IntroductionProps> = ({ onComplete }) => {
 
   const currentThemeData = getCurrentThemeData();
 
+  const handleCreateUser = () => {
+    if (username.trim()) {
+      onCreateUser(username.trim());
+    }
+  };
+
   return (
     <div 
       style={{
@@ -83,6 +83,7 @@ export const Introduction: React.FC<IntroductionProps> = ({ onComplete }) => {
         background: currentThemeData.background,
         transition: animationPhase === 'themes' ? 'background 1s ease-in-out' : 'background 2s ease-in-out',
         display: 'flex',
+        flexDirection: 'column',
         alignItems: titlePosition === 'center' ? 'center' : 'flex-start',
         justifyContent: titlePosition === 'center' ? 'center' : 'flex-start',
         zIndex: 9999,
@@ -109,6 +110,45 @@ export const Introduction: React.FC<IntroductionProps> = ({ onComplete }) => {
       >
         TypeWave
       </h1>
+      
+      {titlePosition === 'center' && (
+        <div style={{ marginTop: '40px', textAlign: 'center' }}>
+          <input
+            type="text"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            placeholder="Enter your username"
+            style={{
+              padding: '15px 25px',
+              fontSize: '1.2rem',
+              borderRadius: '25px',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              background: 'rgba(255, 255, 255, 0.1)',
+              color: 'white',
+              marginBottom: '20px',
+              minWidth: '300px',
+              textAlign: 'center'
+            }}
+            onKeyPress={(e) => e.key === 'Enter' && handleCreateUser()}
+          />
+          <br />
+          <button
+            onClick={handleCreateUser}
+            style={{
+              padding: '15px 30px',
+              fontSize: '1.1rem',
+              borderRadius: '25px',
+              border: 'none',
+              background: currentThemeData.titleGradient,
+              color: 'white',
+              cursor: 'pointer',
+              minWidth: '200px'
+            }}
+          >
+            Start Typing
+          </button>
+        </div>
+      )}
       
       <style>{`
         @keyframes colorWave {
