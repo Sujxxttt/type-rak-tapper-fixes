@@ -1,5 +1,4 @@
-
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect } from 'react';
 
 interface TypingTestProps {
   testText: string;
@@ -9,7 +8,6 @@ interface TypingTestProps {
   onKeyDown: (e: KeyboardEvent) => void;
   fontSize: number;
   fontStyle: string;
-  extraChars: string[];
 }
 
 export const TypingTest: React.FC<TypingTestProps> = ({
@@ -19,8 +17,7 @@ export const TypingTest: React.FC<TypingTestProps> = ({
   theme,
   onKeyDown,
   fontSize,
-  fontStyle,
-  extraChars
+  fontStyle
 }) => {
   const textFlowRef = useRef<HTMLDivElement>(null);
   const caretRef = useRef<HTMLDivElement>(null);
@@ -37,7 +34,7 @@ export const TypingTest: React.FC<TypingTestProps> = ({
 
   useEffect(() => {
     adjustCaretPosition();
-  }, [pos, chars, fontSize, extraChars]);
+  }, [pos, chars, fontSize]);
 
   const adjustCaretPosition = () => {
     if (!caretRef.current || !chars || chars.length === 0 || !textFlowRef.current || !containerRef.current) {
@@ -48,13 +45,8 @@ export const TypingTest: React.FC<TypingTestProps> = ({
     const containerRect = container.getBoundingClientRect();
     const containerCenter = containerRect.width / 2;
     
-    // Calculate position based on current position and extra characters
-    const currentIndex = pos + extraChars.length;
-    
-    if (pos < testText.length) {
+    if (pos < testText.length && chars[pos]) {
       const currentChar = chars[pos];
-      if (!currentChar) return;
-      
       const charRect = currentChar.getBoundingClientRect();
       
       // Calculate offset to keep current character in center
@@ -63,7 +55,7 @@ export const TypingTest: React.FC<TypingTestProps> = ({
       
       // Apply smooth transform
       textFlowRef.current.style.transform = `translateX(${offset}px)`;
-      textFlowRef.current.style.transition = 'transform 0.2s ease-out';
+      textFlowRef.current.style.transition = 'transform 0.1s ease-out';
       
       // Position caret below the current character
       caretRef.current.style.left = `${containerCenter}px`;
@@ -140,11 +132,6 @@ export const TypingTest: React.FC<TypingTestProps> = ({
           }}
         >
           {/* Text will be rendered here by useTypingGame hook */}
-          {extraChars.length > 0 && (
-            <span style={{ color: '#ff4444', backgroundColor: 'rgba(255, 68, 68, 0.2)' }}>
-              {extraChars.join('')}
-            </span>
-          )}
         </div>
       </div>
       <div 
