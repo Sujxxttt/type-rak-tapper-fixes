@@ -73,32 +73,39 @@ export const useTypingGame = () => {
   };
 
   const renderText = (text: string) => {
-    const textFlowElement = document.getElementById('text-flow');
-    if (!textFlowElement) {
-      console.log('Text flow element not found');
-      return;
-    }
+    console.log('Rendering text with length:', text.length);
     
-    setTestText(text);
-    textFlowElement.innerHTML = "";
-    const newChars: HTMLElement[] = [];
-    const frag = document.createDocumentFragment();
-    
-    for (let i = 0; i < text.length; i++) {
-      const char = text[i];
-      const span = document.createElement("span");
-      span.className = "char";
-      span.textContent = char === " " ? "\u00A0" : char;
-      frag.appendChild(span);
-      newChars.push(span);
-    }
-    
-    textFlowElement.appendChild(frag);
-    setChars(newChars);
-    console.log('Text rendered with length:', text.length);
+    // Wait for next tick to ensure DOM is ready
+    setTimeout(() => {
+      const textFlowElement = document.getElementById('text-flow');
+      if (!textFlowElement) {
+        console.log('Text flow element not found, retrying...');
+        setTimeout(() => renderText(text), 100);
+        return;
+      }
+      
+      setTestText(text);
+      textFlowElement.innerHTML = "";
+      const newChars: HTMLElement[] = [];
+      const frag = document.createDocumentFragment();
+      
+      for (let i = 0; i < text.length; i++) {
+        const char = text[i];
+        const span = document.createElement("span");
+        span.className = "char";
+        span.textContent = char === " " ? "\u00A0" : char;
+        frag.appendChild(span);
+        newChars.push(span);
+      }
+      
+      textFlowElement.appendChild(frag);
+      setChars(newChars);
+      console.log('Text successfully rendered with', newChars.length, 'characters');
+    }, 50);
   };
 
   const startTimer = useCallback((duration: number, onComplete: () => void) => {
+    console.log('Starting timer for', duration, 'seconds');
     if (timerRef.current) {
       clearInterval(timerRef.current);
     }
@@ -115,6 +122,7 @@ export const useTypingGame = () => {
   }, []);
 
   const resetTest = () => {
+    console.log('Resetting test');
     setGameOver(false);
     setTestActive(false);
     setElapsed(0);
