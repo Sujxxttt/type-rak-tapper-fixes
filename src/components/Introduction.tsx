@@ -57,7 +57,9 @@ export const Introduction: React.FC<IntroductionProps> = ({ onCreateUser, theme 
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        zIndex: 9999
+        zIndex: 9999,
+        width: '100vw',
+        height: '100vh'
       }}
     >
       <h1 

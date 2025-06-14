@@ -67,6 +67,37 @@ const Index = () => {
     getCurrentErrorRate
   } = useTypingGame();
 
+  // Apply theme to document body immediately
+  const applyTheme = useCallback((themeName: string) => {
+    setTheme(themeName);
+    const root = document.documentElement;
+    const body = document.body;
+    
+    let backgroundStyle = '';
+    switch (themeName) {
+      case 'cosmic-nebula':
+        backgroundStyle = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+        break;
+      case 'midnight-black':
+        backgroundStyle = 'linear-gradient(135deg, #2c3e50 0%, #000000 100%)';
+        break;
+      case 'cotton-candy-glow':
+        backgroundStyle = 'linear-gradient(135deg, #ffeaa7 0%, #fab1a0 50%, #fd79a8 100%)';
+        break;
+      default:
+        backgroundStyle = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+    }
+    
+    root.style.background = backgroundStyle;
+    body.style.background = backgroundStyle;
+    body.style.minHeight = '100vh';
+  }, [setTheme]);
+
+  // Apply theme on component mount and when theme changes
+  useEffect(() => {
+    applyTheme(theme);
+  }, [theme, applyTheme]);
+
   useEffect(() => {
     if (currentUser) {
       setUsername(currentUser);
@@ -260,23 +291,6 @@ const Index = () => {
     });
   }, [duration, generateWords, renderText, setTestActive, setGameOver, setElapsed, setPos, setCorrectCharacters, setTotalErrors, setActualTypedCount, setLastErrorPos, startTimer, handleTestEnd]);
 
-  const applyTheme = useCallback((themeName: string) => {
-    setTheme(themeName);
-    const root = document.documentElement;
-    
-    switch (themeName) {
-      case 'cosmic-nebula':
-        root.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-        break;
-      case 'midnight-black':
-        root.style.background = 'linear-gradient(135deg, #2c3e50 0%, #000000 100%)';
-        break;
-      case 'cotton-candy-glow':
-        root.style.background = 'linear-gradient(135deg, #ffeaa7 0%, #fab1a0 50%, #fd79a8 100%)';
-        break;
-    }
-  }, [setTheme]);
-
   const getButtonColor = useCallback(() => {
     switch (theme) {
       case 'cosmic-nebula': return '#667eea';
@@ -330,10 +344,6 @@ const Index = () => {
     window.open('https://github.com/yourusername', '_blank');
   }, []);
 
-  useEffect(() => {
-    applyTheme(theme);
-  }, [theme, applyTheme]);
-
   if (showHistory) {
     return (
       <HistoryPage
@@ -345,7 +355,12 @@ const Index = () => {
   }
 
   return (
-    <div style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
+    <div style={{ 
+      minHeight: '100vh', 
+      position: 'relative', 
+      overflow: 'hidden',
+      background: 'inherit'
+    }}>
       {showWelcome && !currentUser && (
         <Introduction
           onCreateUser={(username: string) => {
