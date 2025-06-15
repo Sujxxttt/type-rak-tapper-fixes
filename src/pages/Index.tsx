@@ -644,7 +644,7 @@ const Index: React.FC = () => {
               fontWeight: 'bold',
               textShadow: '0 0 10px rgba(0, 255, 0, 0.5)'
             }}>
-              >> PRESS ANY KEY TO START TEST <<
+              &gt;&gt; PRESS ANY KEY TO START TEST &lt;&lt;
             </div>
           </div>
         )}
