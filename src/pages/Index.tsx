@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { TypingTest } from '../components/TypingTest';
 import { StatsDisplay } from '../components/StatsDisplay';
@@ -7,12 +6,14 @@ import { TestNameMenu } from '../components/TestNameMenu';
 import { Introduction } from '../components/Introduction';
 import { HistoryPage } from '../components/HistoryPage';
 import { Toast } from '../components/Toast';
+import { ResultsPage } from '../components/ResultsPage';
+import { Footer } from '../components/Footer';
 import { useTypingGame } from '../hooks/useTypingGame';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { useSoundEffects } from '../hooks/useSoundEffects';
 
 const Index = () => {
-  const [currentScreen, setCurrentScreen] = useState<'greeting' | 'typing' | 'history'>('greeting');
+  const [currentScreen, setCurrentScreen] = useState<'greeting' | 'typing' | 'history' | 'results'>('greeting');
   const [currentTest, setCurrentTest] = useState<string>('1 Minute');
   const [theme, setTheme] = useState<string>('cosmic-nebula');
   const [sideMenuOpen, setSideMenuOpen] = useState<boolean>(false);
@@ -29,8 +30,14 @@ const Index = () => {
   const [showTestNameMenu, setShowTestNameMenu] = useState<boolean>(false);
   const [newTestName, setNewTestName] = useState<string>('');
   const [showIntroduction, setShowIntroduction] = useState<boolean>(false);
-  const [continueTestMode, setContinueTestMode] = useState<boolean>(false);
-  const [extraChars, setExtraChars] = useState<string[]>([]);
+
+  // Test results for results page
+  const [finalResults, setFinalResults] = useState({
+    wpm: 0,
+    accuracy: 0,
+    totalErrors: 0,
+    correctCharacters: 0
+  });
 
   const messageTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
@@ -41,9 +48,7 @@ const Index = () => {
     testActive,
     setTestActive,
     elapsed,
-    setElapsed,
     pos,
-    setPos,
     chars,
     testText,
     correctCharacters,
@@ -108,10 +113,40 @@ const Index = () => {
 
   const getButtonColor = () => {
     switch (theme) {
-      case 'midnight-black': return '#6c757d';
-      case 'cotton-candy-glow': return '#ff1fbc';
-      default: return '#21b1ff';
+      case 'cosmic-nebula': return '#8b5cf6';
+      case 'midnight-black': return '#6366f1';
+      case 'cotton-candy-glow': return '#f472b6';
+      default: return '#8b5cf6';
     }
+  };
+
+  const getTitleGradient = () => {
+    switch (theme) {
+      case 'cosmic-nebula': return 'linear-gradient(90deg, #e454f0 0%, #9d54f0 100%)';
+      case 'midnight-black': return 'linear-gradient(90deg, #e559f7 0%, #9f59f7 100%)';
+      case 'cotton-candy-glow': return 'linear-gradient(90deg, #ff59e8 0%, #ff52a8 100%)';
+      default: return 'linear-gradient(90deg, #e454f0 0%, #9d54f0 100%)';
+    }
+  };
+
+  const getTextColor = () => {
+    return theme === 'cotton-candy-glow' ? '#333' : 'white';
+  };
+
+  const getGlassStyle = () => {
+    let background = 'rgba(255, 255, 255, 0.1)';
+    if (theme === 'cotton-candy-glow') {
+      background = 'rgba(255, 255, 255, 0.2)';
+    } else if (theme === 'midnight-black') {
+      background = 'rgba(0, 0, 0, 0.1)';
+    }
+
+    return {
+      background,
+      borderRadius: '16px',
+      backdropFilter: 'blur(20px)',
+      border: '1px solid rgba(255, 255, 255, 0.1)'
+    };
   };
 
   const switchUser = (username: string) => {
@@ -161,9 +196,8 @@ const Index = () => {
     setCurrentTest(nameToUse);
     
     resetTest();
-    setExtraChars([]);
     setShowReturnConfirm(false);
-    setContinueTestMode(false);
+    setCurrentScreen('typing');
 
     // Generate text and render it immediately
     const textToUse = generateWords(100);
@@ -173,16 +207,6 @@ const Index = () => {
       console.log('Attempting to render text, ref available:', !!textFlowRef.current);
       renderText(textToUse);
     }, 100);
-  };
-
-  const continueTest = (testName?: string) => {
-    if (testName) {
-      startNewTest(testName);
-    } else {
-      const extendedText = extendText();
-      renderText(extendedText);
-    }
-    setContinueTestMode(true);
   };
 
   const handleKeyDown = (e: KeyboardEvent) => {
@@ -206,7 +230,6 @@ const Index = () => {
       playKeyboardSound();
       currentChar.classList.add('correct');
       setCorrectCharacters(prev => prev + 1);
-      setPos(prev => prev + 1);
       
       if (pos + 1 >= chars.length * 0.8) {
         const extendedText = extendText();
@@ -224,10 +247,7 @@ const Index = () => {
         const extraSpan = document.createElement('span');
         extraSpan.textContent = key;
         extraSpan.className = 'char extra';
-        extraSpan.style.color = '#e74c3c';
-        extraSpan.style.backgroundColor = 'rgba(231, 76, 60, 0.2)';
         currentChar.parentNode?.insertBefore(extraSpan, currentChar.nextSibling);
-        setExtraChars(prev => [...prev, key]);
       }
     }
   };
@@ -253,6 +273,14 @@ const Index = () => {
       const finalWPM = getCurrentWPM();
       const accuracy = Math.round(((actualTypedCount - totalErrors) / actualTypedCount) * 100) || 0;
       
+      // Store final results for results page
+      setFinalResults({
+        wpm: finalWPM,
+        accuracy: accuracy,
+        totalErrors: totalErrors,
+        correctCharacters: correctCharacters
+      });
+      
       const result = {
         wpm: finalWPM,
         accuracy: accuracy,
@@ -265,6 +293,8 @@ const Index = () => {
       userResults.push(result);
       localStorage.setItem(`typingResults_${currentActiveUser}`, JSON.stringify(userResults));
       
+      // Switch to results screen
+      setCurrentScreen('results');
       showMessage(`Test completed! WPM: ${finalWPM}, Accuracy: ${accuracy}%`);
     });
   };
@@ -295,7 +325,8 @@ const Index = () => {
       position: 'relative',
       display: 'flex',
       flexDirection: 'column',
-      fontFamily: "'Inter', sans-serif"
+      fontFamily: "'Inter', sans-serif",
+      color: getTextColor()
     }}>
       <SideMenu
         sideMenuOpen={sideMenuOpen}
@@ -336,7 +367,7 @@ const Index = () => {
           <h1 style={{
             fontSize: '4rem',
             fontWeight: 'bold',
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            background: getTitleGradient(),
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             marginBottom: '2rem'
@@ -345,11 +376,8 @@ const Index = () => {
           </h1>
           
           <div style={{
-            background: theme === 'cotton-candy-glow' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.1)',
-            borderRadius: '16px',
+            ...getGlassStyle(),
             padding: '2rem',
-            backdropFilter: 'blur(10px)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
             width: '100%',
             maxWidth: '400px'
           }}>
@@ -371,7 +399,7 @@ const Index = () => {
                 borderRadius: '8px',
                 border: '1px solid rgba(255, 255, 255, 0.3)',
                 background: 'rgba(255, 255, 255, 0.1)',
-                color: theme === 'cotton-candy-glow' ? '#333' : 'white',
+                color: getTextColor(),
                 outline: 'none',
                 marginBottom: '1rem'
               }}
@@ -424,11 +452,10 @@ const Index = () => {
             <button
               onClick={() => setCurrentScreen('greeting')}
               style={{
-                background: 'rgba(255, 255, 255, 0.1)',
-                color: theme === 'cotton-candy-glow' ? '#333' : 'white',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
+                ...getGlassStyle(),
+                color: getTextColor(),
+                border: 'none',
                 padding: '0.5rem 1rem',
-                borderRadius: '6px',
                 cursor: 'pointer'
               }}
             >
@@ -438,11 +465,10 @@ const Index = () => {
             <button
               onClick={() => setSideMenuOpen(true)}
               style={{
-                background: 'rgba(255, 255, 255, 0.1)',
-                color: theme === 'cotton-candy-glow' ? '#333' : 'white',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
+                ...getGlassStyle(),
+                color: getTextColor(),
+                border: 'none',
                 padding: '0.5rem 1rem',
-                borderRadius: '6px',
                 cursor: 'pointer'
               }}
             >
@@ -510,49 +536,6 @@ const Index = () => {
                 End Test
               </button>
             )}
-
-            {gameOver && (
-              <>
-                <button
-                  onClick={() => {
-                    resetTest();
-                    setExtraChars([]);
-                    setShowReturnConfirm(false);
-                    const textToUse = generateWords(100);
-                    setTimeout(() => {
-                      renderText(textToUse);
-                    }, 100);
-                  }}
-                  style={{
-                    background: getButtonColor(),
-                    color: 'white',
-                    border: 'none',
-                    padding: '1rem 2rem',
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    fontSize: '1.1rem',
-                    fontWeight: 'bold'
-                  }}
-                >
-                  Try Again
-                </button>
-                
-                <button
-                  onClick={() => setCurrentScreen('greeting')}
-                  style={{
-                    background: '#6c757d',
-                    color: 'white',
-                    border: 'none',
-                    padding: '1rem 2rem',
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    fontSize: '1.1rem'
-                  }}
-                >
-                  Back to Home
-                </button>
-              </>
-            )}
           </div>
 
           {showReturnConfirm && (
@@ -569,13 +552,10 @@ const Index = () => {
               zIndex: 1000
             }}>
               <div style={{
-                background: theme === 'cotton-candy-glow' ? 'rgba(255, 255, 255, 0.95)' : 'rgba(30, 30, 60, 0.95)',
+                ...getGlassStyle(),
                 padding: '2rem',
-                borderRadius: '12px',
                 textAlign: 'center',
-                backdropFilter: 'blur(10px)',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
-                color: theme === 'cotton-candy-glow' ? '#333' : 'white'
+                color: getTextColor()
               }}>
                 <p style={{ marginBottom: '1rem', fontSize: '1.2rem' }}>
                   Are you sure you want to end the test?
@@ -589,6 +569,7 @@ const Index = () => {
                       if (timerRef.current) {
                         clearInterval(timerRef.current);
                       }
+                      setCurrentScreen('results');
                     }}
                     style={{
                       background: '#e74c3c',
@@ -619,6 +600,27 @@ const Index = () => {
             </div>
           )}
         </div>
+      )}
+
+      {currentScreen === 'results' && (
+        <ResultsPage
+          wpm={finalResults.wpm}
+          accuracy={finalResults.accuracy}
+          totalErrors={finalResults.totalErrors}
+          correctCharacters={finalResults.correctCharacters}
+          duration={duration}
+          theme={theme}
+          onTryAgain={() => {
+            resetTest();
+            setCurrentScreen('typing');
+            setTimeout(() => {
+              const textToUse = generateWords(100);
+              renderText(textToUse);
+            }, 100);
+          }}
+          onBackHome={() => setCurrentScreen('greeting')}
+          getButtonColor={getButtonColor}
+        />
       )}
 
       {currentScreen === 'history' && (
@@ -655,41 +657,15 @@ const Index = () => {
 
       <Toast message={message} onClose={closeToast} />
 
-      <footer style={{
-        marginTop: 'auto',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: '1rem',
-        gap: '2rem',
-        flexWrap: 'wrap'
-      }}>
-        <button
-          onClick={() => setShowIntroduction(true)}
-          style={{
-            background: 'none',
-            border: 'none',
-            color: theme === 'cotton-candy-glow' ? '#333' : 'rgba(255, 255, 255, 0.7)',
-            cursor: 'pointer',
-            textDecoration: 'underline'
-          }}
-        >
-          How to use
-        </button>
-        
-        <button
-          onClick={() => setShowTestNameMenu(true)}
-          style={{
-            background: 'none',
-            border: 'none',
-            color: theme === 'cotton-candy-glow' ? '#333' : 'rgba(255, 255, 255, 0.7)',
-            cursor: 'pointer',
-            textDecoration: 'underline'
-          }}
-        >
-          Change test
-        </button>
-      </footer>
+      {currentScreen !== 'results' && currentScreen !== 'history' && (
+        <Footer
+          theme={theme}
+          onShowIntroduction={() => setShowIntroduction(true)}
+          onShowTestNameMenu={() => setShowTestNameMenu(true)}
+          onShowHistory={handleHistoryClick}
+          onContactMe={handleContactMe}
+        />
+      )}
     </div>
   );
 };
