@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { X } from 'lucide-react';
 import { TypingTest } from '../components/TypingTest';
@@ -486,25 +485,25 @@ const Index: React.FC = () => {
 
   const getTitleGradient = () => {
     if (theme === 'cosmic-nebula') {
-      return 'linear-gradient(90deg, #1a1a3e 0%, #2d1b4e 100%)';
+      return 'linear-gradient(90deg, #a729f0 0%, #3c95fa 100%)';
     } else if (theme === 'midnight-black') {
       return 'linear-gradient(90deg, #c559f7 0%, #7f59f7 100%)';
     } else if (theme === 'cotton-candy-glow') {
       return 'linear-gradient(90deg, #ff59e8 0%, #ff52a8 100%)';
     }
-    return 'linear-gradient(90deg, #1a1a3e 0%, #2d1b4e 100%)';
+    return 'linear-gradient(90deg, #a729f0 0%, #3c95fa 100%)';
   };
 
   const getButtonColor = () => {
     switch (theme) {
       case 'cosmic-nebula':
-        return '#2d1b4e';
+        return '#a729f0';
       case 'midnight-black':
         return '#6a0dad';
       case 'cotton-candy-glow':
         return '#af01af';
       default:
-        return '#2d1b4e';
+        return '#a729f0';
     }
   };
 
@@ -529,7 +528,7 @@ const Index: React.FC = () => {
       color: 'white',
       background: theme === 'midnight-black' ? '#000000' : 
                  theme === 'cotton-candy-glow' ? 'linear-gradient(45deg, #3e8cb9, #2f739d)' :
-                 'linear-gradient(135deg, #0c0c1e 0%, #1a1a3e 50%, #2d1b4e 100%)',
+                 'linear-gradient(135deg, #a729f0, #3c95fa)',
       minHeight: '100vh',
       overflowX: 'hidden'
     }}>
@@ -617,37 +616,29 @@ const Index: React.FC = () => {
           getButtonColor={getButtonColor}
         />
 
-        {/* Start Message for Typing Screen */}
+        {/* Start Message for Typing Screen - now using Toast styling */}
         {currentScreen === 'typing' && showStartMessage && (
           <div style={{
             position: 'fixed',
-            top: '50%',
+            top: '80px',
             left: '50%',
-            transform: 'translate(-50%, -50%)',
-            background: 'rgba(0, 0, 0, 0.8)',
-            backdropFilter: 'blur(15px)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            borderRadius: '16px',
-            padding: '2rem',
-            color: '#00ff00',
-            fontSize: '1.5rem',
-            fontFamily: "'Courier New', monospace",
+            transform: 'translateX(-50%)',
+            background: 'rgba(255, 255, 255, 0.15)',
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            color: 'white',
+            padding: '12px 24px',
+            borderRadius: '12px',
+            zIndex: 2000,
+            fontSize: '0.9rem',
+            maxWidth: '400px',
             textAlign: 'center',
-            zIndex: 1000,
-            boxShadow: '0 0 30px rgba(0, 255, 0, 0.3)',
-            animation: 'pulse 2s infinite'
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
           }}>
-            <div style={{
-              background: 'linear-gradient(45deg, #00ff00, #00aa00)',
-              WebkitBackgroundClip: 'text',
-              backgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              color: 'transparent',
-              fontWeight: 'bold',
-              textShadow: '0 0 10px rgba(0, 255, 0, 0.5)'
-            }}>
-              &gt;&gt; PRESS ANY KEY TO START TEST &lt;&lt;
-            </div>
+            Press any key to start test
           </div>
         )}
 

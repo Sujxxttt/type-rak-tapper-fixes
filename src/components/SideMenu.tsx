@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { X, ChevronDown } from 'lucide-react';
 import {
@@ -59,14 +60,15 @@ export const SideMenu: React.FC<SideMenuProps> = ({
   const [themeDropdownOpen, setThemeDropdownOpen] = useState(false);
   const [fontSizeDropdownOpen, setFontSizeDropdownOpen] = useState(false);
   const [fontStyleDropdownOpen, setFontStyleDropdownOpen] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
   
   const sidebarRef = useRef<HTMLDivElement>(null);
 
-  // Handle outside clicks
+  // Handle outside clicks - only close if clicking outside the sidebar
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (sideMenuOpen && sidebarRef.current && !sidebarRef.current.contains(event.target as Node)) {
-        setSideMenuOpen(false);
+        handleClose();
       }
     };
 
@@ -77,17 +79,31 @@ export const SideMenu: React.FC<SideMenuProps> = ({
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [sideMenuOpen, setSideMenuOpen]);
+  }, [sideMenuOpen]);
+
+  const handleClose = () => {
+    setIsClosing(true);
+    setTimeout(() => {
+      setSideMenuOpen(false);
+      setIsClosing(false);
+    }, 340); // 15% faster than 400ms
+  };
+
+  const handleDropdownItemClick = (action: () => void) => {
+    // Prevent sidebar from closing when selecting dropdown items
+    action();
+    // Don't close the sidebar
+  };
 
   const getSidebarBackground = () => {
     if (theme === 'cosmic-nebula') {
-      return 'linear-gradient(135deg, rgba(12, 12, 30, 0.5), rgba(26, 26, 62, 0.5), rgba(45, 27, 78, 0.5))';
+      return 'linear-gradient(135deg, rgba(167, 41, 240, 0.5), rgba(60, 149, 250, 0.5))';
     } else if (theme === 'midnight-black') {
       return 'rgba(30, 30, 30, 0.5)';
     } else if (theme === 'cotton-candy-glow') {
       return 'rgba(255, 182, 193, 0.5)';
     }
-    return 'linear-gradient(135deg, rgba(12, 12, 30, 0.5), rgba(26, 26, 62, 0.5), rgba(45, 27, 78, 0.5))';
+    return 'linear-gradient(135deg, rgba(167, 41, 240, 0.5), rgba(60, 149, 250, 0.5))';
   };
 
   const getTextColor = () => {
@@ -135,7 +151,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
     { value: 'pacifico', label: 'Pacifico' }
   ];
 
-  if (!sideMenuOpen) return null;
+  if (!sideMenuOpen && !isClosing) return null;
 
   return (
     <div style={{
@@ -149,7 +165,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
       zIndex: 1000,
       display: 'flex',
       justifyContent: 'flex-end',
-      animation: 'fadeIn 0.3s ease-out'
+      animation: isClosing ? 'fadeOut 0.34s ease-out' : 'fadeIn 0.34s ease-out'
     }}>
       <div 
         ref={sidebarRef}
@@ -161,9 +177,9 @@ export const SideMenu: React.FC<SideMenuProps> = ({
           overflowY: 'auto',
           boxShadow: '-10px 0 30px rgba(0, 0, 0, 0.3)',
           border: '1px solid rgba(255, 255, 255, 0.1)',
-          transform: sideMenuOpen ? 'translateX(0)' : 'translateX(100%)',
-          transition: 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-          animation: 'slideInRight 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+          transform: isClosing ? 'translateX(100%)' : 'translateX(0)',
+          transition: 'transform 0.34s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+          animation: isClosing ? 'slideOutRight 0.34s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'slideInRight 0.34s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
         }}>
         {/* Header */}
         <div style={{
@@ -183,7 +199,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
             Settings
           </h2>
           <button 
-            onClick={() => setSideMenuOpen(false)}
+            onClick={handleClose}
             style={{
               background: 'rgba(255, 255, 255, 0.1)',
               border: '1px solid rgba(255, 255, 255, 0.2)',
@@ -267,7 +283,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
                 {usersList.map((user) => (
                   <DropdownMenuItem
                     key={user}
-                    onClick={() => switchUser(user)}
+                    onClick={() => handleDropdownItemClick(() => switchUser(user))}
                     style={{
                       color: getTextColor(),
                       padding: '0.75rem',
@@ -376,7 +392,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
                 {durationOptions.map((option) => (
                   <DropdownMenuItem
                     key={option.value}
-                    onClick={() => setDuration(option.value)}
+                    onClick={() => handleDropdownItemClick(() => setDuration(option.value))}
                     style={{
                       color: getTextColor(),
                       padding: '0.75rem',
@@ -456,7 +472,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
                 {themeOptions.map((option) => (
                   <DropdownMenuItem
                     key={option.value}
-                    onClick={() => applyTheme(option.value)}
+                    onClick={() => handleDropdownItemClick(() => applyTheme(option.value))}
                     style={{
                       color: getTextColor(),
                       padding: '0.75rem',
@@ -536,7 +552,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
                 {fontSizeOptions.map((option) => (
                   <DropdownMenuItem
                     key={option.value}
-                    onClick={() => setFontSize(option.value)}
+                    onClick={() => handleDropdownItemClick(() => setFontSize(option.value))}
                     style={{
                       color: getTextColor(),
                       padding: '0.75rem',
@@ -616,7 +632,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
                 {fontStyleOptions.map((option) => (
                   <DropdownMenuItem
                     key={option.value}
-                    onClick={() => setFontStyle(option.value)}
+                    onClick={() => handleDropdownItemClick(() => setFontStyle(option.value))}
                     style={{
                       color: getTextColor(),
                       padding: '0.75rem',
@@ -736,6 +752,11 @@ export const SideMenu: React.FC<SideMenuProps> = ({
           to { opacity: 1; }
         }
         
+        @keyframes fadeOut {
+          from { opacity: 1; }
+          to { opacity: 0; }
+        }
+        
         @keyframes slideInRight {
           from {
             transform: translateX(100%);
@@ -744,6 +765,17 @@ export const SideMenu: React.FC<SideMenuProps> = ({
           to {
             transform: translateX(0);
             opacity: 1;
+          }
+        }
+        
+        @keyframes slideOutRight {
+          from {
+            transform: translateX(0);
+            opacity: 1;
+          }
+          to {
+            transform: translateX(100%);
+            opacity: 0;
           }
         }
       `}</style>
