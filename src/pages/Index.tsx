@@ -7,6 +7,7 @@ import { SideMenu } from '../components/SideMenu';
 import { Toast } from '../components/Toast';
 import { HistoryPage } from '../components/HistoryPage';
 import { Introduction } from '../components/Introduction';
+import { TypedTextPreview } from '../components/TypedTextPreview';
 import { useTypingGame } from '../hooks/useTypingGame';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { useSoundEffects } from '../hooks/useSoundEffects';
@@ -62,8 +63,8 @@ const Index: React.FC = () => {
     setTotalErrors,
     actualTypedCount,
     setActualTypedCount,
-    lastErrorPos,
-    setLastErrorPos,
+    wasLastError,
+    setWasLastError,
     timerRef,
     generateWords,
     renderText,
@@ -144,17 +145,17 @@ const Index: React.FC = () => {
     return () => document.removeEventListener('keydown', handleCheatCode);
   }, [testActive, duration]);
 
-  const endTest = () => {
+  const endTest = useCallback(() => {
     if (gameOver) return;
-    
+
     console.log('Ending test with current stats:', {
-      elapsed,
+      elapsed: duration,
       correctCharacters,
       totalErrors,
       actualTypedCount,
       typedTextLength: typedText.length
     });
-    
+
     setGameOver(true);
     setTestActive(false);
     if (timerRef.current) {
@@ -162,21 +163,17 @@ const Index: React.FC = () => {
       timerRef.current = null;
     }
     
-    // Use current state values for accurate calculation
-    const finalCorrectChars = correctCharacters;
-    const finalTotalTyped = actualTypedCount;
-    const finalErrors = totalErrors;
-    const testDuration = elapsed;
+    const testDuration = duration;
     
     const mins = Math.max(testDuration / 60, 1 / 60);
-    const speed = Math.round(Math.max(0, (finalCorrectChars / 5) / mins));
-    const errorRate = finalTotalTyped > 0 ? ((finalErrors / finalTotalTyped) * 100) : 0;
-    const score = Math.round(speed * ((100 - errorRate) / 100) * 10);
+    const speed = Math.round(Math.max(0, (correctCharacters / 5) / mins));
+    const errorRate = actualTypedCount > 0 ? ((totalErrors / actualTypedCount) * 100) : 0;
+    const score = Math.round(speed * Math.max(0, (100 - errorRate) / 100) * 10);
     
     console.log('Final calculated test results:', {
-      finalCorrectChars,
-      finalTotalTyped,
-      finalErrors,
+      correctCharacters,
+      actualTypedCount,
+      totalErrors,
       speed,
       errorRate,
       score,
@@ -188,10 +185,10 @@ const Index: React.FC = () => {
       date: new Date().toISOString(),
       wpm: speed,
       errorRate: parseFloat(errorRate.toFixed(2)),
-      errors: finalErrors,
+      errors: totalErrors,
       time: testDuration,
-      characters: finalTotalTyped,
-      correctChars: finalCorrectChars,
+      characters: actualTypedCount,
+      correctChars: correctCharacters,
       score: score
     };
     
@@ -234,7 +231,18 @@ const Index: React.FC = () => {
     localStorage.setItem(`typeRakTests-${currentActiveUser}`, JSON.stringify(newResults));
     
     setCurrentScreen('results');
-  };
+  }, [
+    gameOver, correctCharacters, totalErrors, actualTypedCount, typedText, 
+    duration, testResults, allTestHistory, currentTestName, currentActiveUser, 
+    setGameOver, setTestActive, timerRef, setLastTestResult, setAllTestHistory, 
+    setTestResults, setCurrentScreen
+  ]);
+
+  useEffect(() => {
+    if (testActive && elapsed >= duration) {
+        endTest();
+    }
+  }, [testActive, elapsed, duration, endTest]);
 
   const handleKeyDown = (e: KeyboardEvent) => {
     console.log('Key pressed:', e.key, 'Test active:', testActive, 'Game over:', gameOver);
@@ -260,7 +268,7 @@ const Index: React.FC = () => {
     
     if (!testActive && e.key.length === 1 && pos < chars.length) {
       console.log('Starting test with first keypress');
-      startTimer(duration, endTest);
+      startTimer(duration);
       setTestActive(true);
     }
     
@@ -300,18 +308,14 @@ const Index: React.FC = () => {
           return newCorrect;
         });
         setPos(prev => prev + 1);
-        setLastErrorPos(-1);
+        setWasLastError(false);
         playKeyboardSound();
       } else {
-        // Incorrect character - only count as error if it's not consecutive to the last error
-        if (lastErrorPos !== pos) {
-          setTotalErrors(prev => {
-            const newErrors = prev + 1;
-            console.log('Updated total errors to:', newErrors);
-            return newErrors;
-          });
-          setLastErrorPos(pos);
+        // Incorrect character
+        if (!wasLastError) {
+          setTotalErrors(prev => prev + 1);
         }
+        setWasLastError(true);
         if (chars[pos]) {
           chars[pos].classList.add("incorrect");
         }
@@ -536,8 +540,8 @@ const Index: React.FC = () => {
       fontSize: '112.5%',
       color: 'white',
       background: theme === 'midnight-black' ? '#000000' : 
-                 theme === 'cotton-candy-glow' ? 'linear-gradient(45deg, #4fb3d9, #3fa8d4)' :
-                 'linear-gradient(135deg, #3f034a, #004a7a)',
+                 theme === 'cotton-candy-glow' ? 'linear-gradient(45deg, #68c1e2, #5eb6de)' :
+                 'linear-gradient(45deg, #3f034a, #004a7a)',
       minHeight: '100vh',
       overflowX: 'hidden'
     }}>
@@ -627,10 +631,12 @@ const Index: React.FC = () => {
 
         {/* Start Message for Typing Screen */}
         {currentScreen === 'typing' && showStartMessage && (
-          <Toast 
-            message="Press any key to start test"
-            onClose={() => setShowStartMessage(false)}
-          />
+          <div style={{ position: 'fixed', top: '90px', left: '50%', transform: 'translateX(-50%)', zIndex: 2000 }}>
+            <Toast 
+              message="Press any key to start test"
+              onClose={() => setShowStartMessage(false)}
+            />
+          </div>
         )}
 
         {/* Main Content Areas */}

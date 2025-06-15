@@ -1,4 +1,3 @@
-
 import { useState, useRef, useCallback } from 'react';
 
 export const useTypingGame = () => {
@@ -11,7 +10,7 @@ export const useTypingGame = () => {
   const [correctCharacters, setCorrectCharacters] = useState<number>(0);
   const [totalErrors, setTotalErrors] = useState<number>(0);
   const [actualTypedCount, setActualTypedCount] = useState<number>(0);
-  const [lastErrorPos, setLastErrorPos] = useState<number>(-1);
+  const [wasLastError, setWasLastError] = useState<boolean>(false);
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const textFlowRef = useRef<HTMLDivElement>(null);
@@ -100,7 +99,7 @@ export const useTypingGame = () => {
     console.log('Text successfully rendered with', newChars.length, 'characters');
   }, []);
 
-  const startTimer = useCallback((duration: number, onComplete: () => void) => {
+  const startTimer = useCallback((duration: number) => {
     console.log('Starting timer for', duration, 'seconds');
     if (timerRef.current) {
       clearInterval(timerRef.current);
@@ -111,13 +110,7 @@ export const useTypingGame = () => {
       const now = Date.now();
       const newElapsed = Math.floor((now - startTime) / 1000);
       setElapsed(newElapsed);
-      
-      if (newElapsed >= duration) {
-        clearInterval(timerRef.current!);
-        timerRef.current = null;
-        onComplete();
-      }
-    }, 100); // Update more frequently for better accuracy
+    }, 100);
   }, []);
 
   const resetTest = () => {
@@ -129,7 +122,7 @@ export const useTypingGame = () => {
     setTotalErrors(0);
     setCorrectCharacters(0);
     setActualTypedCount(0);
-    setLastErrorPos(-1);
+    setWasLastError(false);
     usedWordsRef.current = [];
     generatedTextRef.current = '';
     wordListUsedRef.current = false;
@@ -172,10 +165,9 @@ export const useTypingGame = () => {
     setTotalErrors,
     actualTypedCount,
     setActualTypedCount,
-    lastErrorPos,
-    setLastErrorPos,
+    wasLastError,
+    setWasLastError,
     timerRef,
-    textFlowRef,
     generateWords,
     renderText,
     startTimer,

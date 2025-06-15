@@ -1,4 +1,3 @@
-
 import { useRef } from 'react';
 
 export const useSoundEffects = (soundEnabled: boolean) => {
@@ -28,31 +27,34 @@ export const useSoundEffects = (soundEnabled: boolean) => {
     filterNode.connect(gainNode);
     gainNode.connect(audioContext.destination);
     
-    // Configure the first oscillator (main click)
+    // Configure the first oscillator (main click) - sharper and slightly randomized
     oscillator1.type = 'square';
-    oscillator1.frequency.setValueAtTime(1200, audioContext.currentTime);
-    oscillator1.frequency.exponentialRampToValueAtTime(800, audioContext.currentTime + 0.02);
+    const mainFreq = 1200 + (Math.random() - 0.5) * 200;
+    oscillator1.frequency.setValueAtTime(mainFreq, audioContext.currentTime);
+    oscillator1.frequency.exponentialRampToValueAtTime(mainFreq * 0.5, audioContext.currentTime + 0.03);
     
-    // Configure the second oscillator (adds body to the sound)
+    // Configure the second oscillator (adds body to the sound) - lower for more 'thock'
     oscillator2.type = 'triangle';
-    oscillator2.frequency.setValueAtTime(400, audioContext.currentTime);
-    oscillator2.frequency.exponentialRampToValueAtTime(200, audioContext.currentTime + 0.04);
+    const bodyFreq = 300 + (Math.random() - 0.5) * 50;
+    oscillator2.frequency.setValueAtTime(bodyFreq, audioContext.currentTime);
+    oscillator2.frequency.exponentialRampToValueAtTime(bodyFreq * 0.5, audioContext.currentTime + 0.05);
     
     // Configure the filter for a more realistic sound
     filterNode.type = 'lowpass';
-    filterNode.frequency.setValueAtTime(2000, audioContext.currentTime);
-    filterNode.frequency.exponentialRampToValueAtTime(1000, audioContext.currentTime + 0.05);
+    filterNode.frequency.setValueAtTime(2200, audioContext.currentTime);
+    filterNode.frequency.exponentialRampToValueAtTime(1200, audioContext.currentTime + 0.06);
     
-    // Configure the gain for a sharp attack and quick decay
+    // Configure the gain for a sharp attack and quick decay - slightly louder click
     gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-    gainNode.gain.linearRampToValueAtTime(0.15, audioContext.currentTime + 0.005);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.08);
+    gainNode.gain.linearRampToValueAtTime(0.2, audioContext.currentTime + 0.005);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
     
     // Start and stop the oscillators
+    const stopTime = audioContext.currentTime + 0.1;
     oscillator1.start(audioContext.currentTime);
     oscillator2.start(audioContext.currentTime);
-    oscillator1.stop(audioContext.currentTime + 0.08);
-    oscillator2.stop(audioContext.currentTime + 0.08);
+    oscillator1.stop(stopTime);
+    oscillator2.stop(stopTime);
   };
 
   const playErrorSound = () => {

@@ -1,6 +1,16 @@
-
 import React, { useRef, useEffect } from 'react';
 import { X } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
+import { Switch } from '@/components/ui/switch';
 
 interface SideMenuProps {
   sideMenuOpen: boolean;
@@ -52,6 +62,11 @@ export const SideMenu: React.FC<SideMenuProps> = ({
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (sideMenuOpen && sideMenuRef.current && !sideMenuRef.current.contains(event.target as Node)) {
+        // Prevent closing if a click is inside a Radix UI dropdown
+        const target = event.target as HTMLElement;
+        if (target.closest('[data-radix-popper-content-wrapper]')) {
+          return;
+        }
         setSideMenuOpen(false);
       }
     };
@@ -66,11 +81,33 @@ export const SideMenu: React.FC<SideMenuProps> = ({
   }, [sideMenuOpen, setSideMenuOpen]);
 
   const handleOptionClick = (e: React.MouseEvent) => {
-    // Stop propagation to prevent closing the sidebar when clicking options
+    // This is not strictly necessary anymore but doesn't hurt.
     e.stopPropagation();
   };
 
   if (!sideMenuOpen) return null;
+
+  const dropdownContentStyle: React.CSSProperties = {
+    background: 'rgba(20, 20, 20, 0.7)',
+    backdropFilter: 'blur(10px)',
+    border: '1px solid rgba(255, 255, 255, 0.2)',
+    color: theme === 'cotton-candy-glow' ? '#333' : 'white',
+    zIndex: 1001
+  };
+
+  const dropdownTriggerStyle: React.CSSProperties = {
+    width: '100%',
+    padding: '8px 12px',
+    borderRadius: '4px',
+    border: '1px solid rgba(255, 255, 255, 0.3)',
+    background: 'rgba(255, 255, 255, 0.1)',
+    color: theme === 'cotton-candy-glow' ? '#333' : 'white',
+    textAlign: 'left',
+    cursor: 'pointer',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center'
+  };
 
   return (
     <>
@@ -84,7 +121,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
           bottom: 0,
           background: 'rgba(0, 0, 0, 0.5)',
           zIndex: 998,
-          animation: 'fadeIn 0.17s ease-out'
+          animation: 'fadeIn 0.15s ease-out'
         }}
       />
       
@@ -101,12 +138,12 @@ export const SideMenu: React.FC<SideMenuProps> = ({
             'linear-gradient(135deg, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.15))' : 
             'rgba(255, 255, 255, 0.1)',
           backdropFilter: 'blur(20px)',
-          border: '1px solid rgba(255, 255, 255, 0.2)',
+          borderLeft: '1px solid rgba(255, 255, 255, 0.2)',
           zIndex: 999,
           padding: '20px',
           overflowY: 'auto',
           color: theme === 'cotton-candy-glow' ? '#333' : 'white',
-          animation: sideMenuOpen ? 'slideInRight 0.17s ease-out' : 'slideOutRight 0.17s ease-out'
+          animation: sideMenuOpen ? 'slideInRight 0.15s ease-out' : 'slideOutRight 0.15s ease-out forwards'
         }}
       >
         {/* Close Button */}
@@ -130,188 +167,137 @@ export const SideMenu: React.FC<SideMenuProps> = ({
         <h3 style={{ marginBottom: '1.5rem', paddingTop: '1rem' }}>Settings</h3>
 
         {/* User Management */}
-        <div style={{ marginBottom: '1.5rem' }} onClick={handleOptionClick}>
-          <h4 style={{ marginBottom: '0.5rem', fontSize: '1rem', fontWeight: '600' }}>Users:</h4>
-          {usersList.map(user => (
-            <div key={user} style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              padding: '0.5rem',
-              background: user === currentActiveUser ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)',
-              borderRadius: '4px',
-              marginBottom: '0.5rem'
-            }}>
-              <span>{user}</span>
-              {user === currentActiveUser && (
-                <button 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDeleteUser();
-                  }}
-                  style={{
-                    background: deleteConfirmState ? '#dc3545' : '#6c757d',
-                    color: 'white',
-                    border: 'none',
-                    padding: '4px 8px',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: '0.8rem'
-                  }}
-                >
-                  {deleteConfirmState ? 'Confirm Delete' : 'Delete'}
-                </button>
-              )}
-              {user !== currentActiveUser && (
-                <button 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    switchUser(user);
-                  }}
-                  style={{
-                    background: getButtonColor(),
-                    color: 'white',
-                    border: 'none',
-                    padding: '4px 8px',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: '0.8rem'
-                  }}
-                >
-                  Switch
-                </button>
-              )}
-            </div>
-          ))}
+        <div style={{ marginBottom: '1.5rem' }}>
+          <h4 style={{ marginBottom: '0.5rem', fontSize: '1rem', fontWeight: '600' }}>User:</h4>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button style={dropdownTriggerStyle}>
+                <span>{currentActiveUser || 'Select User'}</span>
+                <span>▼</span>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent style={dropdownContentStyle} className="w-[310px]">
+              <DropdownMenuLabel>Manage Users</DropdownMenuLabel>
+              <DropdownMenuSeparator style={{ background: 'rgba(255,255,255,0.2)'}} />
+              {usersList.map(user => (
+                <DropdownMenuItem key={user} onSelect={(e) => e.preventDefault()} style={{ padding: '0.5rem', cursor: 'default' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                    <span>{user}</span>
+                    {user === currentActiveUser ? (
+                      <button onClick={handleDeleteUser} style={{ background: deleteConfirmState ? '#dc3545' : '#6c757d', color: 'white', border: 'none', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem' }}>
+                        {deleteConfirmState ? 'Confirm' : 'Delete'}
+                      </button>
+                    ) : (
+                      <button onClick={() => switchUser(user)} style={{ background: getButtonColor(), color: 'white', border: 'none', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem' }}>
+                        Switch
+                      </button>
+                    )}
+                  </div>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         {/* Test Duration */}
-        <div style={{ marginBottom: '1.5rem' }} onClick={handleOptionClick}>
+        <div style={{ marginBottom: '1.5rem' }}>
           <h4 style={{ marginBottom: '0.5rem', fontSize: '1rem', fontWeight: '600' }}>Test Duration:</h4>
-          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-            {[15, 30, 60, 120].map(time => (
-              <button 
-                key={time}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setDuration(time);
-                }}
-                style={{
-                  background: duration === time ? getButtonColor() : 'rgba(255, 255, 255, 0.2)',
-                  color: theme === 'cotton-candy-glow' ? '#333' : 'white',
-                  border: 'none',
-                  padding: '8px 12px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontSize: '0.9rem'
-                }}
-              >
-                {time}s
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button style={dropdownTriggerStyle}>
+                <span>{duration} seconds</span>
+                <span>▼</span>
               </button>
-            ))}
-          </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent style={dropdownContentStyle} className="w-[310px]">
+              <DropdownMenuLabel>Set Duration</DropdownMenuLabel>
+              <DropdownMenuSeparator style={{ background: 'rgba(255,255,255,0.2)'}} />
+              <DropdownMenuRadioGroup value={String(duration)} onValueChange={val => setDuration(Number(val))}>
+                {[15, 30, 60, 120].map(time => (
+                  <DropdownMenuRadioItem key={time} value={String(time)}>{time}s</DropdownMenuRadioItem>
+                ))}
+              </DropdownMenuRadioGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         {/* Font Size */}
-        <div style={{ marginBottom: '1.5rem' }} onClick={handleOptionClick}>
-          <h4 style={{ marginBottom: '0.5rem', fontSize: '1rem', fontWeight: '600' }}>Font Size: {fontSize}%</h4>
-          <input 
-            type="range"
-            min="80"
-            max="200"
-            value={fontSize}
-            onChange={(e) => {
-              e.stopPropagation();
-              setFontSize(parseInt(e.target.value));
-            }}
-            style={{
-              width: '100%',
-              accentColor: getButtonColor()
-            }}
-          />
+        <div style={{ marginBottom: '1.5rem' }}>
+          <h4 style={{ marginBottom: '0.5rem', fontSize: '1rem', fontWeight: '600' }}>Font Size:</h4>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button style={dropdownTriggerStyle}>
+                <span>{fontSize}%</span>
+                <span>▼</span>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent style={dropdownContentStyle} className="w-[310px]">
+              <DropdownMenuLabel>Set Font Size</DropdownMenuLabel>
+              <DropdownMenuSeparator style={{ background: 'rgba(255,255,255,0.2)'}} />
+              <DropdownMenuRadioGroup value={String(fontSize)} onValueChange={val => setFontSize(Number(val))}>
+                {[80, 100, 120, 150, 200].map(size => (
+                  <DropdownMenuRadioItem key={size} value={String(size)}>{size}%</DropdownMenuRadioItem>
+                ))}
+              </DropdownMenuRadioGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         {/* Font Style */}
-        <div style={{ marginBottom: '1.5rem' }} onClick={handleOptionClick}>
+        <div style={{ marginBottom: '1.5rem' }}>
           <h4 style={{ marginBottom: '0.5rem', fontSize: '1rem', fontWeight: '600' }}>Font Style:</h4>
-          <select 
-            value={fontStyle}
-            onChange={(e) => {
-              e.stopPropagation();
-              setFontStyle(e.target.value);
-            }}
-            style={{
-              width: '100%',
-              padding: '8px',
-              borderRadius: '4px',
-              border: '1px solid rgba(255, 255, 255, 0.3)',
-              background: 'rgba(255, 255, 255, 0.1)',
-              color: theme === 'cotton-candy-glow' ? '#333' : 'white',
-              backdropFilter: 'blur(10px)'
-            }}
-          >
-            <option value="inter">Inter</option>
-            <option value="roboto">Roboto</option>
-            <option value="open-sans">Open Sans</option>
-            <option value="lato">Lato</option>
-            <option value="source-sans">Source Sans Pro</option>
-            <option value="dancing-script">Dancing Script</option>
-            <option value="pacifico">Pacifico</option>
-          </select>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button style={dropdownTriggerStyle}>
+                <span style={{ fontFamily: `'${fontStyle}', sans-serif` }}>{fontStyle.replace('-', ' ')}</span>
+                <span>▼</span>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent style={dropdownContentStyle} className="w-[310px]">
+              <DropdownMenuLabel>Select Font</DropdownMenuLabel>
+              <DropdownMenuSeparator style={{ background: 'rgba(255,255,255,0.2)'}} />
+              <DropdownMenuRadioGroup value={fontStyle} onValueChange={setFontStyle}>
+                {['inter', 'roboto', 'open-sans', 'lato', 'source-sans', 'dancing-script', 'pacifico'].map(font => (
+                  <DropdownMenuRadioItem key={font} value={font} style={{textTransform: 'capitalize'}}>{font.replace('-', ' ')}</DropdownMenuRadioItem>
+                ))}
+              </DropdownMenuRadioGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         {/* Sound Toggle */}
         <div style={{ marginBottom: '1.5rem' }} onClick={handleOptionClick}>
           <h4 style={{ marginBottom: '0.5rem', fontSize: '1rem', fontWeight: '600' }}>Sound Effects:</h4>
-          <button 
-            onClick={(e) => {
-              e.stopPropagation();
-              setSoundEnabled(!soundEnabled);
-            }}
-            style={{
-              background: soundEnabled ? getButtonColor() : 'rgba(255, 255, 255, 0.2)',
-              color: theme === 'cotton-candy-glow' ? '#333' : 'white',
-              border: 'none',
-              padding: '8px 16px',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '0.9rem'
-            }}
-          >
-            {soundEnabled ? 'Enabled' : 'Disabled'}
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(255, 255, 255, 0.1)', padding: '8px 12px', borderRadius: '4px' }}>
+            <span>{soundEnabled ? 'Enabled' : 'Disabled'}</span>
+            <Switch checked={soundEnabled} onCheckedChange={setSoundEnabled} />
+          </div>
         </div>
 
         {/* Themes */}
-        <div style={{ marginBottom: '1.5rem' }} onClick={handleOptionClick}>
-          <h4 style={{ marginBottom: '0.5rem', fontSize: '1rem', fontWeight: '600' }}>Themes:</h4>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            {[
-              { key: 'cosmic-nebula', name: 'Cosmic Nebula' },
-              { key: 'midnight-black', name: 'Midnight Black' },
-              { key: 'cotton-candy-glow', name: 'Cotton Candy Glow' }
-            ].map(themeOption => (
-              <button 
-                key={themeOption.key}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  applyTheme(themeOption.key);
-                }}
-                style={{
-                  background: theme === themeOption.key ? getButtonColor() : 'rgba(255, 255, 255, 0.2)',
-                  color: theme === 'cotton-candy-glow' ? '#333' : 'white',
-                  border: 'none',
-                  padding: '8px 12px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontSize: '0.9rem',
-                  textAlign: 'left'
-                }}
-              >
-                {themeOption.name}
+        <div style={{ marginBottom: '1.5rem' }}>
+          <h4 style={{ marginBottom: '0.5rem', fontSize: '1rem', fontWeight: '600' }}>Theme:</h4>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button style={dropdownTriggerStyle}>
+                <span style={{textTransform: 'capitalize'}}>{theme.replace('-', ' ')}</span>
+                <span>▼</span>
               </button>
-            ))}
-          </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent style={dropdownContentStyle} className="w-[310px]">
+              <DropdownMenuLabel>Select Theme</DropdownMenuLabel>
+              <DropdownMenuSeparator style={{ background: 'rgba(255,255,255,0.2)'}} />
+              <DropdownMenuRadioGroup value={theme} onValueChange={applyTheme}>
+                {[
+                  { key: 'cosmic-nebula', name: 'Cosmic Nebula' },
+                  { key: 'midnight-black', name: 'Midnight Black' },
+                  { key: 'cotton-candy-glow', name: 'Cotton Candy Glow' }
+                ].map(themeOption => (
+                  <DropdownMenuRadioItem key={themeOption.key} value={themeOption.key}>{themeOption.name}</DropdownMenuRadioItem>
+                ))}
+              </DropdownMenuRadioGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         {/* Navigation */}
