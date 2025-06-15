@@ -38,6 +38,8 @@ const Index: React.FC = () => {
   const [continueTestMode, setContinueTestMode] = useState<boolean>(false);
   const [extraChars, setExtraChars] = useState<string[]>([]);
   const [showStartMessage, setShowStartMessage] = useState<boolean>(false);
+  const [typedText, setTypedText] = useState<string>('');
+  const [showTypedPreview, setShowTypedPreview] = useState<boolean>(false);
 
   const messageTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
   const startMessageTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
@@ -145,11 +147,12 @@ const Index: React.FC = () => {
   const endTest = () => {
     if (gameOver) return;
     
-    console.log('Ending test with stats:', {
+    console.log('Ending test with current stats:', {
       elapsed,
       correctCharacters,
       totalErrors,
-      actualTypedCount
+      actualTypedCount,
+      typedTextLength: typedText.length
     });
     
     setGameOver(true);
@@ -159,18 +162,21 @@ const Index: React.FC = () => {
       timerRef.current = null;
     }
     
-    const correctChars = correctCharacters;
-    const totalTyped = actualTypedCount;
+    // Use current state values for accurate calculation
+    const finalCorrectChars = correctCharacters;
+    const finalTotalTyped = actualTypedCount;
+    const finalErrors = totalErrors;
     const testDuration = elapsed;
+    
     const mins = Math.max(testDuration / 60, 1 / 60);
-    const speed = Math.round(Math.max(0, (correctChars / 5) / mins));
-    const errorRate = totalTyped > 0 ? ((totalErrors / totalTyped) * 100) : 0;
+    const speed = Math.round(Math.max(0, (finalCorrectChars / 5) / mins));
+    const errorRate = finalTotalTyped > 0 ? ((finalErrors / finalTotalTyped) * 100) : 0;
     const score = Math.round(speed * ((100 - errorRate) / 100) * 10);
     
-    console.log('Calculated test results:', {
-      correctChars,
-      totalTyped,
-      totalErrors,
+    console.log('Final calculated test results:', {
+      finalCorrectChars,
+      finalTotalTyped,
+      finalErrors,
       speed,
       errorRate,
       score,
@@ -182,10 +188,10 @@ const Index: React.FC = () => {
       date: new Date().toISOString(),
       wpm: speed,
       errorRate: parseFloat(errorRate.toFixed(2)),
-      errors: totalErrors,
+      errors: finalErrors,
       time: testDuration,
-      characters: totalTyped,
-      correctChars: correctChars,
+      characters: finalTotalTyped,
+      correctChars: finalCorrectChars,
       score: score
     };
     
@@ -271,6 +277,9 @@ const Index: React.FC = () => {
     
     if (typedChar && typedChar.length === 1) {
       console.log('Processing character:', typedChar, 'Expected:', expectedChar, 'Position:', pos);
+      
+      // Update typed text immediately
+      setTypedText(prev => prev + typedChar);
       
       // Update actual typed count immediately
       setActualTypedCount(prev => {
@@ -527,8 +536,8 @@ const Index: React.FC = () => {
       fontSize: '112.5%',
       color: 'white',
       background: theme === 'midnight-black' ? '#000000' : 
-                 theme === 'cotton-candy-glow' ? 'linear-gradient(45deg, #3e8cb9, #2f739d)' :
-                 'linear-gradient(135deg, #a729f0, #3c95fa)',
+                 theme === 'cotton-candy-glow' ? 'linear-gradient(45deg, #4fb3d9, #3fa8d4)' :
+                 'linear-gradient(135deg, #3f034a, #004a7a)',
       minHeight: '100vh',
       overflowX: 'hidden'
     }}>
@@ -616,30 +625,12 @@ const Index: React.FC = () => {
           getButtonColor={getButtonColor}
         />
 
-        {/* Start Message for Typing Screen - now using Toast styling */}
+        {/* Start Message for Typing Screen */}
         {currentScreen === 'typing' && showStartMessage && (
-          <div style={{
-            position: 'fixed',
-            top: '80px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            background: 'rgba(255, 255, 255, 0.15)',
-            backdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            color: 'white',
-            padding: '12px 24px',
-            borderRadius: '12px',
-            zIndex: 2000,
-            fontSize: '0.9rem',
-            maxWidth: '400px',
-            textAlign: 'center',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}>
-            Press any key to start test
-          </div>
+          <Toast 
+            message="Press any key to start test"
+            onClose={() => setShowStartMessage(false)}
+          />
         )}
 
         {/* Main Content Areas */}
@@ -979,6 +970,7 @@ const Index: React.FC = () => {
               <button 
                 onClick={() => {
                   resetTest();
+                  setTypedText('');
                   setExtraChars([]);
                   setShowReturnConfirm(false);
                   setShowStartMessage(true);
@@ -1146,7 +1138,21 @@ const Index: React.FC = () => {
               </div>
             </div>
 
-            <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
+            <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
+              <button 
+                onClick={() => setShowTypedPreview(true)}
+                style={{
+                  background: '#6c757d',
+                  color: 'white',
+                  border: 'none',
+                  padding: '12px 24px',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '1rem'
+                }}
+              >
+                Preview Typed Text
+              </button>
               <button 
                 onClick={() => setCurrentScreen('dashboard')}
                 style={{
@@ -1171,6 +1177,16 @@ const Index: React.FC = () => {
             theme={theme}
             onBack={() => setCurrentScreen('dashboard')}
             getButtonColor={getButtonColor}
+          />
+        )}
+
+        {/* Typed Text Preview Modal */}
+        {showTypedPreview && (
+          <TypedTextPreview
+            typedText={typedText}
+            originalText={testText}
+            theme={theme}
+            onClose={() => setShowTypedPreview(false)}
           />
         )}
 

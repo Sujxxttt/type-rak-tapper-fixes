@@ -1,14 +1,6 @@
 
-import React, { useState, useEffect, useRef } from 'react';
-import { X, ChevronDown } from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Switch } from "@/components/ui/switch";
-import { CustomDurationSlider } from './CustomDurationSlider';
+import React, { useRef, useEffect } from 'react';
+import { X } from 'lucide-react';
 
 interface SideMenuProps {
   sideMenuOpen: boolean;
@@ -55,20 +47,12 @@ export const SideMenu: React.FC<SideMenuProps> = ({
   soundEnabled,
   setSoundEnabled
 }) => {
-  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
-  const [durationDropdownOpen, setDurationDropdownOpen] = useState(false);
-  const [themeDropdownOpen, setThemeDropdownOpen] = useState(false);
-  const [fontSizeDropdownOpen, setFontSizeDropdownOpen] = useState(false);
-  const [fontStyleDropdownOpen, setFontStyleDropdownOpen] = useState(false);
-  const [isClosing, setIsClosing] = useState(false);
-  
-  const sidebarRef = useRef<HTMLDivElement>(null);
+  const sideMenuRef = useRef<HTMLDivElement>(null);
 
-  // Handle outside clicks - only close if clicking outside the sidebar
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (sideMenuOpen && sidebarRef.current && !sidebarRef.current.contains(event.target as Node)) {
-        handleClose();
+      if (sideMenuOpen && sideMenuRef.current && !sideMenuRef.current.contains(event.target as Node)) {
+        setSideMenuOpen(false);
       }
     };
 
@@ -79,666 +63,289 @@ export const SideMenu: React.FC<SideMenuProps> = ({
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [sideMenuOpen]);
+  }, [sideMenuOpen, setSideMenuOpen]);
 
-  const handleClose = () => {
-    setIsClosing(true);
-    setTimeout(() => {
-      setSideMenuOpen(false);
-      setIsClosing(false);
-    }, 340); // 15% faster than 400ms
+  const handleOptionClick = (e: React.MouseEvent) => {
+    // Stop propagation to prevent closing the sidebar when clicking options
+    e.stopPropagation();
   };
 
-  const handleDropdownItemClick = (action: () => void) => {
-    // Prevent sidebar from closing when selecting dropdown items
-    action();
-    // Don't close the sidebar
-  };
-
-  const getSidebarBackground = () => {
-    if (theme === 'cosmic-nebula') {
-      return 'linear-gradient(135deg, rgba(167, 41, 240, 0.5), rgba(60, 149, 250, 0.5))';
-    } else if (theme === 'midnight-black') {
-      return 'rgba(30, 30, 30, 0.5)';
-    } else if (theme === 'cotton-candy-glow') {
-      return 'rgba(255, 182, 193, 0.5)';
-    }
-    return 'linear-gradient(135deg, rgba(167, 41, 240, 0.5), rgba(60, 149, 250, 0.5))';
-  };
-
-  const getTextColor = () => {
-    return theme === 'cotton-candy-glow' ? '#333' : '#fff';
-  };
-
-  const getSwitchThemeColor = () => {
-    if (theme === 'midnight-black') {
-      return '#fff';
-    } else if (theme === 'cotton-candy-glow') {
-      return '#333';
-    }
-    return '#fff';
-  };
-
-  const durationOptions = [
-    { value: 30, label: "30 seconds" },
-    { value: 60, label: "1 minute" },
-    { value: 120, label: "2 minutes" },
-    { value: 300, label: "5 minutes" },
-    { value: 600, label: "10 minutes" }
-  ];
-
-  const themeOptions = [
-    { value: 'cosmic-nebula', label: 'Cosmic Nebula' },
-    { value: 'midnight-black', label: 'Midnight Black' },
-    { value: 'cotton-candy-glow', label: 'Cotton Candy Glow' }
-  ];
-
-  const fontSizeOptions = [
-    { value: 80, label: 'Very Small' },
-    { value: 100, label: 'Small' },
-    { value: 120, label: 'Normal' },
-    { value: 140, label: 'Large' },
-    { value: 160, label: 'Very Large' }
-  ];
-
-  const fontStyleOptions = [
-    { value: 'inter', label: 'Inter' },
-    { value: 'roboto', label: 'Roboto' },
-    { value: 'open-sans', label: 'Open Sans' },
-    { value: 'lato', label: 'Lato' },
-    { value: 'source-sans', label: 'Source Sans Pro' },
-    { value: 'dancing-script', label: 'Dancing Script' },
-    { value: 'pacifico', label: 'Pacifico' }
-  ];
-
-  if (!sideMenuOpen && !isClosing) return null;
+  if (!sideMenuOpen) return null;
 
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      background: 'rgba(0, 0, 0, 0.5)',
-      backdropFilter: 'blur(5px)',
-      zIndex: 1000,
-      display: 'flex',
-      justifyContent: 'flex-end',
-      animation: isClosing ? 'fadeOut 0.34s ease-out' : 'fadeIn 0.34s ease-out'
-    }}>
+    <>
+      {/* Backdrop */}
       <div 
-        ref={sidebarRef}
         style={{
-          width: '400px',
-          background: getSidebarBackground(),
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.5)',
+          zIndex: 998,
+          animation: 'fadeIn 0.17s ease-out'
+        }}
+      />
+      
+      {/* Side Menu */}
+      <div
+        ref={sideMenuRef}
+        style={{
+          position: 'fixed',
+          top: 0,
+          right: 0,
+          width: '350px',
+          height: '100vh',
+          background: theme === 'cotton-candy-glow' ? 
+            'linear-gradient(135deg, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.15))' : 
+            'rgba(255, 255, 255, 0.1)',
           backdropFilter: 'blur(20px)',
-          padding: '2rem',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+          zIndex: 999,
+          padding: '20px',
           overflowY: 'auto',
-          boxShadow: '-10px 0 30px rgba(0, 0, 0, 0.3)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          transform: isClosing ? 'translateX(100%)' : 'translateX(0)',
-          transition: 'transform 0.34s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-          animation: isClosing ? 'slideOutRight 0.34s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'slideInRight 0.34s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
-        }}>
-        {/* Header */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '2rem',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-          paddingBottom: '1rem'
-        }}>
-          <h2 style={{
-            color: getTextColor(),
+          color: theme === 'cotton-candy-glow' ? '#333' : 'white',
+          animation: sideMenuOpen ? 'slideInRight 0.17s ease-out' : 'slideOutRight 0.17s ease-out'
+        }}
+      >
+        {/* Close Button */}
+        <button 
+          onClick={() => setSideMenuOpen(false)}
+          style={{
+            position: 'absolute',
+            top: '15px',
+            right: '15px',
+            background: 'none',
+            border: 'none',
+            color: theme === 'cotton-candy-glow' ? '#333' : 'white',
             fontSize: '1.5rem',
-            fontWeight: '600',
-            margin: 0
-          }}>
-            Settings
-          </h2>
-          <button 
-            onClick={handleClose}
-            style={{
-              background: 'rgba(255, 255, 255, 0.1)',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              borderRadius: '8px',
-              color: getTextColor(),
-              padding: '8px',
-              cursor: 'pointer',
-              backdropFilter: 'blur(10px)',
-              transition: 'all 0.2s ease'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-            }}
-          >
-            <X size={20} />
-          </button>
-        </div>
+            cursor: 'pointer',
+            padding: '5px'
+          }}
+        >
+          <X size={24} />
+        </button>
 
-        {/* Settings Content */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          
-          {/* User Selection */}
-          <div style={{
-            background: 'rgba(255, 255, 255, 0.08)',
-            borderRadius: '12px',
-            padding: '1rem',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            backdropFilter: 'blur(10px)'
-          }}>
-            <label style={{
-              display: 'block',
-              marginBottom: '0.75rem',
-              color: getTextColor(),
-              fontSize: '0.95rem',
-              fontWeight: '500'
-            }}>
-              Current User:
-            </label>
-            <DropdownMenu open={userDropdownOpen} onOpenChange={setUserDropdownOpen}>
-              <DropdownMenuTrigger asChild>
-                <button style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  borderRadius: '8px',
-                  color: getTextColor(),
-                  cursor: 'pointer',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  backdropFilter: 'blur(10px)',
-                  transition: 'all 0.2s ease'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                }}>
-                  <span>{currentActiveUser}</span>
-                  <ChevronDown size={16} style={{
-                    transform: userDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-                    transition: 'transform 0.2s ease'
-                  }} />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent 
-                style={{
-                  background: getSidebarBackground(),
-                  backdropFilter: 'blur(20px)',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  borderRadius: '8px',
-                  minWidth: '200px',
-                  zIndex: 1001
-                }}
-              >
-                {usersList.map((user) => (
-                  <DropdownMenuItem
-                    key={user}
-                    onClick={() => handleDropdownItemClick(() => switchUser(user))}
-                    style={{
-                      color: getTextColor(),
-                      padding: '0.75rem',
-                      cursor: 'pointer',
-                      transition: 'background-color 0.2s ease'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = 'transparent';
-                    }}
-                  >
-                    {user}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-            
-            <button 
-              onClick={handleDeleteUser}
-              style={{
-                width: '100%',
-                marginTop: '0.75rem',
-                padding: '0.75rem',
-                background: deleteConfirmState ? 'rgba(220, 53, 69, 0.8)' : 'rgba(220, 53, 69, 0.6)',
-                border: '1px solid rgba(220, 53, 69, 0.8)',
-                borderRadius: '8px',
-                color: 'white',
-                cursor: 'pointer',
-                fontSize: '0.9rem',
-                backdropFilter: 'blur(10px)',
-                transition: 'all 0.2s ease'
-              }}
-              onMouseEnter={(e) => {
-                if (!deleteConfirmState) {
-                  e.currentTarget.style.background = 'rgba(220, 53, 69, 0.8)';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!deleteConfirmState) {
-                  e.currentTarget.style.background = 'rgba(220, 53, 69, 0.6)';
-                }
-              }}
-            >
-              {deleteConfirmState ? 'Confirm Delete?' : 'Delete Current User'}
-            </button>
-          </div>
+        <h3 style={{ marginBottom: '1.5rem', paddingTop: '1rem' }}>Settings</h3>
 
-          {/* Test Duration */}
-          <div style={{
-            background: 'rgba(255, 255, 255, 0.08)',
-            borderRadius: '12px',
-            padding: '1rem',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            backdropFilter: 'blur(10px)'
-          }}>
-            <label style={{
-              display: 'block',
-              marginBottom: '0.75rem',
-              color: getTextColor(),
-              fontSize: '0.95rem',
-              fontWeight: '500'
-            }}>
-              Test Duration:
-            </label>
-            <DropdownMenu open={durationDropdownOpen} onOpenChange={setDurationDropdownOpen}>
-              <DropdownMenuTrigger asChild>
-                <button style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  borderRadius: '8px',
-                  color: getTextColor(),
-                  cursor: 'pointer',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  backdropFilter: 'blur(10px)',
-                  transition: 'all 0.2s ease'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                }}>
-                  <span>{durationOptions.find(opt => opt.value === duration)?.label || `${duration} seconds`}</span>
-                  <ChevronDown size={16} style={{
-                    transform: durationDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-                    transition: 'transform 0.2s ease'
-                  }} />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent 
-                style={{
-                  background: getSidebarBackground(),
-                  backdropFilter: 'blur(20px)',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  borderRadius: '8px',
-                  minWidth: '200px',
-                  zIndex: 1001
-                }}
-              >
-                {durationOptions.map((option) => (
-                  <DropdownMenuItem
-                    key={option.value}
-                    onClick={() => handleDropdownItemClick(() => setDuration(option.value))}
-                    style={{
-                      color: getTextColor(),
-                      padding: '0.75rem',
-                      cursor: 'pointer',
-                      transition: 'background-color 0.2s ease'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = 'transparent';
-                    }}
-                  >
-                    {option.label}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-
-          {/* Theme Selection */}
-          <div style={{
-            background: 'rgba(255, 255, 255, 0.08)',
-            borderRadius: '12px',
-            padding: '1rem',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            backdropFilter: 'blur(10px)'
-          }}>
-            <label style={{
-              display: 'block',
-              marginBottom: '0.75rem',
-              color: getTextColor(),
-              fontSize: '0.95rem',
-              fontWeight: '500'
-            }}>
-              Theme:
-            </label>
-            <DropdownMenu open={themeDropdownOpen} onOpenChange={setThemeDropdownOpen}>
-              <DropdownMenuTrigger asChild>
-                <button style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  borderRadius: '8px',
-                  color: getTextColor(),
-                  cursor: 'pointer',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  backdropFilter: 'blur(10px)',
-                  transition: 'all 0.2s ease'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                }}>
-                  <span>{themeOptions.find(opt => opt.value === theme)?.label || theme}</span>
-                  <ChevronDown size={16} style={{
-                    transform: themeDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-                    transition: 'transform 0.2s ease'
-                  }} />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent 
-                style={{
-                  background: getSidebarBackground(),
-                  backdropFilter: 'blur(20px)',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  borderRadius: '8px',
-                  minWidth: '200px',
-                  zIndex: 1001
-                }}
-              >
-                {themeOptions.map((option) => (
-                  <DropdownMenuItem
-                    key={option.value}
-                    onClick={() => handleDropdownItemClick(() => applyTheme(option.value))}
-                    style={{
-                      color: getTextColor(),
-                      padding: '0.75rem',
-                      cursor: 'pointer',
-                      transition: 'background-color 0.2s ease'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = 'transparent';
-                    }}
-                  >
-                    {option.label}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-
-          {/* Font Size */}
-          <div style={{
-            background: 'rgba(255, 255, 255, 0.08)',
-            borderRadius: '12px',
-            padding: '1rem',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            backdropFilter: 'blur(10px)'
-          }}>
-            <label style={{
-              display: 'block',
-              marginBottom: '0.75rem',
-              color: getTextColor(),
-              fontSize: '0.95rem',
-              fontWeight: '500'
-            }}>
-              Font Size:
-            </label>
-            <DropdownMenu open={fontSizeDropdownOpen} onOpenChange={setFontSizeDropdownOpen}>
-              <DropdownMenuTrigger asChild>
-                <button style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  borderRadius: '8px',
-                  color: getTextColor(),
-                  cursor: 'pointer',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  backdropFilter: 'blur(10px)',
-                  transition: 'all 0.2s ease'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                }}>
-                  <span>{fontSizeOptions.find(opt => opt.value === fontSize)?.label || `${fontSize}%`}</span>
-                  <ChevronDown size={16} style={{
-                    transform: fontSizeDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-                    transition: 'transform 0.2s ease'
-                  }} />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent 
-                style={{
-                  background: getSidebarBackground(),
-                  backdropFilter: 'blur(20px)',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  borderRadius: '8px',
-                  minWidth: '200px',
-                  zIndex: 1001
-                }}
-              >
-                {fontSizeOptions.map((option) => (
-                  <DropdownMenuItem
-                    key={option.value}
-                    onClick={() => handleDropdownItemClick(() => setFontSize(option.value))}
-                    style={{
-                      color: getTextColor(),
-                      padding: '0.75rem',
-                      cursor: 'pointer',
-                      transition: 'background-color 0.2s ease'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = 'transparent';
-                    }}
-                  >
-                    {option.label}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-
-          {/* Font Style */}
-          <div style={{
-            background: 'rgba(255, 255, 255, 0.08)',
-            borderRadius: '12px',
-            padding: '1rem',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            backdropFilter: 'blur(10px)'
-          }}>
-            <label style={{
-              display: 'block',
-              marginBottom: '0.75rem',
-              color: getTextColor(),
-              fontSize: '0.95rem',
-              fontWeight: '500'
-            }}>
-              Font Style:
-            </label>
-            <DropdownMenu open={fontStyleDropdownOpen} onOpenChange={setFontStyleDropdownOpen}>
-              <DropdownMenuTrigger asChild>
-                <button style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  borderRadius: '8px',
-                  color: getTextColor(),
-                  cursor: 'pointer',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  backdropFilter: 'blur(10px)',
-                  transition: 'all 0.2s ease'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                }}>
-                  <span>{fontStyleOptions.find(opt => opt.value === fontStyle)?.label || fontStyle}</span>
-                  <ChevronDown size={16} style={{
-                    transform: fontStyleDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-                    transition: 'transform 0.2s ease'
-                  }} />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent 
-                style={{
-                  background: getSidebarBackground(),
-                  backdropFilter: 'blur(20px)',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  borderRadius: '8px',
-                  minWidth: '200px',
-                  zIndex: 1001
-                }}
-              >
-                {fontStyleOptions.map((option) => (
-                  <DropdownMenuItem
-                    key={option.value}
-                    onClick={() => handleDropdownItemClick(() => setFontStyle(option.value))}
-                    style={{
-                      color: getTextColor(),
-                      padding: '0.75rem',
-                      cursor: 'pointer',
-                      transition: 'background-color 0.2s ease'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = 'transparent';
-                    }}
-                  >
-                    {option.label}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-
-          {/* Sound Effects Toggle */}
-          <div style={{
-            background: 'rgba(255, 255, 255, 0.08)',
-            borderRadius: '12px',
-            padding: '1rem',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            backdropFilter: 'blur(10px)'
-          }}>
-            <div style={{
+        {/* User Management */}
+        <div style={{ marginBottom: '1.5rem' }} onClick={handleOptionClick}>
+          <h4 style={{ marginBottom: '0.5rem', fontSize: '1rem', fontWeight: '600' }}>Users:</h4>
+          {usersList.map(user => (
+            <div key={user} style={{
               display: 'flex',
-              alignItems: 'center',
               justifyContent: 'space-between',
-              color: getTextColor(),
-              fontSize: '0.95rem'
+              alignItems: 'center',
+              padding: '0.5rem',
+              background: user === currentActiveUser ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+              borderRadius: '4px',
+              marginBottom: '0.5rem'
             }}>
-              <label style={{ color: 'inherit' }}>
-                Enable typing sounds
-              </label>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center'
-              }}>
-                <Switch
-                  checked={soundEnabled}
-                  onCheckedChange={setSoundEnabled}
+              <span>{user}</span>
+              {user === currentActiveUser && (
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteUser();
+                  }}
                   style={{
-                    '--switch-thumb': getSwitchThemeColor(),
-                    '--switch-track': soundEnabled ? getSwitchThemeColor() : 'rgba(255, 255, 255, 0.3)'
-                  } as React.CSSProperties}
-                />
-              </div>
+                    background: deleteConfirmState ? '#dc3545' : '#6c757d',
+                    color: 'white',
+                    border: 'none',
+                    padding: '4px 8px',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontSize: '0.8rem'
+                  }}
+                >
+                  {deleteConfirmState ? 'Confirm Delete' : 'Delete'}
+                </button>
+              )}
+              {user !== currentActiveUser && (
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    switchUser(user);
+                  }}
+                  style={{
+                    background: getButtonColor(),
+                    color: 'white',
+                    border: 'none',
+                    padding: '4px 8px',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontSize: '0.8rem'
+                  }}
+                >
+                  Switch
+                </button>
+              )}
             </div>
+          ))}
+        </div>
+
+        {/* Test Duration */}
+        <div style={{ marginBottom: '1.5rem' }} onClick={handleOptionClick}>
+          <h4 style={{ marginBottom: '0.5rem', fontSize: '1rem', fontWeight: '600' }}>Test Duration:</h4>
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            {[15, 30, 60, 120].map(time => (
+              <button 
+                key={time}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setDuration(time);
+                }}
+                style={{
+                  background: duration === time ? getButtonColor() : 'rgba(255, 255, 255, 0.2)',
+                  color: theme === 'cotton-candy-glow' ? '#333' : 'white',
+                  border: 'none',
+                  padding: '8px 12px',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '0.9rem'
+                }}
+              >
+                {time}s
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div style={{ 
-          marginTop: '2rem', 
-          display: 'flex', 
-          flexDirection: 'column', 
-          gap: '0.75rem',
-          borderTop: '1px solid rgba(255, 255, 255, 0.1)',
-          paddingTop: '1.5rem'
-        }}>
-          <button 
-            onClick={handleHistoryClick}
+        {/* Font Size */}
+        <div style={{ marginBottom: '1.5rem' }} onClick={handleOptionClick}>
+          <h4 style={{ marginBottom: '0.5rem', fontSize: '1rem', fontWeight: '600' }}>Font Size: {fontSize}%</h4>
+          <input 
+            type="range"
+            min="80"
+            max="200"
+            value={fontSize}
+            onChange={(e) => {
+              e.stopPropagation();
+              setFontSize(parseInt(e.target.value));
+            }}
             style={{
               width: '100%',
-              padding: '0.75rem',
+              accentColor: getButtonColor()
+            }}
+          />
+        </div>
+
+        {/* Font Style */}
+        <div style={{ marginBottom: '1.5rem' }} onClick={handleOptionClick}>
+          <h4 style={{ marginBottom: '0.5rem', fontSize: '1rem', fontWeight: '600' }}>Font Style:</h4>
+          <select 
+            value={fontStyle}
+            onChange={(e) => {
+              e.stopPropagation();
+              setFontStyle(e.target.value);
+            }}
+            style={{
+              width: '100%',
+              padding: '8px',
+              borderRadius: '4px',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
               background: 'rgba(255, 255, 255, 0.1)',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              borderRadius: '8px',
-              color: getTextColor(),
-              cursor: 'pointer',
-              fontSize: '0.95rem',
-              backdropFilter: 'blur(10px)',
-              transition: 'all 0.2s ease'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+              color: theme === 'cotton-candy-glow' ? '#333' : 'white',
+              backdropFilter: 'blur(10px)'
             }}
           >
-            View History
+            <option value="inter">Inter</option>
+            <option value="roboto">Roboto</option>
+            <option value="open-sans">Open Sans</option>
+            <option value="lato">Lato</option>
+            <option value="source-sans">Source Sans Pro</option>
+            <option value="dancing-script">Dancing Script</option>
+            <option value="pacifico">Pacifico</option>
+          </select>
+        </div>
+
+        {/* Sound Toggle */}
+        <div style={{ marginBottom: '1.5rem' }} onClick={handleOptionClick}>
+          <h4 style={{ marginBottom: '0.5rem', fontSize: '1rem', fontWeight: '600' }}>Sound Effects:</h4>
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              setSoundEnabled(!soundEnabled);
+            }}
+            style={{
+              background: soundEnabled ? getButtonColor() : 'rgba(255, 255, 255, 0.2)',
+              color: theme === 'cotton-candy-glow' ? '#333' : 'white',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '0.9rem'
+            }}
+          >
+            {soundEnabled ? 'Enabled' : 'Disabled'}
+          </button>
+        </div>
+
+        {/* Themes */}
+        <div style={{ marginBottom: '1.5rem' }} onClick={handleOptionClick}>
+          <h4 style={{ marginBottom: '0.5rem', fontSize: '1rem', fontWeight: '600' }}>Themes:</h4>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            {[
+              { key: 'cosmic-nebula', name: 'Cosmic Nebula' },
+              { key: 'midnight-black', name: 'Midnight Black' },
+              { key: 'cotton-candy-glow', name: 'Cotton Candy Glow' }
+            ].map(themeOption => (
+              <button 
+                key={themeOption.key}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  applyTheme(themeOption.key);
+                }}
+                style={{
+                  background: theme === themeOption.key ? getButtonColor() : 'rgba(255, 255, 255, 0.2)',
+                  color: theme === 'cotton-candy-glow' ? '#333' : 'white',
+                  border: 'none',
+                  padding: '8px 12px',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '0.9rem',
+                  textAlign: 'left'
+                }}
+              >
+                {themeOption.name}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Navigation */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              handleHistoryClick();
+            }}
+            style={{
+              background: 'rgba(255, 255, 255, 0.2)',
+              color: theme === 'cotton-candy-glow' ? '#333' : 'white',
+              border: 'none',
+              padding: '12px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '1rem'
+            }}
+          >
+            View Test History
           </button>
           <button 
-            onClick={handleContactMe}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleContactMe();
+            }}
             style={{
-              width: '100%',
-              padding: '0.75rem',
-              background: 'rgba(255, 255, 255, 0.1)',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              borderRadius: '8px',
-              color: getTextColor(),
+              background: 'rgba(255, 255, 255, 0.2)',
+              color: theme === 'cotton-candy-glow' ? '#333' : 'white',
+              border: 'none',
+              padding: '12px',
+              borderRadius: '6px',
               cursor: 'pointer',
-              fontSize: '0.95rem',
-              backdropFilter: 'blur(10px)',
-              transition: 'all 0.2s ease'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+              fontSize: '1rem'
             }}
           >
             Contact Me
@@ -747,16 +354,6 @@ export const SideMenu: React.FC<SideMenuProps> = ({
       </div>
 
       <style>{`
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        
-        @keyframes fadeOut {
-          from { opacity: 1; }
-          to { opacity: 0; }
-        }
-        
         @keyframes slideInRight {
           from {
             transform: translateX(100%);
@@ -778,7 +375,16 @@ export const SideMenu: React.FC<SideMenuProps> = ({
             opacity: 0;
           }
         }
+        
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
       `}</style>
-    </div>
+    </>
   );
 };
