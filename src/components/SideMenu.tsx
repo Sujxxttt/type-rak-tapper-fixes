@@ -65,7 +65,6 @@ export const SideMenu: React.FC<SideMenuProps> = ({
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (sideMenuRef.current && !sideMenuRef.current.contains(event.target as Node)) {
-        // Also check if the click is outside any dropdown content
         const dropdowns = document.querySelectorAll('[data-radix-popper-content-wrapper]');
         let isClickInsideDropdown = false;
         dropdowns.forEach(dropdown => {
@@ -125,7 +124,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
     background: 'rgba(255, 255, 255, 0.1)',
     backdropFilter: 'blur(15px)',
     border: '1px solid rgba(255, 255, 255, 0.2)',
-    color: theme === 'cotton-candy-glow' ? '#333' : 'white',
+    color: 'white',
     borderRadius: '8px',
     zIndex: 1001
   };
@@ -136,13 +135,15 @@ export const SideMenu: React.FC<SideMenuProps> = ({
     borderRadius: '4px',
     border: '1px solid rgba(255, 255, 255, 0.3)',
     background: 'rgba(255, 255, 255, 0.1)',
-    color: theme === 'cotton-candy-glow' ? '#333' : 'white',
+    color: 'white',
     textAlign: 'left',
     cursor: 'pointer',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center'
   };
+
+  const fontSizes = [80, 90, 100, 110, 120, 130, 140, 150, 175, 200];
 
   return (
     <>
@@ -156,7 +157,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
           bottom: 0,
           background: 'rgba(0, 0, 0, 0.5)',
           zIndex: 998,
-          animation: 'fadeIn 0.12s ease-out'
+          animation: 'fadeIn 0.2s ease-out'
         }}
       />
       
@@ -174,8 +175,8 @@ export const SideMenu: React.FC<SideMenuProps> = ({
           zIndex: 999,
           padding: '20px',
           overflowY: 'auto',
-          color: theme === 'cotton-candy-glow' ? '#333' : 'white',
-          animation: sideMenuOpen ? 'slideInRight 0.2s ease-out' : 'slideOutRight 0.2s ease-out forwards'
+          color: 'white',
+          animation: sideMenuOpen ? 'slideInRight 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'slideOutRight 0.3s cubic-bezier(0.55, 0.085, 0.68, 0.53) forwards'
         }}
       >
         <button 
@@ -186,7 +187,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
             right: '15px',
             background: 'none',
             border: 'none',
-            color: theme === 'cotton-candy-glow' ? '#333' : 'white',
+            color: 'white',
             fontSize: '1.5rem',
             cursor: 'pointer',
             padding: '5px'
@@ -207,26 +208,18 @@ export const SideMenu: React.FC<SideMenuProps> = ({
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent style={dropdownContentStyle} className="w-[310px]">
-              <DropdownMenuLabel>Manage Users</DropdownMenuLabel>
-              <DropdownMenuSeparator style={{ background: 'rgba(255,255,255,0.2)'}} />
-              {usersList.map(user => (
-                <DropdownMenuItem key={user} onSelect={(e) => e.preventDefault()} style={{ padding: '0.5rem', cursor: 'default' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-                    <span>{user}</span>
-                    {user === currentActiveUser ? (
-                      <button onClick={handleDeleteUser} style={{ background: deleteConfirmState ? '#dc3545' : '#6c757d', color: 'white', border: 'none', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem' }}>
-                        {deleteConfirmState ? 'Confirm' : 'Delete'}
-                      </button>
-                    ) : (
-                      <button onClick={() => switchUser(user)} style={{ background: getButtonColor(), color: 'white', border: 'none', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem' }}>
-                        Switch
-                      </button>
-                    )}
-                  </div>
-                </DropdownMenuItem>
-              ))}
+              <DropdownMenuRadioGroup value={currentActiveUser} onValueChange={switchUser}>
+                {usersList.map(user => (
+                  <DropdownMenuRadioItem key={user} value={user}>{user}</DropdownMenuRadioItem>
+                ))}
+              </DropdownMenuRadioGroup>
             </DropdownMenuContent>
           </DropdownMenu>
+          {currentActiveUser && (
+             <button onClick={handleDeleteUser} style={{ width: '100%', marginTop: '10px', padding: '8px 12px', borderRadius: '4px', border: 'none', background: deleteConfirmState ? '#b91c1c' : '#dc2626', color: 'white', cursor: 'pointer', transition: 'background-color 0.2s' }}>
+               {deleteConfirmState ? 'Confirm Delete' : `Delete ${currentActiveUser}`}
+             </button>
+          )}
         </div>
 
         <div style={{ marginBottom: '1.5rem' }}>
@@ -269,7 +262,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
             </DropdownMenuTrigger>
             <DropdownMenuContent style={dropdownContentStyle} className="w-[310px]">
               <DropdownMenuRadioGroup value={String(fontSize)} onValueChange={val => setFontSize(Number(val))}>
-                {[80, 100, 120, 150, 200].map(size => (
+                {fontSizes.map(size => (
                   <DropdownMenuRadioItem key={size} value={String(size)}>{size}%</DropdownMenuRadioItem>
                 ))}
               </DropdownMenuRadioGroup>
@@ -331,9 +324,6 @@ export const SideMenu: React.FC<SideMenuProps> = ({
               checked={soundEnabled} 
               onCheckedChange={setSoundEnabled}
               className="data-[state=checked]:bg-[--switch-checked-color]"
-              style={{
-                color: theme === 'cotton-candy-glow' ? '#333' : 'white',
-              }}
             />
           </div>
         </div>
@@ -345,8 +335,8 @@ export const SideMenu: React.FC<SideMenuProps> = ({
       </div>
 
       <style>{`
-        @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        @keyframes slideOutRight { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
+        @keyframes slideInRight { from { transform: translateX(100%); opacity: 0.8; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes slideOutRight { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0.8; } }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         .DropdownMenuContent[data-state="open"] { animation: fadeIn 0.1s ease-out, scale-in 0.1s ease-out; }
         .DropdownMenuContent[data-state="closed"] { animation: fade-out 0.1s ease-in, scale-out 0.1s ease-in; }

@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 
 interface TypingTestProps {
@@ -43,7 +42,7 @@ export const TypingTest: React.FC<TypingTestProps> = ({
         
         textFlowElement.scrollTo({
           left: scrollLeft,
-          behavior: 'smooth' // Changed from 'auto' for smoother animation
+          behavior: 'smooth'
         });
       }
     }
@@ -97,7 +96,7 @@ export const TypingTest: React.FC<TypingTestProps> = ({
           whiteSpace: 'nowrap',
           scrollbarWidth: 'none',
           msOverflowStyle: 'none',
-          transition: 'transform 0.2s ease-out' // Added for smoothness
+          scrollBehavior: 'smooth',
         }}
         tabIndex={0}
       />
