@@ -105,16 +105,19 @@ export const useTypingGame = () => {
     if (timerRef.current) {
       clearInterval(timerRef.current);
     }
+    
+    const startTime = Date.now();
     timerRef.current = setInterval(() => {
-      setElapsed(prev => {
-        const newElapsed = prev + 1;
-        if (newElapsed >= duration) {
-          clearInterval(timerRef.current!);
-          onComplete();
-        }
-        return newElapsed;
-      });
-    }, 1000);
+      const now = Date.now();
+      const newElapsed = Math.floor((now - startTime) / 1000);
+      setElapsed(newElapsed);
+      
+      if (newElapsed >= duration) {
+        clearInterval(timerRef.current!);
+        timerRef.current = null;
+        onComplete();
+      }
+    }, 100); // Update more frequently for better accuracy
   }, []);
 
   const resetTest = () => {

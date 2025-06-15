@@ -9,6 +9,7 @@ import { HistoryPage } from '../components/HistoryPage';
 import { Introduction } from '../components/Introduction';
 import { useTypingGame } from '../hooks/useTypingGame';
 import { useLocalStorage } from '../hooks/useLocalStorage';
+import { useSoundEffects } from '../hooks/useSoundEffects';
 
 const Index: React.FC = () => {
   // Introduction state - show on every reload
@@ -24,6 +25,7 @@ const Index: React.FC = () => {
   const [duration, setDuration] = useLocalStorage<number>("typeRakDuration", 60);
   const [fontSize, setFontSize] = useLocalStorage<number>("typeRakFontSize", 120);
   const [fontStyle, setFontStyle] = useLocalStorage<string>("typeRakFontStyle", 'inter');
+  const [soundEnabled, setSoundEnabled] = useLocalStorage<boolean>("typeRakSoundEnabled", true);
   const [sideMenuOpen, setSideMenuOpen] = useState<boolean>(false);
   const [currentScreen, setCurrentScreen] = useState<string>('greeting');
   const [theme, setTheme] = useLocalStorage<string>("typeRakTheme", 'cosmic-nebula');
@@ -67,6 +69,9 @@ const Index: React.FC = () => {
     getCurrentWPM,
     getCurrentErrorRate
   } = useTypingGame();
+
+  // Use sound effects
+  const { playKeyboardSound, playErrorSound } = useSoundEffects(soundEnabled);
 
   // Show introduction on first load
   useEffect(() => {
@@ -137,6 +142,14 @@ const Index: React.FC = () => {
 
   const endTest = () => {
     if (gameOver) return;
+    
+    console.log('Ending test with stats:', {
+      elapsed,
+      correctCharacters,
+      totalErrors,
+      actualTypedCount
+    });
+    
     setGameOver(true);
     setTestActive(false);
     if (timerRef.current) {
@@ -146,19 +159,20 @@ const Index: React.FC = () => {
     
     const correctChars = correctCharacters;
     const totalTyped = actualTypedCount;
-    const mins = Math.max(elapsed / 60, 1 / 60);
+    const testDuration = elapsed;
+    const mins = Math.max(testDuration / 60, 1 / 60);
     const speed = Math.round(Math.max(0, (correctChars / 5) / mins));
     const errorRate = totalTyped > 0 ? ((totalErrors / totalTyped) * 100) : 0;
     const score = Math.round(speed * ((100 - errorRate) / 100) * 10);
     
-    console.log('Test ended with stats:', {
+    console.log('Calculated test results:', {
       correctChars,
       totalTyped,
       totalErrors,
       speed,
       errorRate,
       score,
-      elapsed
+      testDuration
     });
     
     const testResult = {
@@ -167,7 +181,7 @@ const Index: React.FC = () => {
       wpm: speed,
       errorRate: parseFloat(errorRate.toFixed(2)),
       errors: totalErrors,
-      time: elapsed,
+      time: testDuration,
       characters: totalTyped,
       correctChars: correctChars,
       score: score
@@ -263,6 +277,7 @@ const Index: React.FC = () => {
         });
         setPos(prev => prev + 1);
         setLastErrorPos(-1);
+        playKeyboardSound();
       } else {
         // Incorrect character - only count as error if it's not consecutive to the last error
         if (lastErrorPos !== pos) {
@@ -276,6 +291,7 @@ const Index: React.FC = () => {
         chars[pos]?.classList.add("incorrect");
         // Still advance position to continue typing
         setPos(prev => prev + 1);
+        playErrorSound();
       }
     }
   };
@@ -875,7 +891,8 @@ const Index: React.FC = () => {
             flexDirection: 'column',
             alignItems: 'center',
             padding: '20px 0',
-            flex: 1
+            flex: 1,
+            position: 'relative'
           }}>
             <TypingTest
               testText={testText}
@@ -939,9 +956,10 @@ const Index: React.FC = () => {
               </button>
             </div>
 
+            {/* Fixed Return Button */}
             <div style={{
               position: 'fixed',
-              bottom: '120px',
+              bottom: '20px',
               right: '20px',
               zIndex: 100
             }}>
@@ -1067,7 +1085,7 @@ const Index: React.FC = () => {
           />
         )}
 
-        {/* Side Menu */}
+        {/* Side Menu with Sound Toggle */}
         <SideMenu
           sideMenuOpen={sideMenuOpen}
           setSideMenuOpen={setSideMenuOpen}
@@ -1087,6 +1105,8 @@ const Index: React.FC = () => {
           setFontSize={setFontSize}
           fontStyle={fontStyle}
           setFontStyle={setFontStyle}
+          soundEnabled={soundEnabled}
+          setSoundEnabled={setSoundEnabled}
         />
 
         {/* Toast Message */}

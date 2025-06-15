@@ -32,12 +32,28 @@ export const TypingTest: React.FC<TypingTestProps> = ({
   useEffect(() => {
     if (chars.length > 0 && pos < chars.length) {
       const currentChar = chars[pos];
-      if (currentChar) {
-        currentChar.scrollIntoView({
-          behavior: 'smooth',
-          block: 'center',
-          inline: 'center'
+      const textFlowElement = document.getElementById('text-flow');
+      
+      if (currentChar && textFlowElement) {
+        const charRect = currentChar.getBoundingClientRect();
+        const containerRect = textFlowElement.getBoundingClientRect();
+        
+        // Calculate position for smooth horizontal scrolling
+        const charLeft = currentChar.offsetLeft;
+        const containerWidth = textFlowElement.clientWidth;
+        const scrollLeft = Math.max(0, charLeft - containerWidth / 2);
+        
+        textFlowElement.scrollTo({
+          left: scrollLeft,
+          behavior: 'smooth'
         });
+        
+        // Position the cursor
+        const cursor = document.getElementById('typing-cursor');
+        if (cursor) {
+          cursor.style.left = `${charLeft}px`;
+          cursor.style.top = `${currentChar.offsetTop}px`;
+        }
       }
     }
   }, [pos, chars]);
@@ -58,18 +74,20 @@ export const TypingTest: React.FC<TypingTestProps> = ({
   return (
     <div style={{
       width: '90%',
-      maxWidth: '1000px',
+      maxWidth: '800px',
+      height: '120px',
       margin: '2rem auto',
-      padding: '2rem',
+      padding: '1.5rem',
       background: theme === 'cotton-candy-glow' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.1)',
-      borderRadius: '16px',
+      borderRadius: '12px',
       backdropFilter: 'blur(10px)',
       border: '1px solid rgba(255, 255, 255, 0.2)',
       position: 'relative',
       fontSize: `${fontSize}%`,
       fontFamily: getFontFamily(),
-      lineHeight: '1.6',
-      letterSpacing: '0.02em'
+      lineHeight: '1.4',
+      letterSpacing: '0.02em',
+      overflow: 'hidden'
     }}>
       <div
         id="text-flow"
@@ -80,11 +98,15 @@ export const TypingTest: React.FC<TypingTestProps> = ({
           fontFamily: 'inherit',
           lineHeight: 'inherit',
           letterSpacing: 'inherit',
-          wordBreak: 'break-word',
-          overflowWrap: 'break-word',
           userSelect: 'none',
           cursor: 'text',
-          minHeight: '3em'
+          height: '100%',
+          overflowX: 'auto',
+          overflowY: 'hidden',
+          whiteSpace: 'nowrap',
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none',
+          WebkitScrollbar: 'none'
         }}
         tabIndex={0}
       />
@@ -94,16 +116,22 @@ export const TypingTest: React.FC<TypingTestProps> = ({
           style={{
             position: 'absolute',
             width: '2px',
-            height: '1.5em',
+            height: '1.8em',
             backgroundColor: theme === 'cotton-candy-glow' ? '#ff1fbc' : '#21b1ff',
             animation: 'blinkCaret 1s infinite',
             zIndex: 10,
             pointerEvents: 'none',
-            transform: 'translateY(-10%)'
+            transition: 'left 0.1s ease'
           }}
           id="typing-cursor"
         />
       )}
+      
+      <style>{`
+        #text-flow::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
     </div>
   );
 };
