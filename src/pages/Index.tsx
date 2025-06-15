@@ -483,35 +483,28 @@ const Index: React.FC = () => {
     return { avgWpm, avgErrorRate, avgScore, totalTests, totalTime };
   };
 
-  const getButtonColor = () => {
-    switch (theme) {
-      case 'cosmic-nebula':
-        return '#8a2be2'; // Updated cosmic nebula color
-      case 'midnight-black':
-        return '#6a0dad';
-      case 'cotton-candy-glow':
-        return '#af01af';
-      default:
-        return '#8a2be2';
-    }
-  };
-
-  const averageStats = getAverageStats();
-
-  // Show introduction first - always
-  if (showIntroduction) {
-    return <Introduction onComplete={handleIntroComplete} />;
-  }
-
   const getTitleGradient = () => {
     if (theme === 'cosmic-nebula') {
-      return 'linear-gradient(90deg, #8a2be2 0%, #4b0082 100%)'; // Updated cosmic nebula gradient
+      return 'linear-gradient(90deg, #1a1a3e 0%, #2d1b4e 100%)';
     } else if (theme === 'midnight-black') {
       return 'linear-gradient(90deg, #c559f7 0%, #7f59f7 100%)';
     } else if (theme === 'cotton-candy-glow') {
       return 'linear-gradient(90deg, #ff59e8 0%, #ff52a8 100%)';
     }
-    return 'linear-gradient(90deg, #8a2be2 0%, #4b0082 100%)';
+    return 'linear-gradient(90deg, #1a1a3e 0%, #2d1b4e 100%)';
+  };
+
+  const getButtonColor = () => {
+    switch (theme) {
+      case 'cosmic-nebula':
+        return '#2d1b4e';
+      case 'midnight-black':
+        return '#6a0dad';
+      case 'cotton-candy-glow':
+        return '#af01af';
+      default:
+        return '#2d1b4e';
+    }
   };
 
   return (
@@ -527,7 +520,7 @@ const Index: React.FC = () => {
       color: 'white',
       background: theme === 'midnight-black' ? '#000000' : 
                  theme === 'cotton-candy-glow' ? 'linear-gradient(45deg, #3e8cb9, #2f739d)' :
-                 'linear-gradient(45deg, #8a2be2, #4b0082)', // Updated cosmic nebula background
+                 'linear-gradient(135deg, #0c0c1e 0%, #1a1a3e 50%, #2d1b4e 100%)',
       minHeight: '100vh',
       overflowX: 'hidden'
     }}>

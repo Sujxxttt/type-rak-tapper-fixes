@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { X, ChevronDown } from 'lucide-react';
 import {
   DropdownMenu,
@@ -59,16 +59,35 @@ export const SideMenu: React.FC<SideMenuProps> = ({
   const [themeDropdownOpen, setThemeDropdownOpen] = useState(false);
   const [fontSizeDropdownOpen, setFontSizeDropdownOpen] = useState(false);
   const [fontStyleDropdownOpen, setFontStyleDropdownOpen] = useState(false);
+  
+  const sidebarRef = useRef<HTMLDivElement>(null);
+
+  // Handle outside clicks
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (sideMenuOpen && sidebarRef.current && !sidebarRef.current.contains(event.target as Node)) {
+        setSideMenuOpen(false);
+      }
+    };
+
+    if (sideMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [sideMenuOpen, setSideMenuOpen]);
 
   const getSidebarBackground = () => {
     if (theme === 'cosmic-nebula') {
-      return 'linear-gradient(135deg, rgba(138, 43, 226, 0.5), rgba(75, 0, 130, 0.5))'; // New cosmic nebula colors
+      return 'linear-gradient(135deg, rgba(12, 12, 30, 0.5), rgba(26, 26, 62, 0.5), rgba(45, 27, 78, 0.5))';
     } else if (theme === 'midnight-black') {
       return 'rgba(30, 30, 30, 0.5)';
     } else if (theme === 'cotton-candy-glow') {
       return 'rgba(255, 182, 193, 0.5)';
     }
-    return 'rgba(75, 0, 130, 0.5)';
+    return 'linear-gradient(135deg, rgba(12, 12, 30, 0.5), rgba(26, 26, 62, 0.5), rgba(45, 27, 78, 0.5))';
   };
 
   const getTextColor = () => {
@@ -132,18 +151,20 @@ export const SideMenu: React.FC<SideMenuProps> = ({
       justifyContent: 'flex-end',
       animation: 'fadeIn 0.3s ease-out'
     }}>
-      <div style={{
-        width: '400px',
-        background: getSidebarBackground(),
-        backdropFilter: 'blur(20px)',
-        padding: '2rem',
-        overflowY: 'auto',
-        boxShadow: '-10px 0 30px rgba(0, 0, 0, 0.3)',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
-        transform: sideMenuOpen ? 'translateX(0)' : 'translateX(100%)',
-        transition: 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-        animation: 'slideInRight 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
-      }}>
+      <div 
+        ref={sidebarRef}
+        style={{
+          width: '400px',
+          background: getSidebarBackground(),
+          backdropFilter: 'blur(20px)',
+          padding: '2rem',
+          overflowY: 'auto',
+          boxShadow: '-10px 0 30px rgba(0, 0, 0, 0.3)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          transform: sideMenuOpen ? 'translateX(0)' : 'translateX(100%)',
+          transition: 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+          animation: 'slideInRight 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+        }}>
         {/* Header */}
         <div style={{
           display: 'flex',
