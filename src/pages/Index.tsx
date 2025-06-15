@@ -71,6 +71,17 @@ const Index = () => {
     applyTheme(theme);
   }, [theme]);
 
+  // Initialize the test when switching to typing screen
+  useEffect(() => {
+    if (currentScreen === 'typing' && !testText) {
+      console.log('Initializing typing test...');
+      const initialText = generateWords(100);
+      setTimeout(() => {
+        renderText(initialText);
+      }, 100);
+    }
+  }, [currentScreen, testText, generateWords, renderText]);
+
   const showMessage = (msg: string) => {
     setMessage(msg);
     if (messageTimeoutRef.current) {
@@ -158,11 +169,10 @@ const Index = () => {
     const textToUse = generateWords(100);
     console.log('Generated text for new test:', textToUse.substring(0, 50) + '...');
     
-    // Use a longer timeout to ensure the component is properly mounted
     setTimeout(() => {
       console.log('Attempting to render text, ref available:', !!textFlowRef.current);
       renderText(textToUse);
-    }, 500);
+    }, 100);
   };
 
   const continueTest = (testName?: string) => {
@@ -193,7 +203,7 @@ const Index = () => {
     setActualTypedCount(prev => prev + 1);
 
     if (isCorrect) {
-      playKeyboardSound(); // Play keyboard sound for correct character
+      playKeyboardSound();
       currentChar.classList.add('correct');
       setCorrectCharacters(prev => prev + 1);
       setPos(prev => prev + 1);
@@ -203,7 +213,7 @@ const Index = () => {
         renderText(extendedText);
       }
     } else {
-      playErrorSound(); // Play error sound for incorrect character
+      playErrorSound();
       if (lastErrorPos !== pos) {
         setTotalErrors(prev => prev + 1);
         setLastErrorPos(pos);
@@ -371,7 +381,7 @@ const Index = () => {
               onClick={() => {
                 if (currentActiveUser) {
                   setCurrentScreen('typing');
-                  startNewTest();
+                  setTimeout(() => startNewTest(), 100);
                 } else {
                   showMessage('Please enter your name first.');
                 }
@@ -511,7 +521,7 @@ const Index = () => {
                     const textToUse = generateWords(100);
                     setTimeout(() => {
                       renderText(textToUse);
-                    }, 500);
+                    }, 100);
                   }}
                   style={{
                     background: getButtonColor(),

@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -98,4 +99,67 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Theme Styles */
+.cosmic-nebula {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+}
+
+.midnight-black {
+  background: linear-gradient(135deg, #0c0c0c 0%, #1a1a1a 100%);
+  min-height: 100vh;
+}
+
+.cotton-candy-glow {
+  background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+  min-height: 100vh;
+}
+
+/* Typing Test Styles */
+.char {
+  font-size: inherit;
+  font-family: inherit;
+  line-height: inherit;
+  letter-spacing: inherit;
+}
+
+.char.correct {
+  color: #27ae60 !important;
+  background-color: rgba(39, 174, 96, 0.2) !important;
+}
+
+.char.incorrect {
+  color: #e74c3c !important;
+  background-color: rgba(231, 76, 60, 0.2) !important;
+}
+
+.char.extra {
+  color: #e74c3c !important;
+  background-color: rgba(231, 76, 60, 0.2) !important;
+}
+
+/* Hide scrollbars */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Caret animation */
+@keyframes blinkCaret {
+  0%, 50% {
+    opacity: 1;
+  }
+  51%, 100% {
+    opacity: 0;
+  }
+}
+
+#typing-cursor {
+  animation: blinkCaret 1s infinite;
 }

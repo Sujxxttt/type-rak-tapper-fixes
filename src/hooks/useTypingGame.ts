@@ -2,161 +2,164 @@
 import { useState, useRef, useCallback } from 'react';
 
 export const useTypingGame = () => {
-  const [gameOver, setGameOver] = useState<boolean>(false);
-  const [testActive, setTestActive] = useState<boolean>(false);
-  const [elapsed, setElapsed] = useState<number>(0);
-  const [pos, setPos] = useState<number>(0);
+  const [gameOver, setGameOver] = useState(false);
+  const [testActive, setTestActive] = useState(false);
+  const [elapsed, setElapsed] = useState(0);
+  const [pos, setPos] = useState(0);
   const [chars, setChars] = useState<HTMLElement[]>([]);
-  const [testText, setTestText] = useState<string>('');
-  const [correctCharacters, setCorrectCharacters] = useState<number>(0);
-  const [totalErrors, setTotalErrors] = useState<number>(0);
-  const [actualTypedCount, setActualTypedCount] = useState<number>(0);
-  const [lastErrorPos, setLastErrorPos] = useState<number>(-1);
+  const [testText, setTestText] = useState('');
+  const [correctCharacters, setCorrectCharacters] = useState(0);
+  const [totalErrors, setTotalErrors] = useState(0);
+  const [actualTypedCount, setActualTypedCount] = useState(0);
+  const [lastErrorPos, setLastErrorPos] = useState(-1);
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const textFlowRef = useRef<HTMLDivElement>(null);
-  const usedWordsRef = useRef<string[]>([]);
-  const generatedTextRef = useRef<string>('');
-  const wordListUsedRef = useRef<boolean>(false);
 
-  const wordList = [
-    "the", "quick", "brown", "fox", "jumps", "over", "lazy", "dog", "and", "runs",
-    "through", "forest", "with", "great", "speed", "while", "being", "chased", "by",
-    "hunter", "who", "wants", "catch", "for", "his", "dinner", "but", "fox", "too",
-    "smart", "fast", "escape", "from", "danger", "using", "its", "natural", "instincts",
-    "survival", "skills", "that", "have", "been", "developed", "over", "many", "years",
-    "evolution", "making", "one", "most", "cunning", "animals", "in", "animal", "kingdom",
-    "able", "outsmart", "even", "most", "experienced", "hunters", "with", "ease", "grace",
-    "amazing", "wonderful", "beautiful", "fantastic", "incredible", "awesome", "brilliant",
-    "excellent", "perfect", "outstanding", "remarkable", "stunning", "magnificent", "spectacular",
-    "powerful", "strong", "mighty", "fierce", "brave", "bold", "confident", "determined",
-    "focused", "dedicated", "passionate", "creative", "innovative", "intelligent", "wise",
-    "clever", "skilled", "talented", "gifted", "capable", "efficient", "effective", "successful"
+  const words = [
+    "the", "of", "and", "a", "to", "in", "is", "you", "that", "it", "he", "was", "for", "on", "are", "as", "with",
+    "his", "they", "I", "at", "be", "this", "have", "from", "or", "one", "had", "by", "word", "but", "not", "what",
+    "all", "were", "we", "when", "your", "can", "said", "there", "each", "which", "she", "do", "how", "their", "if",
+    "will", "up", "other", "about", "out", "many", "then", "them", "these", "so", "some", "her", "would", "make",
+    "like", "into", "him", "has", "two", "more", "go", "no", "way", "could", "my", "than", "first", "been", "call",
+    "who", "its", "now", "find", "long", "down", "day", "did", "get", "come", "made", "may", "part", "over", "new",
+    "sound", "take", "only", "little", "work", "know", "place", "year", "live", "me", "back", "give", "most", "very",
+    "after", "thing", "our", "just", "name", "good", "sentence", "man", "think", "say", "great", "where", "help",
+    "through", "much", "before", "line", "right", "too", "mean", "old", "any", "same", "tell", "boy", "follow",
+    "came", "want", "show", "also", "around", "form", "three", "small", "set", "put", "end", "why", "again", "turn",
+    "here", "off", "went", "old", "number", "great", "tell", "men", "say", "small", "every", "found", "still",
+    "between", "name", "should", "home", "big", "give", "air", "line", "set", "own", "under", "read", "last",
+    "never", "us", "left", "end", "along", "while", "might", "next", "sound", "below", "saw", "something", "thought",
+    "both", "few", "those", "always", "show", "large", "often", "together", "asked", "house", "don't", "world",
+    "going", "want", "school", "important", "until", "form", "food", "keep", "children", "feet", "land", "side",
+    "without", "boy", "once", "animal", "life", "enough", "took", "sometimes", "four", "head", "above", "kind",
+    "began", "almost", "live", "page", "got", "earth", "need", "far", "hand", "high", "year", "mother", "light",
+    "country", "father", "let", "night", "picture", "being", "study", "second", "book", "carry", "took", "science",
+    "eat", "room", "friend", "began", "idea", "fish", "mountain", "north", "once", "base", "hear", "horse", "cut",
+    "sure", "watch", "color", "face", "wood", "main", "enough", "plain", "girl", "usual", "young", "ready", "above",
+    "ever", "red", "list", "though", "feel", "talk", "bird", "soon", "body", "dog", "family", "direct", "leave",
+    "song", "measure", "door", "product", "black", "short", "numeral", "class", "wind", "question", "happen",
+    "complete", "ship", "area", "half", "rock", "order", "fire", "south", "problem", "piece", "told", "knew",
+    "pass", "since", "top", "whole", "king", "space", "heard", "best", "hour", "better", "during", "hundred",
+    "five", "remember", "step", "early", "hold", "west", "ground", "interest", "reach", "fast", "verb", "sing",
+    "listen", "six", "table", "travel", "less", "morning", "ten", "simple", "several", "vowel", "toward", "war",
+    "lay", "against", "pattern", "slow", "center", "love", "person", "money", "serve", "appear", "road", "map",
+    "rain", "rule", "govern", "pull", "cold", "notice", "voice", "unit", "power", "town", "fine", "certain", "fly",
+    "fall", "lead", "cry", "dark", "machine", "note", "wait", "plan", "figure", "star", "box", "noun", "field",
+    "rest", "correct", "able", "pound", "done", "beauty", "drive", "stood", "contain", "front", "teach", "week",
+    "final", "gave", "green", "oh", "quick", "develop", "ocean", "warm", "free", "minute", "strong", "special",
+    "mind", "behind", "clear", "tail", "produce", "fact", "street", "inch", "multiply", "nothing", "course", "stay",
+    "wheel", "full", "force", "blue", "object", "decide", "surface", "deep", "moon", "island", "foot", "system",
+    "busy", "test", "record", "boat", "common", "gold", "possible", "plane", "stead", "dry", "wonder", "laugh",
+    "thousands", "ago", "ran", "check", "game", "shape", "equate", "miss", "brought", "heat", "snow", "tire",
+    "bring", "yes", "distant", "fill", "east", "paint", "language", "among"
   ];
 
-  const generateWords = (count: number): string => {
-    let generatedText = "";
-    let availableWords = [...wordList];
-    
-    if (wordListUsedRef.current) {
-      availableWords = [...wordList];
-      usedWordsRef.current = [];
-      wordListUsedRef.current = false;
-    }
-    
-    for (let i = 0; i < count; i++) {
-      if (availableWords.length === 0) {
-        wordListUsedRef.current = true;
-        availableWords = [...wordList];
-        usedWordsRef.current = [];
-      }
-      
-      const randomIndex = Math.floor(Math.random() * availableWords.length);
-      const selectedWord = availableWords[randomIndex];
-      availableWords.splice(randomIndex, 1);
-      usedWordsRef.current.push(selectedWord);
-      
-      generatedText += selectedWord;
-      if (i < count - 1) {
-        generatedText += " ";
-      }
-    }
-    
-    generatedTextRef.current = generatedText;
-    return generatedText;
-  };
-
-  const extendText = () => {
-    const additionalWords = generateWords(50);
-    generatedTextRef.current += " " + additionalWords;
-    return generatedTextRef.current;
-  };
+  const generateWords = useCallback((count: number) => {
+    const shuffled = [...words].sort(() => Math.random() - 0.5);
+    const selectedWords = shuffled.slice(0, count);
+    const text = selectedWords.join(' ');
+    setTestText(text);
+    console.log('Generated text:', text.substring(0, 50) + '...');
+    return text;
+  }, []);
 
   const renderText = useCallback((text: string) => {
-    console.log('Rendering text with length:', text.length);
+    console.log('renderText called with text length:', text.length);
+    console.log('textFlowRef.current available:', !!textFlowRef.current);
     
-    const tryRender = () => {
-      const textFlowElement = textFlowRef.current;
-      if (!textFlowElement) {
-        console.log('Text flow element not found, retrying...');
-        setTimeout(tryRender, 50);
-        return;
-      }
-      
-      console.log('Text flow element found, rendering text');
-      setTestText(text);
-      textFlowElement.innerHTML = "";
-      const newChars: HTMLElement[] = [];
-      const frag = document.createDocumentFragment();
-      
-      for (let i = 0; i < text.length; i++) {
-        const char = text[i];
-        const span = document.createElement("span");
-        span.className = "char";
-        span.textContent = char === " " ? "\u00A0" : char;
-        frag.appendChild(span);
-        newChars.push(span);
-      }
-      
-      textFlowElement.appendChild(frag);
-      setChars(newChars);
-      console.log('Text successfully rendered with', newChars.length, 'characters');
-    };
+    if (!textFlowRef.current) {
+      console.log('Text flow element not found, retrying...');
+      setTimeout(() => renderText(text), 100);
+      return;
+    }
 
-    tryRender();
+    const textFlow = textFlowRef.current;
+    textFlow.innerHTML = '';
+
+    const newChars: HTMLElement[] = [];
+    
+    text.split('').forEach((char) => {
+      const span = document.createElement('span');
+      span.textContent = char;
+      span.className = 'char';
+      span.style.color = 'inherit';
+      span.style.backgroundColor = 'transparent';
+      textFlow.appendChild(span);
+      newChars.push(span);
+    });
+
+    setChars(newChars);
+    console.log('Text rendered successfully, chars count:', newChars.length);
+
+    // Focus the text flow element
+    textFlow.focus();
   }, []);
 
   const startTimer = useCallback((duration: number, onComplete: () => void) => {
-    console.log('Starting timer for', duration, 'seconds');
+    setElapsed(0);
     if (timerRef.current) {
       clearInterval(timerRef.current);
     }
+    
     timerRef.current = setInterval(() => {
-      setElapsed(prev => {
+      setElapsed((prev) => {
         const newElapsed = prev + 1;
         if (newElapsed >= duration) {
           clearInterval(timerRef.current!);
           onComplete();
+          return duration;
         }
         return newElapsed;
       });
     }, 1000);
   }, []);
 
-  const resetTest = () => {
-    console.log('Resetting test');
+  const resetTest = useCallback(() => {
     setGameOver(false);
     setTestActive(false);
     setElapsed(0);
     setPos(0);
-    setTotalErrors(0);
     setCorrectCharacters(0);
+    setTotalErrors(0);
     setActualTypedCount(0);
     setLastErrorPos(-1);
-    usedWordsRef.current = [];
-    generatedTextRef.current = '';
-    wordListUsedRef.current = false;
     
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
-    
-    const allChars = document.querySelectorAll('.char');
-    allChars.forEach(char => {
-      char.classList.remove('correct', 'incorrect', 'extra');
+
+    // Clear all character styling
+    chars.forEach(char => {
+      char.classList.remove('correct', 'incorrect');
+      char.style.backgroundColor = 'transparent';
     });
-  };
 
-  const getCurrentWPM = () => {
+    // Remove extra characters
+    if (textFlowRef.current) {
+      const extraChars = textFlowRef.current.querySelectorAll('.extra');
+      extraChars.forEach(char => char.remove());
+    }
+  }, [chars]);
+
+  const extendText = useCallback(() => {
+    const additionalWords = generateWords(50);
+    const newText = testText + ' ' + additionalWords;
+    setTestText(newText);
+    return newText;
+  }, [testText, generateWords]);
+
+  const getCurrentWPM = useCallback(() => {
     if (elapsed === 0) return 0;
-    return Math.round((correctCharacters / 5) / (elapsed / 60));
-  };
+    const wordsTyped = correctCharacters / 5; // Standard: 5 characters = 1 word
+    return Math.round((wordsTyped / elapsed) * 60);
+  }, [correctCharacters, elapsed]);
 
-  const getCurrentErrorRate = () => {
+  const getCurrentErrorRate = useCallback(() => {
     if (actualTypedCount === 0) return 0;
-    return (totalErrors / actualTypedCount) * 100;
-  };
+    return Math.round((totalErrors / actualTypedCount) * 100);
+  }, [totalErrors, actualTypedCount]);
 
   return {
     gameOver,
