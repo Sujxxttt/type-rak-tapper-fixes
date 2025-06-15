@@ -47,13 +47,6 @@ export const TypingTest: React.FC<TypingTestProps> = ({
           left: scrollLeft,
           behavior: 'smooth'
         });
-        
-        // Position the cursor
-        const cursor = document.getElementById('typing-cursor');
-        if (cursor) {
-          cursor.style.left = `${charLeft}px`;
-          cursor.style.top = `${currentChar.offsetTop}px`;
-        }
       }
     }
   }, [pos, chars]);
@@ -73,10 +66,10 @@ export const TypingTest: React.FC<TypingTestProps> = ({
 
   return (
     <div style={{
-      width: '90%',
-      maxWidth: '800px',
+      width: '100%',
+      maxWidth: '1040px', // 30% wider than 800px
       height: '120px',
-      margin: '2rem auto',
+      margin: '4rem auto 2rem auto', // 2cm lower (approximately 4rem instead of 2rem)
       padding: '1.5rem',
       background: theme === 'cotton-candy-glow' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.1)',
       borderRadius: '12px',
@@ -105,27 +98,10 @@ export const TypingTest: React.FC<TypingTestProps> = ({
           overflowY: 'hidden',
           whiteSpace: 'nowrap',
           scrollbarWidth: 'none',
-          msOverflowStyle: 'none',
-          WebkitScrollbar: 'none'
+          msOverflowStyle: 'none'
         }}
         tabIndex={0}
       />
-      
-      {pos < chars.length && (
-        <div
-          style={{
-            position: 'absolute',
-            width: '2px',
-            height: '1.8em',
-            backgroundColor: theme === 'cotton-candy-glow' ? '#ff1fbc' : '#21b1ff',
-            animation: 'blinkCaret 1s infinite',
-            zIndex: 10,
-            pointerEvents: 'none',
-            transition: 'left 0.1s ease'
-          }}
-          id="typing-cursor"
-        />
-      )}
       
       <style>{`
         #text-flow::-webkit-scrollbar {

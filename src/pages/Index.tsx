@@ -959,20 +959,35 @@ const Index: React.FC = () => {
             {/* Fixed Return Button */}
             <div style={{
               position: 'fixed',
-              bottom: '20px',
-              right: '20px',
+              bottom: '30px',
+              right: '30px',
               zIndex: 100
             }}>
               <button 
                 onClick={handleReturnToDashboard}
                 style={{
-                  background: showReturnConfirm ? '#e74c3c' : '#6c757d',
+                  background: showReturnConfirm ? 
+                    'rgba(231, 76, 60, 0.9)' : 
+                    'rgba(255, 255, 255, 0.1)',
+                  backdropFilter: 'blur(15px)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
                   color: 'white',
-                  border: 'none',
-                  padding: '12px 24px',
-                  borderRadius: '6px',
+                  padding: '15px 25px',
+                  borderRadius: '12px',
                   cursor: 'pointer',
-                  fontSize: '1rem'
+                  fontSize: '1rem',
+                  fontWeight: '500',
+                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+                  transition: 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+                  transform: 'translateY(0)',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 12px 40px rgba(0, 0, 0, 0.4)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.3)';
                 }}
               >
                 {showReturnConfirm ? 'Confirm Return?' : 'Return to Dashboard'}
