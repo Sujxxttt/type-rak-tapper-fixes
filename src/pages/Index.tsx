@@ -37,8 +37,10 @@ const Index: React.FC = () => {
   const [lastTestResult, setLastTestResult] = useState<any>(null);
   const [continueTestMode, setContinueTestMode] = useState<boolean>(false);
   const [extraChars, setExtraChars] = useState<string[]>([]);
+  const [showStartMessage, setShowStartMessage] = useState<boolean>(false);
 
   const messageTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+  const startMessageTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
   // Use the typing game hook
   const {
@@ -241,6 +243,15 @@ const Index: React.FC = () => {
     
     e.preventDefault();
     
+    // Hide start message when first key is pressed
+    if (showStartMessage) {
+      setShowStartMessage(false);
+      if (startMessageTimeoutRef.current) {
+        clearTimeout(startMessageTimeoutRef.current);
+        startMessageTimeoutRef.current = null;
+      }
+    }
+    
     if (!testActive && e.key.length === 1 && pos < chars.length) {
       console.log('Starting test with first keypress');
       startTimer(duration, endTest);
@@ -259,20 +270,24 @@ const Index: React.FC = () => {
     const typedChar = e.key;
     
     if (typedChar && typedChar.length === 1) {
-      console.log('Processing character:', typedChar, 'Expected:', expectedChar);
+      console.log('Processing character:', typedChar, 'Expected:', expectedChar, 'Position:', pos);
+      
+      // Update actual typed count immediately
       setActualTypedCount(prev => {
         const newCount = prev + 1;
-        console.log('Total typed count:', newCount);
+        console.log('Updated typed count to:', newCount);
         return newCount;
       });
       
       if (expectedChar === typedChar) {
         // Correct character
-        chars[pos]?.classList.remove("incorrect");
-        chars[pos]?.classList.add("correct");
+        if (chars[pos]) {
+          chars[pos].classList.remove("incorrect");
+          chars[pos].classList.add("correct");
+        }
         setCorrectCharacters(prev => {
           const newCorrect = prev + 1;
-          console.log('Correct characters:', newCorrect);
+          console.log('Updated correct characters to:', newCorrect);
           return newCorrect;
         });
         setPos(prev => prev + 1);
@@ -283,12 +298,14 @@ const Index: React.FC = () => {
         if (lastErrorPos !== pos) {
           setTotalErrors(prev => {
             const newErrors = prev + 1;
-            console.log('Total errors:', newErrors);
+            console.log('Updated total errors to:', newErrors);
             return newErrors;
           });
           setLastErrorPos(pos);
         }
-        chars[pos]?.classList.add("incorrect");
+        if (chars[pos]) {
+          chars[pos].classList.add("incorrect");
+        }
         // Still advance position to continue typing
         setPos(prev => prev + 1);
         playErrorSound();
@@ -329,6 +346,15 @@ const Index: React.FC = () => {
     resetTest();
     setShowReturnConfirm(false);
     setContinueTestMode(false);
+    setShowStartMessage(true);
+    
+    // Show start message for 15 seconds
+    if (startMessageTimeoutRef.current) {
+      clearTimeout(startMessageTimeoutRef.current);
+    }
+    startMessageTimeoutRef.current = setTimeout(() => {
+      setShowStartMessage(false);
+    }, 15000);
     
     setTimeout(() => {
       const textToUse = generateWords(100);
@@ -413,6 +439,11 @@ const Index: React.FC = () => {
     resetTest();
     setExtraChars([]);
     setShowReturnConfirm(false);
+    setShowStartMessage(false);
+    if (startMessageTimeoutRef.current) {
+      clearTimeout(startMessageTimeoutRef.current);
+      startMessageTimeoutRef.current = null;
+    }
     setCurrentScreen('dashboard');
   };
 
@@ -455,13 +486,13 @@ const Index: React.FC = () => {
   const getButtonColor = () => {
     switch (theme) {
       case 'cosmic-nebula':
-        return '#8f0cc4';
+        return '#8a2be2'; // Updated cosmic nebula color
       case 'midnight-black':
         return '#6a0dad';
       case 'cotton-candy-glow':
         return '#af01af';
       default:
-        return '#8f0cc4';
+        return '#8a2be2';
     }
   };
 
@@ -474,13 +505,13 @@ const Index: React.FC = () => {
 
   const getTitleGradient = () => {
     if (theme === 'cosmic-nebula') {
-      return 'linear-gradient(90deg, #f364f0 0%, #cd64f0 100%)'; // 20% brighter
+      return 'linear-gradient(90deg, #8a2be2 0%, #4b0082 100%)'; // Updated cosmic nebula gradient
     } else if (theme === 'midnight-black') {
       return 'linear-gradient(90deg, #c559f7 0%, #7f59f7 100%)';
     } else if (theme === 'cotton-candy-glow') {
       return 'linear-gradient(90deg, #ff59e8 0%, #ff52a8 100%)';
     }
-    return 'linear-gradient(90deg, #c454f0 0%, #7d54f0 100%)';
+    return 'linear-gradient(90deg, #8a2be2 0%, #4b0082 100%)';
   };
 
   return (
@@ -496,7 +527,7 @@ const Index: React.FC = () => {
       color: 'white',
       background: theme === 'midnight-black' ? '#000000' : 
                  theme === 'cotton-candy-glow' ? 'linear-gradient(45deg, #3e8cb9, #2f739d)' :
-                 'linear-gradient(45deg, #3f034a, #004a7a)',
+                 'linear-gradient(45deg, #8a2be2, #4b0082)', // Updated cosmic nebula background
       minHeight: '100vh',
       overflowX: 'hidden'
     }}>
@@ -583,6 +614,40 @@ const Index: React.FC = () => {
           onCancel={() => setShowTestNameMenu(false)}
           getButtonColor={getButtonColor}
         />
+
+        {/* Start Message for Typing Screen */}
+        {currentScreen === 'typing' && showStartMessage && (
+          <div style={{
+            position: 'fixed',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            background: 'rgba(0, 0, 0, 0.8)',
+            backdropFilter: 'blur(15px)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            borderRadius: '16px',
+            padding: '2rem',
+            color: '#00ff00',
+            fontSize: '1.5rem',
+            fontFamily: "'Courier New', monospace",
+            textAlign: 'center',
+            zIndex: 1000,
+            boxShadow: '0 0 30px rgba(0, 255, 0, 0.3)',
+            animation: 'pulse 2s infinite'
+          }}>
+            <div style={{
+              background: 'linear-gradient(45deg, #00ff00, #00aa00)',
+              WebkitBackgroundClip: 'text',
+              backgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              color: 'transparent',
+              fontWeight: 'bold',
+              textShadow: '0 0 10px rgba(0, 255, 0, 0.5)'
+            }}>
+              >> PRESS ANY KEY TO START TEST <<
+            </div>
+          </div>
+        )}
 
         {/* Main Content Areas */}
         {currentScreen === 'greeting' && (
@@ -923,6 +988,16 @@ const Index: React.FC = () => {
                   resetTest();
                   setExtraChars([]);
                   setShowReturnConfirm(false);
+                  setShowStartMessage(true);
+                  
+                  // Show start message for 15 seconds
+                  if (startMessageTimeoutRef.current) {
+                    clearTimeout(startMessageTimeoutRef.current);
+                  }
+                  startMessageTimeoutRef.current = setTimeout(() => {
+                    setShowStartMessage(false);
+                  }, 15000);
+                  
                   setTimeout(() => {
                     const textToUse = generateWords(100);
                     renderText(textToUse);
@@ -956,7 +1031,7 @@ const Index: React.FC = () => {
               </button>
             </div>
 
-            {/* Fixed Return Button */}
+            {/* Fixed Return Button with Glass Style */}
             <div style={{
               position: 'fixed',
               bottom: '30px',
@@ -967,13 +1042,13 @@ const Index: React.FC = () => {
                 onClick={handleReturnToDashboard}
                 style={{
                   background: showReturnConfirm ? 
-                    'rgba(231, 76, 60, 0.9)' : 
+                    'rgba(231, 76, 60, 0.7)' : 
                     'rgba(255, 255, 255, 0.1)',
-                  backdropFilter: 'blur(15px)',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  backdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(255, 255, 255, 0.3)',
                   color: 'white',
                   padding: '15px 25px',
-                  borderRadius: '12px',
+                  borderRadius: '16px',
                   cursor: 'pointer',
                   fontSize: '1rem',
                   fontWeight: '500',
@@ -984,10 +1059,16 @@ const Index: React.FC = () => {
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = 'translateY(-2px)';
                   e.currentTarget.style.boxShadow = '0 12px 40px rgba(0, 0, 0, 0.4)';
+                  e.currentTarget.style.background = showReturnConfirm ? 
+                    'rgba(231, 76, 60, 0.8)' : 
+                    'rgba(255, 255, 255, 0.15)';
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = 'translateY(0)';
                   e.currentTarget.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.3)';
+                  e.currentTarget.style.background = showReturnConfirm ? 
+                    'rgba(231, 76, 60, 0.7)' : 
+                    'rgba(255, 255, 255, 0.1)';
                 }}
               >
                 {showReturnConfirm ? 'Confirm Return?' : 'Return to Dashboard'}
@@ -1154,7 +1235,7 @@ const Index: React.FC = () => {
             onMouseEnter={(e) => {
               const target = e.target as HTMLElement;
               target.style.color = theme === 'midnight-black' ? '#c559f7' : 
-                                   theme === 'cotton-candy-glow' ? '#ff59e8' : '#c454f0';
+                                   theme === 'cotton-candy-glow' ? '#ff59e8' : '#8a2be2';
             }}
             onMouseLeave={(e) => {
               const target = e.target as HTMLElement;
@@ -1176,7 +1257,7 @@ const Index: React.FC = () => {
             onMouseEnter={(e) => {
               const target = e.target as HTMLElement;
               target.style.color = theme === 'midnight-black' ? '#c559f7' : 
-                                   theme === 'cotton-candy-glow' ? '#ff59e8' : '#c454f0';
+                                   theme === 'cotton-candy-glow' ? '#ff59e8' : '#8a2be2';
             }}
             onMouseLeave={(e) => {
               const target = e.target as HTMLElement;
@@ -1198,7 +1279,7 @@ const Index: React.FC = () => {
             onMouseEnter={(e) => {
               const target = e.target as HTMLElement;
               target.style.color = theme === 'midnight-black' ? '#c559f7' : 
-                                   theme === 'cotton-candy-glow' ? '#ff59e8' : '#c454f0';
+                                   theme === 'cotton-candy-glow' ? '#ff59e8' : '#8a2be2';
             }}
             onMouseLeave={(e) => {
               const target = e.target as HTMLElement;
@@ -1220,7 +1301,7 @@ const Index: React.FC = () => {
             onMouseEnter={(e) => {
               const target = e.target as HTMLElement;
               target.style.color = theme === 'midnight-black' ? '#c559f7' : 
-                                   theme === 'cotton-candy-glow' ? '#ff59e8' : '#c454f0';
+                                   theme === 'cotton-candy-glow' ? '#ff59e8' : '#8a2be2';
             }}
             onMouseLeave={(e) => {
               const target = e.target as HTMLElement;
@@ -1242,7 +1323,7 @@ const Index: React.FC = () => {
             onMouseEnter={(e) => {
               const target = e.target as HTMLElement;
               target.style.color = theme === 'midnight-black' ? '#c559f7' : 
-                                   theme === 'cotton-candy-glow' ? '#ff59e8' : '#c454f0';
+                                   theme === 'cotton-candy-glow' ? '#ff59e8' : '#8a2be2';
             }}
             onMouseLeave={(e) => {
               const target = e.target as HTMLElement;
@@ -1262,7 +1343,7 @@ const Index: React.FC = () => {
             onMouseEnter={(e) => {
               const target = e.target as HTMLElement;
               target.style.color = theme === 'midnight-black' ? '#c559f7' : 
-                                   theme === 'cotton-candy-glow' ? '#ff59e8' : '#c454f0';
+                                   theme === 'cotton-candy-glow' ? '#ff59e8' : '#8a2be2';
             }}
             onMouseLeave={(e) => {
               const target = e.target as HTMLElement;
@@ -1279,6 +1360,17 @@ const Index: React.FC = () => {
 
         @keyframes blinkCaret {
           50% { opacity: 0; }
+        }
+        
+        @keyframes pulse {
+          0%, 100% { 
+            opacity: 1; 
+            transform: translate(-50%, -50%) scale(1);
+          }
+          50% { 
+            opacity: 0.7; 
+            transform: translate(-50%, -50%) scale(1.05);
+          }
         }
         
         .char {
