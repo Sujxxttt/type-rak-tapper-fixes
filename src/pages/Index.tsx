@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { X } from 'lucide-react';
 import { TypingTest } from '../components/TypingTest';
@@ -506,6 +507,14 @@ const Index: React.FC = () => {
         return '#2d1b4e';
     }
   };
+
+  // Calculate average stats
+  const averageStats = getAverageStats();
+
+  // Show introduction first - always
+  if (showIntroduction) {
+    return <Introduction onComplete={handleIntroComplete} />;
+  }
 
   return (
     <div style={{
