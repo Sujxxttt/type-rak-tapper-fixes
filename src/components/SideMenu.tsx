@@ -6,6 +6,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Switch } from "@/components/ui/switch";
 import { CustomDurationSlider } from './CustomDurationSlider';
 
 interface SideMenuProps {
@@ -27,6 +28,8 @@ interface SideMenuProps {
   setFontSize: (size: number) => void;
   fontStyle: string;
   setFontStyle: (style: string) => void;
+  soundEnabled: boolean;
+  setSoundEnabled: (enabled: boolean) => void;
 }
 
 export const SideMenu: React.FC<SideMenuProps> = ({
@@ -47,7 +50,9 @@ export const SideMenu: React.FC<SideMenuProps> = ({
   fontSize,
   setFontSize,
   fontStyle,
-  setFontStyle
+  setFontStyle,
+  soundEnabled,
+  setSoundEnabled
 }) => {
   // Fix: Define showCustomDuration state for the custom duration slider
   const [showCustomDuration, setShowCustomDuration] = useState(false);
@@ -73,7 +78,6 @@ export const SideMenu: React.FC<SideMenuProps> = ({
   const sidebarVisible = sideMenuOpen ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0';
 
   const getGlassBackground = () => {
-    // Even more transparency for better effect
     if (theme === 'midnight-black') {
       return 'rgba(20, 20, 20, 0.38)';
     } else if (theme === 'cotton-candy-glow') {
@@ -204,6 +208,38 @@ export const SideMenu: React.FC<SideMenuProps> = ({
           >
             <X size={24} />
           </button>
+        </div>
+
+        {/* Sound Settings */}
+        <div style={{ marginBottom: '25px' }}>
+          <h3 style={{
+            marginBottom: '15px',
+            fontSize: '1.1rem',
+            fontWeight: '600',
+            opacity: 0.9
+          }}>
+            Sound Effects
+          </h3>
+          <div style={{
+            background: 'rgba(255, 255, 255, 0.1)',
+            borderRadius: '12px',
+            padding: '15px',
+            border: '1px solid rgba(255, 255, 255, 0.1)'
+          }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between'
+            }}>
+              <span style={{ fontSize: '0.95rem' }}>
+                Enable keyboard and error sounds
+              </span>
+              <Switch
+                checked={soundEnabled}
+                onCheckedChange={setSoundEnabled}
+              />
+            </div>
+          </div>
         </div>
 
         {/* Users Section */}

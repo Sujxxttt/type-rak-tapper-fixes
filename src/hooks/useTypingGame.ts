@@ -1,3 +1,4 @@
+
 import { useState, useRef, useCallback } from 'react';
 
 export const useTypingGame = () => {
@@ -71,17 +72,18 @@ export const useTypingGame = () => {
     return generatedTextRef.current;
   };
 
-  const renderText = (text: string, elementRef?: React.RefObject<HTMLDivElement>) => {
+  const renderText = useCallback((text: string) => {
     console.log('Rendering text with length:', text.length);
     
     const tryRender = () => {
-      const textFlowElement = elementRef?.current || document.getElementById('text-flow');
+      const textFlowElement = textFlowRef.current;
       if (!textFlowElement) {
         console.log('Text flow element not found, retrying...');
         setTimeout(tryRender, 50);
         return;
       }
       
+      console.log('Text flow element found, rendering text');
       setTestText(text);
       textFlowElement.innerHTML = "";
       const newChars: HTMLElement[] = [];
@@ -102,7 +104,7 @@ export const useTypingGame = () => {
     };
 
     tryRender();
-  };
+  }, []);
 
   const startTimer = useCallback((duration: number, onComplete: () => void) => {
     console.log('Starting timer for', duration, 'seconds');

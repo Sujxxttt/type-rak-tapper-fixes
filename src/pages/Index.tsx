@@ -1,45 +1,38 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { X } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
 import { TypingTest } from '../components/TypingTest';
 import { StatsDisplay } from '../components/StatsDisplay';
-import { TestNameMenu } from '../components/TestNameMenu';
 import { SideMenu } from '../components/SideMenu';
-import { Toast } from '../components/Toast';
-import { HistoryPage } from '../components/HistoryPage';
+import { TestNameMenu } from '../components/TestNameMenu';
 import { Introduction } from '../components/Introduction';
+import { HistoryPage } from '../components/HistoryPage';
+import { Toast } from '../components/Toast';
 import { useTypingGame } from '../hooks/useTypingGame';
 import { useLocalStorage } from '../hooks/useLocalStorage';
+import { useSoundEffects } from '../hooks/useSoundEffects';
 
-const Index: React.FC = () => {
-  // Introduction state - show on every reload
-  const [showIntroduction, setShowIntroduction] = useState(true);
-  
-  // Global state variables
-  const [usersList, setUsersList] = useLocalStorage<string[]>("typeRakUsersList", []);
-  const [currentActiveUser, setCurrentActiveUser] = useLocalStorage<string>("typeRakActiveUser", '');
-  const [testResults, setTestResults] = useState<any[]>([]);
-  const [allTestHistory, setAllTestHistory] = useState<any[]>([]);
-  const [currentTestName, setCurrentTestName] = useState<string>('');
-  const [deleteConfirmState, setDeleteConfirmState] = useState<boolean>(false);
-  const [duration, setDuration] = useLocalStorage<number>("typeRakDuration", 60);
-  const [fontSize, setFontSize] = useLocalStorage<number>("typeRakFontSize", 120);
-  const [fontStyle, setFontStyle] = useLocalStorage<string>("typeRakFontStyle", 'inter');
+const Index = () => {
+  const [currentScreen, setCurrentScreen] = useState<'greeting' | 'typing' | 'history'>('greeting');
+  const [currentTest, setCurrentTest] = useState<string>('1 Minute');
+  const [theme, setTheme] = useState<string>('cosmic-nebula');
   const [sideMenuOpen, setSideMenuOpen] = useState<boolean>(false);
-  const [currentScreen, setCurrentScreen] = useState<string>('greeting');
-  const [theme, setTheme] = useLocalStorage<string>("typeRakTheme", 'cosmic-nebula');
-  const [message, setMessage] = useState<string>('');
-  const [showTestNameMenu, setShowTestNameMenu] = useState<boolean>(false);
-  const [newTestName, setNewTestName] = useState<string>('');
   const [showReturnConfirm, setShowReturnConfirm] = useState<boolean>(false);
-  const [highlightFooter, setHighlightFooter] = useState<boolean>(false);
-  const [lastTestResult, setLastTestResult] = useState<any>(null);
+  const [fontSize, setFontSize] = useState<number>(100);
+  const [fontStyle, setFontStyle] = useState<string>('inter');
+  const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
+
+  const [usersList, setUsersList] = useLocalStorage<string[]>('typingTestUsers', []);
+  const [currentActiveUser, setCurrentActiveUser] = useLocalStorage<string>('activeUser', '');
+  const [message, setMessage] = useState<string | null>(null);
+  const [deleteConfirmState, setDeleteConfirmState] = useState<boolean>(false);
+  const [duration, setDuration] = useState<number>(60);
+  const [testNameMenuOpen, setTestNameMenuOpen] = useState<boolean>(false);
+  const [showIntroduction, setShowIntroduction] = useState<boolean>(false);
   const [continueTestMode, setContinueTestMode] = useState<boolean>(false);
   const [extraChars, setExtraChars] = useState<string[]>([]);
 
   const messageTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
-  const textFlowRef = React.useRef<HTMLDivElement>(null);
 
-  // Use the typing game hook
+  // Use the typing game hook and sound effects
   const {
     gameOver,
     setGameOver,
@@ -60,6 +53,7 @@ const Index: React.FC = () => {
     lastErrorPos,
     setLastErrorPos,
     timerRef,
+    textFlowRef,
     generateWords,
     renderText,
     startTimer,
@@ -69,1255 +63,594 @@ const Index: React.FC = () => {
     getCurrentErrorRate
   } = useTypingGame();
 
-  // Show introduction on first load
-  useEffect(() => {
-    setShowIntroduction(false);
-  }, []);
-
-  const handleIntroComplete = () => {
-    setShowIntroduction(false);
-  };
+  const { playKeyboardSound, playErrorSound } = useSoundEffects(soundEnabled);
 
   useEffect(() => {
-    if (showIntroduction) return;
-    
-    if (usersList.length > 0) {
-      if (currentActiveUser && usersList.includes(currentActiveUser)) {
-        setCurrentScreen('dashboard');
-        loadUserTests(currentActiveUser);
-      } else {
-        setCurrentActiveUser(usersList[0]);
-        setCurrentScreen('dashboard');
-        loadUserTests(usersList[0]);
-      }
-    }
-  }, [usersList, currentActiveUser, showIntroduction]);
-
-  const loadUserTests = (username: string) => {
-    const storedTests = localStorage.getItem(`typeRakTests-${username}`);
-    const storedHistory = localStorage.getItem(`typeRakHistory-${username}`);
-    if (storedTests) {
-      setTestResults(JSON.parse(storedTests));
-    } else {
-      setTestResults([]);
-    }
-    if (storedHistory) {
-      setAllTestHistory(JSON.parse(storedHistory));
-    } else {
-      setAllTestHistory([]);
-    }
-  };
-
-  useEffect(() => {
-    document.body.className = '';
-    if (theme === 'midnight-black') {
-      document.body.classList.add('midnight-black');
-    } else if (theme === 'cotton-candy-glow') {
-      document.body.classList.add('cotton-candy-glow');
-    }
+    applyTheme(theme);
   }, [theme]);
 
-  useEffect(() => {
-    const handleCheatCode = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.altKey && e.key === 'Backspace' && testActive) {
-        e.preventDefault();
-        setElapsed(prev => {
-          const newElapsed = prev + 30;
-          if (newElapsed >= duration) {
-            setTimeout(endTest, 100);
-          }
-          return newElapsed;
-        });
-        showToast("Cheat activated: +30 seconds!");
-      }
-    };
-
-    document.addEventListener('keydown', handleCheatCode);
-    return () => document.removeEventListener('keydown', handleCheatCode);
-  }, [testActive, duration]);
-
-  const endTest = () => {
-    if (gameOver) return;
-    setGameOver(true);
-    setTestActive(false);
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
+  const showMessage = (msg: string) => {
+    setMessage(msg);
+    if (messageTimeoutRef.current) {
+      clearTimeout(messageTimeoutRef.current);
     }
-    
-    const correctChars = correctCharacters;
-    const totalTyped = actualTypedCount;
-    const mins = Math.max(elapsed / 60, 1 / 60);
-    const speed = Math.round(Math.max(0, (correctChars / 5) / mins));
-    const errorRate = totalTyped > 0 ? ((totalErrors / totalTyped) * 100) : 0;
-    const score = Math.round(speed * ((100 - errorRate) / 100) * 10);
-    
-    console.log('Test ended with stats:', {
-      correctChars,
-      totalTyped,
-      totalErrors,
-      speed,
-      errorRate,
-      score,
-      elapsed
-    });
-    
-    const testResult = {
-      name: currentTestName,
-      date: new Date().toISOString(),
-      wpm: speed,
-      errorRate: parseFloat(errorRate.toFixed(2)),
-      errors: totalErrors,
-      time: elapsed,
-      characters: totalTyped,
-      correctChars: correctChars,
-      score: score
-    };
-    
-    setLastTestResult(testResult);
-    
-    const newHistory = [...allTestHistory, testResult];
-    setAllTestHistory(newHistory);
-    localStorage.setItem(`typeRakHistory-${currentActiveUser}`, JSON.stringify(newHistory));
-    
-    const existingTestIndex = testResults.findIndex(test => test.name === currentTestName);
-    let newResults;
-    
-    if (existingTestIndex >= 0) {
-      const testHistory = newHistory.filter(t => t.name === currentTestName);
-      const avgWpm = Math.round(testHistory.reduce((sum, t) => sum + t.wpm, 0) / testHistory.length);
-      const avgErrorRate = (testHistory.reduce((sum, t) => sum + t.errorRate, 0) / testHistory.length);
-      const avgScore = Math.round(testHistory.reduce((sum, t) => sum + t.score, 0) / testHistory.length);
-      const totalTime = testHistory.reduce((sum, t) => sum + t.time, 0);
-      
-      newResults = [...testResults];
-      newResults[existingTestIndex] = {
-        ...testResults[existingTestIndex],
-        wpm: avgWpm,
-        errorRate: parseFloat(avgErrorRate.toFixed(2)),
-        score: avgScore,
-        testCount: testHistory.length,
-        lastDate: testResult.date,
-        totalTime: totalTime
-      };
-    } else {
-      newResults = [...testResults, {
-        ...testResult,
-        testCount: 1,
-        lastDate: testResult.date,
-        totalTime: testResult.time
-      }];
-    }
-    
-    setTestResults(newResults);
-    localStorage.setItem(`typeRakTests-${currentActiveUser}`, JSON.stringify(newResults));
-    
-    setCurrentScreen('results');
+    messageTimeoutRef.current = setTimeout(() => {
+      setMessage(null);
+    }, 3000);
   };
 
-  const handleKeyDown = (e: KeyboardEvent) => {
-    console.log('Key pressed:', e.key, 'Test active:', testActive, 'Game over:', gameOver);
-    
-    if (gameOver) return;
-
-    // Disable backspace completely during active tests
-    if (e.key === "Backspace") {
-      e.preventDefault();
-      return;
-    }
-    
-    e.preventDefault();
-    
-    if (!testActive && e.key.length === 1 && pos < chars.length) {
-      console.log('Starting test with first keypress');
-      startTimer(duration, endTest);
-      setTestActive(true);
-    }
-    
-    if (!testActive) return;
-    
-    // Check if we need to extend text
-    if (pos >= testText.length - 100) {
-      const newText = extendText();
-      renderText(newText, textFlowRef);
-    }
-    
-    const expectedChar = testText[pos];
-    const typedChar = e.key;
-    
-    if (typedChar && typedChar.length === 1) {
-      console.log('Processing character:', typedChar, 'Expected:', expectedChar);
-      setActualTypedCount(prev => {
-        const newCount = prev + 1;
-        console.log('Total typed count:', newCount);
-        return newCount;
-      });
-      
-      if (expectedChar === typedChar) {
-        // Correct character
-        chars[pos]?.classList.remove("incorrect");
-        chars[pos]?.classList.add("correct");
-        setCorrectCharacters(prev => {
-          const newCorrect = prev + 1;
-          console.log('Correct characters:', newCorrect);
-          return newCorrect;
-        });
-        setPos(prev => prev + 1);
-        setLastErrorPos(-1);
-      } else {
-        // Incorrect character - only count as error if it's not consecutive to the last error
-        if (lastErrorPos !== pos) {
-          setTotalErrors(prev => {
-            const newErrors = prev + 1;
-            console.log('Total errors:', newErrors);
-            return newErrors;
-          });
-          setLastErrorPos(pos);
-        }
-        chars[pos]?.classList.add("incorrect");
-        // Still advance position to continue typing
-        setPos(prev => prev + 1);
-      }
+  const closeToast = () => {
+    setMessage(null);
+    if (messageTimeoutRef.current) {
+      clearTimeout(messageTimeoutRef.current);
     }
   };
 
-  const createUser = (username: string) => {
-    if (!username.trim()) {
-      showToast("Please enter a username.", true);
-      return false;
+  const applyTheme = (themeName: string) => {
+    const body = document.body;
+    body.className = '';
+    body.classList.add(themeName);
+    setTheme(themeName);
+  };
+
+  const getButtonColor = () => {
+    switch (theme) {
+      case 'midnight-black': return '#6c757d';
+      case 'cotton-candy-glow': return '#ff1fbc';
+      default: return '#21b1ff';
     }
-    if (usersList.includes(username)) {
-      showToast("User already exists. Try a different name.", true);
-      return false;
-    }
-    
-    const newUsers = [...usersList, username];
-    setUsersList(newUsers);
-    setCurrentActiveUser(username);
-    setTestResults([]);
-    setAllTestHistory([]);
-    setCurrentScreen('dashboard');
-    showToast(`User "${username}" created successfully!`);
-    return true;
   };
 
   const switchUser = (username: string) => {
     setCurrentActiveUser(username);
-    loadUserTests(username);
+    showMessage(`Switched to user: ${username}`);
+  };
+
+  const handleDeleteUser = () => {
+    if (!deleteConfirmState && currentActiveUser) {
+      setDeleteConfirmState(true);
+      setTimeout(() => {
+        setDeleteConfirmState(false);
+      }, 3000);
+      return;
+    }
+
+    if (currentActiveUser) {
+      const updatedUsers = usersList.filter(user => user !== currentActiveUser);
+      setUsersList(updatedUsers);
+      
+      if (updatedUsers.length > 0) {
+        setCurrentActiveUser(updatedUsers[0]);
+        showMessage(`Deleted user and switched to: ${updatedUsers[0]}`);
+      } else {
+        setCurrentActiveUser('');
+        showMessage('User deleted. Please create a new user.');
+      }
+    }
     setDeleteConfirmState(false);
   };
 
-  const startNewTest = (testName: string) => {
-    console.log('Starting new test:', testName);
-    setCurrentTestName(testName);
-    setCurrentScreen('typing');
+  const handleHistoryClick = () => {
+    if (currentActiveUser) {
+      setCurrentScreen('history');
+      setSideMenuOpen(false);
+    } else {
+      showMessage('Please select or create a user first.');
+    }
+  };
+
+  const handleContactMe = () => {
+    window.open('mailto:contact@example.com', '_blank');
+  };
+
+  const startNewTest = (testName?: string) => {
+    const nameToUse = testName || currentTest;
+    setCurrentTest(nameToUse);
+    
     resetTest();
+    setExtraChars([]);
     setShowReturnConfirm(false);
     setContinueTestMode(false);
 
-    // Generate text and trigger rendering after component mounts
+    // Generate text and render it immediately
     const textToUse = generateWords(100);
     console.log('Generated text for new test:', textToUse.substring(0, 50) + '...');
     
-    // Wait for the component to mount and then render the text
+    // Use a longer timeout to ensure the component is properly mounted
     setTimeout(() => {
       console.log('Attempting to render text, ref available:', !!textFlowRef.current);
-      renderText(textToUse, textFlowRef);
-    }, 100);
+      renderText(textToUse);
+    }, 200);
   };
 
   const continueTest = (testName?: string) => {
     if (testName) {
       startNewTest(testName);
     } else {
-      setContinueTestMode(true);
+      const extendedText = extendText();
+      renderText(extendedText);
     }
+    setContinueTestMode(true);
   };
 
-  const applyTheme = (newTheme: string) => {
-    setTheme(newTheme);
-  };
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (!testActive) return;
+    if (e.ctrlKey || e.altKey || e.metaKey) return;
 
-  const showToast = (msg: string, isError = false) => {
-    setMessage(msg);
-    if (messageTimeoutRef.current) {
-      clearTimeout(messageTimeoutRef.current);
-    }
-    messageTimeoutRef.current = setTimeout(() => setMessage(''), 5000);
-  };
-
-  const closeToast = () => {
-    setMessage('');
-    if (messageTimeoutRef.current) {
-      clearTimeout(messageTimeoutRef.current);
-    }
-  };
-
-  const handleDeleteUser = () => {
-    if (!deleteConfirmState) {
-      setDeleteConfirmState(true);
-      return;
-    }
-    
-    const userToDelete = currentActiveUser;
-    const newUsers = usersList.filter(u => u !== userToDelete);
-    setUsersList(newUsers);
-    localStorage.removeItem(`typeRakTests-${userToDelete}`);
-    localStorage.removeItem(`typeRakHistory-${userToDelete}`);
-    localStorage.removeItem(`typeRakLastTest-${userToDelete}`);
-    
-    setDeleteConfirmState(false);
-    
-    if (newUsers.length > 0) {
-      setCurrentActiveUser(newUsers[0]);
-      loadUserTests(newUsers[0]);
-      setCurrentScreen('dashboard');
-    } else {
-      setCurrentActiveUser('');
-      setCurrentScreen('greeting');
-    }
-    showToast(`User "${userToDelete}" deleted.`);
-  };
-
-  const handleCreateTestClick = () => {
-    setShowTestNameMenu(true);
-    setNewTestName('');
-  };
-
-  const handleConfirmTestName = () => {
-    if (!newTestName.trim()) {
-      showToast("Please enter a test name.", true);
-      return;
-    }
-    setShowTestNameMenu(false);
-    startNewTest(newTestName);
-  };
-
-  const handleReturnToDashboard = () => {
-    if (!showReturnConfirm) {
+    const key = e.key;
+    if (key === 'Escape') {
       setShowReturnConfirm(true);
       return;
     }
-    
-    resetTest();
-    setExtraChars([]);
-    setShowReturnConfirm(false);
-    setCurrentScreen('dashboard');
-  };
 
-  const handleContactMe = () => {
-    setSideMenuOpen(false);
-    setHighlightFooter(true);
-    setTimeout(() => setHighlightFooter(false), 2000);
-  };
+    if (pos >= chars.length) return;
 
-  const handleHistoryClick = () => {
-    if (currentScreen === 'typing' && testActive) {
-      showToast("This will abort the current test.", true);
-      setTimeout(() => {
-        setShowReturnConfirm(true);
-      }, 100);
+    const currentChar = chars[pos];
+    const isCorrect = key === testText[pos];
+
+    setActualTypedCount(prev => prev + 1);
+
+    if (isCorrect) {
+      playKeyboardSound(); // Play keyboard sound for correct character
+      currentChar.classList.add('correct');
+      setCorrectCharacters(prev => prev + 1);
+      setPos(prev => prev + 1);
+      
+      if (pos + 1 >= chars.length * 0.8) {
+        const extendedText = extendText();
+        renderText(extendedText);
+      }
     } else {
-      setCurrentScreen('history');
+      playErrorSound(); // Play error sound for incorrect character
+      if (lastErrorPos !== pos) {
+        setTotalErrors(prev => prev + 1);
+        setLastErrorPos(pos);
+      }
+      currentChar.classList.add('incorrect');
+      
+      if (key.length === 1) {
+        const extraSpan = document.createElement('span');
+        extraSpan.textContent = key;
+        extraSpan.className = 'char extra';
+        extraSpan.style.color = '#e74c3c';
+        extraSpan.style.backgroundColor = 'rgba(231, 76, 60, 0.2)';
+        currentChar.parentNode?.insertBefore(extraSpan, currentChar.nextSibling);
+        setExtraChars(prev => [...prev, key]);
+      }
     }
   };
 
-  const confirmAbortAndGoToHistory = () => {
-    resetTest();
-    setExtraChars([]);
-    setShowReturnConfirm(false);
-    setCurrentScreen('history');
-  };
+  const handleTestStart = () => {
+    if (!currentActiveUser) {
+      showMessage('Please enter your name first.');
+      return;
+    }
 
-  const getAverageStats = () => {
-    if (testResults.length === 0) return null;
+    if (!testText) {
+      showMessage('Please wait for text to load.');
+      return;
+    }
+
+    setTestActive(true);
+    setGameOver(false);
     
-    const avgWpm = Math.round(testResults.reduce((sum, test) => sum + test.wpm, 0) / testResults.length);
-    const avgErrorRate = (testResults.reduce((sum, test) => sum + test.errorRate, 0) / testResults.length).toFixed(2);
-    const avgScore = Math.round(testResults.reduce((sum, test) => sum + test.score, 0) / testResults.length);
-    const totalTests = testResults.reduce((sum, test) => sum + (test.testCount || 1), 0);
-    const totalTime = testResults.reduce((sum, test) => sum + (test.totalTime || 0), 0);
-    
-    return { avgWpm, avgErrorRate, avgScore, totalTests, totalTime };
-  };
-
-  const getButtonColor = () => {
-    switch (theme) {
-      case 'cosmic-nebula':
-        return '#8f0cc4';
-      case 'midnight-black':
-        return '#6a0dad';
-      case 'cotton-candy-glow':
-        return '#af01af';
-      default:
-        return '#8f0cc4';
-    }
-  };
-
-  const averageStats = getAverageStats();
-
-  // Show introduction first - always
-  if (showIntroduction) {
-    return <Introduction onComplete={handleIntroComplete} />;
-  }
-
-  const getTitleGradient = () => {
-    if (theme === 'cosmic-nebula') {
-      return 'linear-gradient(90deg, #f364f0 0%, #cd64f0 100%)'; // 20% brighter
-    } else if (theme === 'midnight-black') {
-      return 'linear-gradient(90deg, #c559f7 0%, #7f59f7 100%)';
-    } else if (theme === 'cotton-candy-glow') {
-      return 'linear-gradient(90deg, #ff59e8 0%, #ff52a8 100%)';
-    }
-    return 'linear-gradient(90deg, #c454f0 0%, #7d54f0 100%)';
+    startTimer(duration, () => {
+      setTestActive(false);
+      setGameOver(true);
+      
+      const finalWPM = getCurrentWPM();
+      const accuracy = Math.round(((actualTypedCount - totalErrors) / actualTypedCount) * 100) || 0;
+      
+      const result = {
+        wpm: finalWPM,
+        accuracy: accuracy,
+        duration: duration,
+        date: new Date().toISOString(),
+        testName: currentTest
+      };
+      
+      const userResults = JSON.parse(localStorage.getItem(`typingResults_${currentActiveUser}`) || '[]');
+      userResults.push(result);
+      localStorage.setItem(`typingResults_${currentActiveUser}`, JSON.stringify(userResults));
+      
+      showMessage(`Test completed! WPM: ${finalWPM}, Accuracy: ${accuracy}%`);
+    });
   };
 
   return (
     <div style={{
-      fontFamily: fontStyle === 'roboto' ? "'Roboto', sans-serif" :
-                  fontStyle === 'open-sans' ? "'Open Sans', sans-serif" :
-                  fontStyle === 'lato' ? "'Lato', sans-serif" :
-                  fontStyle === 'source-sans' ? "'Source Sans Pro', sans-serif" :
-                  fontStyle === 'dancing-script' ? "'Dancing Script', cursive" :
-                  fontStyle === 'pacifico' ? "'Pacifico', cursive" :
-                  "'Inter', sans-serif",
-      fontSize: '112.5%',
-      color: 'white',
-      background: theme === 'midnight-black' ? '#000000' : 
-                 theme === 'cotton-candy-glow' ? 'linear-gradient(45deg, #3e8cb9, #2f739d)' :
-                 'linear-gradient(45deg, #3f034a, #004a7a)',
       minHeight: '100vh',
-      overflowX: 'hidden'
+      position: 'relative',
+      display: 'flex',
+      flexDirection: 'column',
+      fontFamily: "'Inter', sans-serif"
     }}>
-      {/* Overlay for sidebar */}
-      {sideMenuOpen && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 animate-fade-in"
-          onClick={() => setSideMenuOpen(false)}
+      <SideMenu
+        sideMenuOpen={sideMenuOpen}
+        setSideMenuOpen={setSideMenuOpen}
+        usersList={usersList}
+        currentActiveUser={currentActiveUser}
+        switchUser={switchUser}
+        handleDeleteUser={handleDeleteUser}
+        deleteConfirmState={deleteConfirmState}
+        duration={duration}
+        setDuration={setDuration}
+        theme={theme}
+        applyTheme={applyTheme}
+        handleHistoryClick={handleHistoryClick}
+        handleContactMe={handleContactMe}
+        getButtonColor={getButtonColor}
+        fontSize={fontSize}
+        setFontSize={setFontSize}
+        fontStyle={fontStyle}
+        setFontStyle={setFontStyle}
+        soundEnabled={soundEnabled}
+        setSoundEnabled={setSoundEnabled}
+      />
+
+      {currentScreen === 'greeting' && (
+        <div style={{
+          width: '100%',
+          maxWidth: '800px',
+          margin: '0 auto',
+          padding: '2rem',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '100vh',
+          textAlign: 'center'
+        }}>
+          <h1 style={{
+            fontSize: '4rem',
+            fontWeight: 'bold',
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            marginBottom: '2rem'
+          }}>
+            TypingTest
+          </h1>
+          
+          <div style={{
+            background: theme === 'cotton-candy-glow' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.1)',
+            borderRadius: '16px',
+            padding: '2rem',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            width: '100%',
+            maxWidth: '400px'
+          }}>
+            <input
+              type="text"
+              placeholder="Enter your name to begin"
+              value={currentActiveUser}
+              onChange={(e) => {
+                const newName = e.target.value;
+                setCurrentActiveUser(newName);
+                if (newName && !usersList.includes(newName)) {
+                  setUsersList(prev => [...prev, newName]);
+                }
+              }}
+              style={{
+                width: '100%',
+                padding: '1rem',
+                fontSize: '1.2rem',
+                borderRadius: '8px',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                background: 'rgba(255, 255, 255, 0.1)',
+                color: theme === 'cotton-candy-glow' ? '#333' : 'white',
+                outline: 'none',
+                marginBottom: '1rem'
+              }}
+            />
+            
+            <button
+              onClick={() => {
+                if (currentActiveUser) {
+                  setCurrentScreen('typing');
+                  startNewTest();
+                } else {
+                  showMessage('Please enter your name first.');
+                }
+              }}
+              style={{
+                width: '100%',
+                padding: '1rem',
+                fontSize: '1.2rem',
+                backgroundColor: getButtonColor(),
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontWeight: 'bold'
+              }}
+            >
+              Start Typing Test
+            </button>
+          </div>
+        </div>
+      )}
+
+      {currentScreen === 'typing' && (
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '100vh',
+          padding: '2rem'
+        }}>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            width: '90%',
+            maxWidth: '1000px',
+            marginBottom: '2rem'
+          }}>
+            <button
+              onClick={() => setCurrentScreen('greeting')}
+              style={{
+                background: 'rgba(255, 255, 255, 0.1)',
+                color: theme === 'cotton-candy-glow' ? '#333' : 'white',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                padding: '0.5rem 1rem',
+                borderRadius: '6px',
+                cursor: 'pointer'
+              }}
+            >
+              ← Back to Home
+            </button>
+
+            <button
+              onClick={() => setSideMenuOpen(true)}
+              style={{
+                background: 'rgba(255, 255, 255, 0.1)',
+                color: theme === 'cotton-candy-glow' ? '#333' : 'white',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                padding: '0.5rem 1rem',
+                borderRadius: '6px',
+                cursor: 'pointer'
+              }}
+            >
+              Settings ⚙️
+            </button>
+          </div>
+
+          <StatsDisplay
+            wpm={getCurrentWPM()}
+            accuracy={actualTypedCount > 0 ? Math.round(((actualTypedCount - totalErrors) / actualTypedCount) * 100) : 100}
+            timer={Math.max(0, duration - elapsed)}
+            theme={theme}
+          />
+
+          <TypingTest
+            testText={testText}
+            pos={pos}
+            chars={chars}
+            theme={theme}
+            onKeyDown={handleKeyDown}
+            fontSize={fontSize}
+            fontStyle={fontStyle}
+            textFlowRef={textFlowRef}
+          />
+
+          <div style={{
+            display: 'flex',
+            gap: '1rem',
+            marginTop: '2rem',
+            flexWrap: 'wrap',
+            justifyContent: 'center'
+          }}>
+            {!testActive && !gameOver && (
+              <button
+                onClick={handleTestStart}
+                style={{
+                  background: getButtonColor(),
+                  color: 'white',
+                  border: 'none',
+                  padding: '1rem 2rem',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontSize: '1.1rem',
+                  fontWeight: 'bold'
+                }}
+              >
+                Start Test
+              </button>
+            )}
+
+            {testActive && (
+              <button
+                onClick={() => setShowReturnConfirm(true)}
+                style={{
+                  background: '#6c757d',
+                  color: 'white',
+                  border: 'none',
+                  padding: '1rem 2rem',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontSize: '1.1rem'
+                }}
+              >
+                End Test
+              </button>
+            )}
+
+            {gameOver && (
+              <>
+                <button
+                  onClick={() => {
+                    resetTest();
+                    setExtraChars([]);
+                    setShowReturnConfirm(false);
+                    const textToUse = generateWords(100);
+                    setTimeout(() => {
+                      renderText(textToUse);
+                    }, 100);
+                  }}
+                  style={{
+                    background: getButtonColor(),
+                    color: 'white',
+                    border: 'none',
+                    padding: '1rem 2rem',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontSize: '1.1rem',
+                    fontWeight: 'bold'
+                  }}
+                >
+                  Try Again
+                </button>
+                
+                <button
+                  onClick={() => setCurrentScreen('greeting')}
+                  style={{
+                    background: '#6c757d',
+                    color: 'white',
+                    border: 'none',
+                    padding: '1rem 2rem',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontSize: '1.1rem'
+                  }}
+                >
+                  Back to Home
+                </button>
+              </>
+            )}
+          </div>
+
+          {showReturnConfirm && (
+            <div style={{
+              position: 'fixed',
+              top: '0',
+              left: '0',
+              width: '100%',
+              height: '100%',
+              background: 'rgba(0, 0, 0, 0.5)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 1000
+            }}>
+              <div style={{
+                background: theme === 'cotton-candy-glow' ? 'rgba(255, 255, 255, 0.95)' : 'rgba(30, 30, 60, 0.95)',
+                padding: '2rem',
+                borderRadius: '12px',
+                textAlign: 'center',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                color: theme === 'cotton-candy-glow' ? '#333' : 'white'
+              }}>
+                <p style={{ marginBottom: '1rem', fontSize: '1.2rem' }}>
+                  Are you sure you want to end the test?
+                </p>
+                <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+                  <button
+                    onClick={() => {
+                      setTestActive(false);
+                      setGameOver(true);
+                      setShowReturnConfirm(false);
+                      if (timerRef.current) {
+                        clearInterval(timerRef.current);
+                      }
+                    }}
+                    style={{
+                      background: '#e74c3c',
+                      color: 'white',
+                      border: 'none',
+                      padding: '0.5rem 1rem',
+                      borderRadius: '6px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Yes, End Test
+                  </button>
+                  <button
+                    onClick={() => setShowReturnConfirm(false)}
+                    style={{
+                      background: '#6c757d',
+                      color: 'white',
+                      border: 'none',
+                      padding: '0.5rem 1rem',
+                      borderRadius: '6px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {currentScreen === 'history' && (
+        <HistoryPage
+          currentActiveUser={currentActiveUser}
+          onBack={() => setCurrentScreen('greeting')}
+          theme={theme}
         />
       )}
 
-      <div style={{
+      <TestNameMenu
+        testNameMenuOpen={testNameMenuOpen}
+        setTestNameMenuOpen={setTestNameMenuOpen}
+        currentTest={currentTest}
+        setCurrentTest={setCurrentTest}
+        theme={theme}
+        startNewTest={startNewTest}
+        continueTest={continueTest}
+        continueTestMode={continueTestMode}
+        setContinueTestMode={setContinueTestMode}
+        duration={duration}
+        setDuration={setDuration}
+      />
+
+      {showIntroduction && (
+        <Introduction onClose={() => setShowIntroduction(false)} theme={theme} />
+      )}
+
+      <Toast message={message} onClose={closeToast} />
+
+      <footer style={{
+        marginTop: 'auto',
         display: 'flex',
-        flexDirection: 'column',
-        minHeight: '100vh',
-        padding: '20px',
-        position: 'relative'
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: '1rem',
+        gap: '2rem',
+        flexWrap: 'wrap'
       }}>
-        {/* Header */}
-        <header style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '1rem',
-          zIndex: 10
-        }}>
-          <div>
-            <h1 style={{
-              backgroundImage: getTitleGradient(),
-              WebkitBackgroundClip: 'text',
-              backgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              color: 'transparent',
-              fontSize: '2.5rem',
-              fontWeight: 700,
-              margin: 0,
-              fontFamily: "'Inter', sans-serif"
-            }}>
-              TypeWave
-            </h1>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center' }}>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              marginRight: '20px',
-              background: 'rgba(255, 255, 255, 0.1)',
-              borderRadius: '8px',
-              padding: '5px 15px',
-              backdropFilter: 'blur(10px)',
-              border: '1px solid rgba(255, 255, 255, 0.3)'
-            }}>
-              <span style={{ marginRight: '10px', fontSize: '1.15rem' }}>User: {currentActiveUser}</span>
-              <button 
-                onClick={() => setCurrentScreen('create-user')}
-                style={{
-                  background: 'transparent',
-                  color: 'white',
-                  border: 'none',
-                  padding: '5px 10px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  marginLeft: '10px',
-                  fontSize: '1.26rem'
-                }}
-              >
-                +
-              </button>
-            </div>
-            <button 
-              onClick={() => setSideMenuOpen(true)}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: 'white',
-                fontSize: '1.5rem',
-                cursor: 'pointer',
-                padding: '5px'
-              }}
-            >
-              ☰
-            </button>
-          </div>
-        </header>
-
-        {/* Test Name Menu */}
-        <TestNameMenu
-          showTestNameMenu={showTestNameMenu}
-          newTestName={newTestName}
-          setNewTestName={setNewTestName}
-          onConfirm={handleConfirmTestName}
-          onCancel={() => setShowTestNameMenu(false)}
-          getButtonColor={getButtonColor}
-        />
-
-        {currentScreen === 'greeting' && (
-          <div style={{
-            width: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '20px 0',
-            flex: 1
-          }}>
-            <h2 style={{ marginBottom: '1rem' }}>Welcome to TypeWave!</h2>
-            <p style={{ marginBottom: '1.5rem' }}>
-              {usersList.length === 0 ? "No users found. Create one below to get started." : "Please select or create a user to begin."}
-            </p>
-            {usersList.length === 0 && (
-              <div style={{
-                background: 'rgba(255, 255, 255, 0.15)',
-                borderRadius: '16px',
-                backdropFilter: 'blur(10px)',
-                border: '1px solid rgba(255, 255, 255, 0.3)',
-                padding: '20px',
-                maxWidth: '400px'
-              }}>
-                <label style={{ display: 'block', marginBottom: '10px' }}>Enter username:</label>
-                <input 
-                  type="text" 
-                  id="greeting-new-user-input"
-                  placeholder="New username"
-                  style={{
-                    width: '100%',
-                    padding: '10px',
-                    marginBottom: '15px',
-                    borderRadius: '4px',
-                    border: '1px solid rgba(255, 255, 255, 0.3)',
-                    background: 'rgba(255,255,255,0.1)',
-                    color: 'white',
-                    backdropFilter: 'blur(10px)'
-                  }}
-                />
-                <button 
-                  onClick={() => {
-                    const input = document.getElementById('greeting-new-user-input') as HTMLInputElement;
-                    if (input) createUser(input.value);
-                  }}
-                  style={{
-                    width: '100%',
-                    background: getButtonColor(),
-                    color: 'white',
-                    border: 'none',
-                    padding: '12px',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    fontSize: '1rem'
-                  }}
-                >
-                  Create User & Start
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-
-        {currentScreen === 'create-user' && (
-          <div style={{
-            width: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '20px 0',
-            flex: 1
-          }}>
-            <h2 style={{ marginBottom: '1rem' }}>Create New User</h2>
-            <div style={{
-              background: 'rgba(255, 255, 255, 0.15)',
-              borderRadius: '16px',
-              backdropFilter: 'blur(10px)',
-              border: '1px solid rgba(255, 255, 255, 0.3)',
-              padding: '30px',
-              maxWidth: '400px'
-            }}>
-              <label style={{ display: 'block', marginBottom: '0.6rem', fontSize: '0.95em', color: '#d0d0d0' }}>
-                Enter Username:
-              </label>
-              <input 
-                type="text" 
-                id="new-username-input"
-                placeholder="New username"
-                style={{
-                  width: '100%',
-                  padding: '10px',
-                  marginBottom: '20px',
-                  border: '1px solid rgba(255, 255, 255, 0.25)',
-                  borderRadius: '6px',
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  color: '#ffffff',
-                  cursor: 'pointer',
-                  backdropFilter: 'blur(10px)'
-                }}
-              />
-              <label style={{ display: 'block', marginBottom: '0.6rem', fontSize: '0.95em', color: '#d0d0d0' }}>
-                Confirm Username:
-              </label>
-              <input 
-                type="text" 
-                id="confirm-username-input"
-                placeholder="Confirm username"
-                style={{
-                  width: '100%',
-                  padding: '10px',
-                  marginBottom: '20px',
-                  border: '1px solid rgba(255, 255, 255, 0.25)',
-                  borderRadius: '6px',
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  color: '#ffffff',
-                  cursor: 'pointer',
-                  backdropFilter: 'blur(10px)'
-                }}
-              />
-              <button 
-                onClick={() => {
-                  const input1 = document.getElementById('new-username-input') as HTMLInputElement;
-                  const input2 = document.getElementById('confirm-username-input') as HTMLInputElement;
-                  if (input1 && input2 && input1.value === input2.value) {
-                    createUser(input1.value);
-                  } else {
-                    showToast("Usernames do not match.", true);
-                  }
-                }}
-                style={{
-                  width: '100%',
-                  background: getButtonColor(),
-                  color: 'white',
-                  border: 'none',
-                  padding: '12px 24px',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontSize: '1rem',
-                  marginBottom: '10px'
-                }}
-              >
-                Create User
-              </button>
-              <button 
-                onClick={() => setCurrentScreen(usersList.length > 0 ? 'dashboard' : 'greeting')}
-                style={{
-                  width: '100%',
-                  background: '#6c757d',
-                  color: 'white',
-                  border: 'none',
-                  padding: '12px 24px',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontSize: '1rem'
-                }}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        )}
-
-        {currentScreen === 'dashboard' && currentActiveUser && (
-          <div style={{
-            width: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '20px 0',
-            flex: 1
-          }}>
-            <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
-              <button 
-                onClick={handleCreateTestClick}
-                style={{
-                  background: getButtonColor(),
-                  color: 'white',
-                  border: 'none',
-                  padding: '12px 24px',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontSize: '1rem'
-                }}
-              >
-                Create New Test
-              </button>
-              {testResults.length > 0 && (
-                <button 
-                  onClick={() => continueTest()}
-                  style={{
-                    background: getButtonColor(),
-                    color: 'white',
-                    border: 'none',
-                    padding: '12px 24px',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    fontSize: '1rem'
-                  }}
-                >
-                  Continue Test
-                </button>
-              )}
-            </div>
-
-            {averageStats && (
-              <div style={{
-                width: '100%',
-                maxWidth: '700px',
-                background: 'rgba(255, 255, 255, 0.1)',
-                borderRadius: '16px',
-                backdropFilter: 'blur(10px)',
-                border: '1px solid rgba(255, 255, 255, 0.3)',
-                padding: '20px',
-                marginBottom: '20px'
-              }}>
-                <h3 style={{ marginBottom: '15px', textAlign: 'center' }}>Your Average Performance</h3>
-                <div style={{ display: 'flex', justifyContent: 'space-around', textAlign: 'center' }}>
-                  <div>
-                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: getButtonColor() }}>{averageStats.avgWpm}</div>
-                    <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>Avg WPM</div>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: getButtonColor() }}>{averageStats.avgErrorRate}%</div>
-                    <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>Avg Error Rate</div>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: getButtonColor() }}>{averageStats.avgScore}</div>
-                    <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>Avg Score</div>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: getButtonColor() }}>{averageStats.totalTests}</div>
-                    <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>Total Tests</div>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: getButtonColor() }}>
-                      {Math.floor((averageStats.totalTime || 0) / 60)}:{((averageStats.totalTime || 0) % 60).toString().padStart(2, '0')}
-                    </div>
-                    <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>Time</div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <div style={{
-              width: '100%',
-              maxWidth: '700px',
-              background: 'rgba(255, 255, 255, 0.1)',
-              borderRadius: '16px',
-              backdropFilter: 'blur(10px)',
-              border: '1px solid rgba(255, 255, 255, 0.3)',
-              padding: '15px'
-            }}>
-              <h3 style={{ marginBottom: '10px', borderBottom: '1px solid rgba(255,255,255,0.2)', paddingBottom: '8px' }}>
-                Your Previous Tests:
-              </h3>
-              {testResults.length === 0 ? (
-                <p>No tests recorded yet.</p>
-              ) : (
-                <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
-                  {testResults.map((test, index) => (
-                    <div 
-                      key={index} 
-                      style={{
-                        background: continueTestMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)',
-                        padding: '10px',
-                        borderRadius: '8px',
-                        marginBottom: '8px',
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        cursor: continueTestMode ? 'pointer' : 'default',
-                        border: continueTestMode ? '1px solid rgba(255, 255, 255, 0.3)' : 'none'
-                      }}
-                      onClick={() => continueTestMode && continueTest(test.name)}
-                    >
-                      <div>
-                        <div style={{ fontWeight: 'bold' }}>{test.name}</div>
-                        <div style={{ fontSize: '0.8rem', opacity: 0.8 }}>
-                          {test.testCount > 1 ? `${test.testCount} tests completed` : '1 test completed'} | Last: {new Date(test.lastDate).toLocaleDateString()}
-                        </div>
-                        <div style={{ fontSize: '0.8rem', opacity: 0.8 }}>
-                          Time: {Math.floor((test.totalTime || 0) / 60)}:{((test.totalTime || 0) % 60).toString().padStart(2, '0')}
-                        </div>
-                      </div>
-                      <div style={{ textAlign: 'right' }}>
-                        <div>{test.wpm} WPM | {test.errorRate}% Error Rate | Score: {test.score}</div>
-                        <div style={{ fontSize: '0.8rem', opacity: 0.8 }}>
-                          Average Stats
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {currentScreen === 'typing' && (
-          <div style={{
-            width: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            padding: '20px 0',
-            flex: 1
-          }}>
-            <TypingTest
-              testText={testText}
-              pos={pos}
-              chars={chars}
-              theme={theme}
-              onKeyDown={handleKeyDown}
-              fontSize={fontSize}
-              fontStyle={fontStyle}
-              textFlowRef={textFlowRef}
-            />
-
-            <StatsDisplay
-              elapsed={elapsed}
-              correctSigns={correctCharacters}
-              totalErrors={totalErrors}
-              currentErrorRate={getCurrentErrorRate()}
-              theme={theme}
-            />
-
-            <div style={{ 
-              display: 'flex', 
-              gap: '1rem', 
-              alignItems: 'center',
-              marginBottom: '2rem'
-            }}>
-              <button 
-                onClick={() => {
-                  resetTest();
-                  setExtraChars([]);
-                  setShowReturnConfirm(false);
-                  // Generate new text and render it
-                  const textToUse = generateWords(100);
-                  setTimeout(() => {
-                    renderText(textToUse, textFlowRef);
-                  }, 100);
-                }}
-                style={{
-                  background: getButtonColor(),
-                  color: 'white',
-                  border: 'none',
-                  padding: '12px 24px',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontSize: '1rem'
-                }}
-              >
-                Restart Current Test
-              </button>
-              <button 
-                onClick={handleHistoryClick}
-                style={{
-                  background: '#6c757d',
-                  color: 'white',
-                  border: 'none',
-                  padding: '12px 24px',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontSize: '1rem'
-                }}
-              >
-                History
-              </button>
-            </div>
-
-            <div style={{
-              position: 'fixed',
-              bottom: '120px',
-              right: '20px',
-              zIndex: 100
-            }}>
-              <button 
-                onClick={handleReturnToDashboard}
-                style={{
-                  background: showReturnConfirm ? '#e74c3c' : '#6c757d',
-                  color: 'white',
-                  border: 'none',
-                  padding: '12px 24px',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontSize: '1rem'
-                }}
-              >
-                {showReturnConfirm ? 'Confirm Return?' : 'Return to Dashboard'}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {currentScreen === 'results' && lastTestResult && (
-          <div style={{
-            width: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            padding: '20px 0',
-            flex: 1
-          }}>
-            <div style={{
-              fontSize: '3em',
-              fontWeight: 'bold',
-              marginBottom: '0.5rem',
-              color: theme === 'cotton-candy-glow' ? '#333' : 'white',
-              textAlign: 'center'
-            }}>
-              <span style={{ fontSize: '0.5em', opacity: 0.8, marginRight: '5px' }}>Score:</span>
-              <span>{lastTestResult.score}</span>
-              <span style={{ fontSize: '0.5em', opacity: 0.8, marginLeft: '5px' }}>/ 1000</span>
-            </div>
-            
-            <div style={{
-              fontSize: '1.5em',
-              marginBottom: '2rem',
-              textAlign: 'center',
-              color: theme === 'cotton-candy-glow' ? '#333' : 'white'
-            }}>
-              {lastTestResult.score >= 800 ? "Excellent! Impressive Speed and Low Error Rate!" :
-               lastTestResult.score >= 600 ? "Great job! Keep practicing!" :
-               lastTestResult.score >= 400 ? "Good work! Room for improvement!" :
-               "Keep practicing! You'll get better!"}
-            </div>
-
-            <div style={{
-              width: '100%',
-              maxWidth: '700px',
-              background: 'rgba(255, 255, 255, 0.1)',
-              borderRadius: '16px',
-              backdropFilter: 'blur(10px)',
-              border: '1px solid rgba(255, 255, 255, 0.3)',
-              padding: '20px',
-              marginBottom: '2rem'
-            }}>
-              <h3 style={{ marginBottom: '15px', textAlign: 'center' }}>Test Results</h3>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '15px', textAlign: 'center', marginBottom: '15px' }}>
-                <div>
-                  <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: getButtonColor() }}>{lastTestResult.wpm}</div>
-                  <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>WPM</div>
-                </div>
-                <div>
-                  <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: getButtonColor() }}>{lastTestResult.errorRate}%</div>
-                  <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>Error Rate</div>
-                </div>
-                <div>
-                  <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: getButtonColor() }}>{lastTestResult.score}</div>
-                  <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>Score</div>
-                </div>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '15px', textAlign: 'center' }}>
-                <div>
-                  <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: getButtonColor() }}>{lastTestResult.errors}</div>
-                  <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>Total Errors</div>
-                </div>
-                <div>
-                  <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: getButtonColor() }}>{lastTestResult.correctChars}</div>
-                  <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>Correct Signs</div>
-                </div>
-                <div>
-                  <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: getButtonColor() }}>
-                    {Math.floor(lastTestResult.time / 60)}:{(lastTestResult.time % 60).toString().padStart(2, '0')}
-                  </div>
-                  <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>Time Taken</div>
-                </div>
-              </div>
-            </div>
-
-            <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
-              <button 
-                onClick={() => setCurrentScreen('dashboard')}
-                style={{
-                  background: getButtonColor(),
-                  color: 'white',
-                  border: 'none',
-                  padding: '12px 24px',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontSize: '1rem'
-                }}
-              >
-                Back to Test Dashboard
-              </button>
-            </div>
-          </div>
-        )}
-
-        {currentScreen === 'history' && (
-          <HistoryPage
-            allTestHistory={allTestHistory}
-            theme={theme}
-            onBack={() => setCurrentScreen('dashboard')}
-            getButtonColor={getButtonColor}
-          />
-        )}
-
-        {/* Side Menu with smooth animations */}
-        <SideMenu
-          sideMenuOpen={sideMenuOpen}
-          setSideMenuOpen={setSideMenuOpen}
-          usersList={usersList}
-          currentActiveUser={currentActiveUser}
-          switchUser={switchUser}
-          handleDeleteUser={handleDeleteUser}
-          deleteConfirmState={deleteConfirmState}
-          duration={duration}
-          setDuration={setDuration}
-          theme={theme}
-          applyTheme={applyTheme}
-          handleHistoryClick={handleHistoryClick}
-          handleContactMe={handleContactMe}
-          getButtonColor={getButtonColor}
-          fontSize={fontSize}
-          setFontSize={setFontSize}
-          fontStyle={fontStyle}
-          setFontStyle={setFontStyle}
-        />
-
-        {/* Toast Message */}
-        <Toast message={message} onClose={closeToast} />
-
-        <footer style={{
-          marginTop: 'auto',
-          display: 'flex',
-          flexWrap: 'wrap',
-          justifyContent: 'center',
-          gap: '1.5rem',
-          padding: '1.5rem 0',
-          zIndex: 5,
-          background: highlightFooter ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
-          borderRadius: highlightFooter ? '12px' : '0',
-          transition: 'all 0.3s ease',
-          border: highlightFooter ? '1px solid rgba(255, 255, 255, 0.3)' : 'none'
-        }}>
-          <a 
-            href="https://www.reddit.com/user/Rak_the_rock" 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            style={{ 
-              color: 'white', 
-              textDecoration: 'none', 
-              fontSize: '0.9rem',
-              transition: 'color 0.3s ease'
-            }}
-            onMouseEnter={(e) => {
-              const target = e.target as HTMLElement;
-              target.style.color = theme === 'midnight-black' ? '#c559f7' : 
-                                   theme === 'cotton-candy-glow' ? '#ff59e8' : '#c454f0';
-            }}
-            onMouseLeave={(e) => {
-              const target = e.target as HTMLElement;
-              target.style.color = 'white';
-            }}
-          >
-            Reddit
-          </a>
-          <a 
-            href="https://github.com/Raktherock" 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            style={{ 
-              color: 'white', 
-              textDecoration: 'none', 
-              fontSize: '0.9rem',
-              transition: 'color 0.3s ease'
-            }}
-            onMouseEnter={(e) => {
-              const target = e.target as HTMLElement;
-              target.style.color = theme === 'midnight-black' ? '#c559f7' : 
-                                   theme === 'cotton-candy-glow' ? '#ff59e8' : '#c454f0';
-            }}
-            onMouseLeave={(e) => {
-              const target = e.target as HTMLElement;
-              target.style.color = 'white';
-            }}
-          >
-            GitHub
-          </a>
-          <a 
-            href="https://t.me/RakshanKumaraa" 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            style={{ 
-              color: 'white', 
-              textDecoration: 'none', 
-              fontSize: '0.9rem',
-              transition: 'color 0.3s ease'
-            }}
-            onMouseEnter={(e) => {
-              const target = e.target as HTMLElement;
-              target.style.color = theme === 'midnight-black' ? '#c559f7' : 
-                                   theme === 'cotton-candy-glow' ? '#ff59e8' : '#c454f0';
-            }}
-            onMouseLeave={(e) => {
-              const target = e.target as HTMLElement;
-              target.style.color = 'white';
-            }}
-          >
-            Telegram
-          </a>
-          <a 
-            href="https://www.linkedin.com/in/rakshan-kumaraa-140049365/" 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            style={{ 
-              color: 'white', 
-              textDecoration: 'none', 
-              fontSize: '0.9rem',
-              transition: 'color 0.3s ease'
-            }}
-            onMouseEnter={(e) => {
-              const target = e.target as HTMLElement;
-              target.style.color = theme === 'midnight-black' ? '#c559f7' : 
-                                   theme === 'cotton-candy-glow' ? '#ff59e8' : '#c454f0';
-            }}
-            onMouseLeave={(e) => {
-              const target = e.target as HTMLElement;
-              target.style.color = 'white';
-            }}
-          >
-            LinkedIn
-          </a>
-          <a 
-            href="https://wa.me/916369314244" 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            style={{ 
-              color: 'white', 
-              textDecoration: 'none', 
-              fontSize: '0.9rem',
-              transition: 'color 0.3s ease'
-            }}
-            onMouseEnter={(e) => {
-              const target = e.target as HTMLElement;
-              target.style.color = theme === 'midnight-black' ? '#c559f7' : 
-                                   theme === 'cotton-candy-glow' ? '#ff59e8' : '#c454f0';
-            }}
-            onMouseLeave={(e) => {
-              const target = e.target as HTMLElement;
-              target.style.color = 'white';
-            }}
-          >
-            WhatsApp
-          </a>
-          <a 
-            href="mailto:rakshankumaraa@gmail.com" 
-            style={{ 
-              color: 'white', 
-              textDecoration: 'none', 
-              fontSize: '0.9rem',
-              transition: 'color 0.3s ease'
-            }}
-            onMouseEnter={(e) => {
-              const target = e.target as HTMLElement;
-              target.style.color = theme === 'midnight-black' ? '#c559f7' : 
-                                   theme === 'cotton-candy-glow' ? '#ff59e8' : '#c454f0';
-            }}
-            onMouseLeave={(e) => {
-              const target = e.target as HTMLElement;
-              target.style.color = 'white';
-            }}
-          >
-            Gmail
-          </a>
-        </footer>
-      </div>
-
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Open+Sans:wght@300;400;500;700&family=Lato:wght@300;400;700&family=Source+Sans+Pro:wght@300;400;600;700&family=Inter:wght@300;400;500;600;700&family=Dancing+Script:wght@400;500;600;700&family=Pacifico:wght@400&display=swap');
-
-        @keyframes blinkCaret {
-          50% { opacity: 0; }
-        }
-
-        @keyframes fade-in {
-          0% {
-            opacity: 0;
-            transform: translateY(10px);
-          }
-          100% {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        @keyframes slide-in-right {
-          0% { transform: translateX(100%); }
-          100% { transform: translateX(0); }
-        }
-
-        @keyframes slide-out-right {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(100%); }
-        }
-
-        .animate-fade-in {
-          animation: fade-in 0.3s ease-out;
-        }
-
-        .animate-slide-in-right {
-          animation: slide-in-right 0.3s ease-out;
-        }
-
-        .animate-slide-out-right {
-          animation: slide-out-right 0.3s ease-out;
-        }
+        <button
+          onClick={() => setShowIntroduction(true)}
+          style={{
+            background: 'none',
+            border: 'none',
+            color: theme === 'cotton-candy-glow' ? '#333' : 'rgba(255, 255, 255, 0.7)',
+            cursor: 'pointer',
+            textDecoration: 'underline'
+          }}
+        >
+          How to use
+        </button>
         
-        .char {
-          display: inline-block;
-          color: ${theme === 'midnight-black' ? '#f0f0f0' : theme === 'cotton-candy-glow' ? '#555' : '#f5e9f1'};
-          transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out;
-          padding: 0 1px;
-          margin: 0;
-          letter-spacing: 0.01em;
-          position: relative;
-        }
-        
-        .char.correct {
-          color: ${theme === 'midnight-black' ? '#ae1ee3' : theme === 'cotton-candy-glow' ? '#ff1fbc' : '#21b1ff'} !important;
-        }
-        
-        .char.incorrect {
-          color: #ff1c14 !important;
-          background-color: rgba(255, 28, 20, 0.3);
-          border-radius: 2px;
-        }
-        
-        .extra {
-          color: #ff4444 !important;
-          background-color: rgba(255, 68, 68, 0.2);
-          border-radius: 2px;
-        }
-      `}</style>
+        <button
+          onClick={() => setTestNameMenuOpen(true)}
+          style={{
+            background: 'none',
+            border: 'none',
+            color: theme === 'cotton-candy-glow' ? '#333' : 'rgba(255, 255, 255, 0.7)',
+            cursor: 'pointer',
+            textDecoration: 'underline'
+          }}
+        >
+          Change test
+        </button>
+      </footer>
     </div>
   );
 };
