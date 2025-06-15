@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { X, ChevronDown } from 'lucide-react';
 import {
@@ -7,6 +6,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Switch } from "@/components/ui/switch";
 import { CustomDurationSlider } from './CustomDurationSlider';
 
 interface SideMenuProps {
@@ -69,6 +69,15 @@ export const SideMenu: React.FC<SideMenuProps> = ({
 
   const getTextColor = () => {
     return theme === 'cotton-candy-glow' ? '#333' : '#fff';
+  };
+
+  const getSwitchThemeColor = () => {
+    if (theme === 'midnight-black') {
+      return '#fff';
+    } else if (theme === 'cotton-candy-glow') {
+      return '#333';
+    }
+    return '#fff';
   };
 
   const durationOptions = [
@@ -593,26 +602,30 @@ export const SideMenu: React.FC<SideMenuProps> = ({
             border: '1px solid rgba(255, 255, 255, 0.1)',
             backdropFilter: 'blur(10px)'
           }}>
-            <label style={{
+            <div style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '12px',
+              justifyContent: 'space-between',
               color: getTextColor(),
-              cursor: 'pointer',
               fontSize: '0.95rem'
             }}>
-              <input
-                type="checkbox"
-                checked={soundEnabled}
-                onChange={(e) => setSoundEnabled(e.target.checked)}
-                style={{
-                  width: '18px',
-                  height: '18px',
-                  cursor: 'pointer'
-                }}
-              />
-              Enable typing sounds
-            </label>
+              <label style={{ color: 'inherit' }}>
+                Enable typing sounds
+              </label>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center'
+              }}>
+                <Switch
+                  checked={soundEnabled}
+                  onCheckedChange={setSoundEnabled}
+                  style={{
+                    '--switch-thumb': getSwitchThemeColor(),
+                    '--switch-track': soundEnabled ? getSwitchThemeColor() : 'rgba(255, 255, 255, 0.3)'
+                  } as React.CSSProperties}
+                />
+              </div>
+            </div>
           </div>
         </div>
 
