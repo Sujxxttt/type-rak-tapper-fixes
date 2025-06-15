@@ -9,7 +9,6 @@ interface TypingTestProps {
   onKeyDown: (e: KeyboardEvent) => void;
   fontSize: number;
   fontStyle: string;
-  textFlowRef: React.RefObject<HTMLDivElement>; // NEW PROP
 }
 
 export const TypingTest: React.FC<TypingTestProps> = ({
@@ -19,33 +18,29 @@ export const TypingTest: React.FC<TypingTestProps> = ({
   theme,
   onKeyDown,
   fontSize,
-  fontStyle,
-  textFlowRef
+  fontStyle
 }) => {
-  // Remove local scrollRef; use textFlowRef everywhere it was used.
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       onKeyDown(e);
     };
+
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [onKeyDown]);
 
-  // Scroll current character into view (horizontal only)
   useEffect(() => {
-    if (!textFlowRef.current) return;
     if (chars.length > 0 && pos < chars.length) {
       const currentChar = chars[pos];
       if (currentChar) {
-        const container = textFlowRef.current;
-        const offsetLeft = currentChar.offsetLeft;
-        container.scrollTo({
-          left: Math.max(offsetLeft - 20, 0),
+        currentChar.scrollIntoView({
           behavior: 'smooth',
+          block: 'center',
+          inline: 'center'
         });
       }
     }
-  }, [pos, chars, textFlowRef]);
+  }, [pos, chars]);
 
   const getFontFamily = () => {
     switch (fontStyle) {
@@ -89,6 +84,7 @@ export const TypingTest: React.FC<TypingTestProps> = ({
       borderRadius: '16px',
       backdropFilter: 'blur(10px)',
       border: '1px solid rgba(255, 255, 255, 0.2)',
+      // Removed box-shadow
       position: 'relative',
       fontSize: `${fontSize}%`,
       fontFamily: getFontFamily(),
@@ -97,44 +93,32 @@ export const TypingTest: React.FC<TypingTestProps> = ({
     }}>
       <div
         id="text-flow"
-        ref={textFlowRef} // USE THE EXTERNAL REF!
         style={{
-          display: 'flex',
-          overflowX: 'auto',
-          whiteSpace: 'nowrap',
           color: theme === 'cotton-candy-glow' ? '#333' : 'white',
           outline: 'none',
           fontSize: 'inherit',
           fontFamily: 'inherit',
           lineHeight: 'inherit',
           letterSpacing: 'inherit',
+          wordBreak: 'break-word',
+          overflowWrap: 'break-word',
           userSelect: 'none',
-          cursor: 'text',
-          width: '100%',
-          alignItems: 'center',
-          scrollbarWidth: 'none',
+          cursor: 'text'
         }}
         tabIndex={0}
-        className="no-scrollbar"
       />
+      
       {pos < chars.length && (
         <div
           style={{
             position: 'absolute',
-            height: '1.5em',
             width: '2px',
+            height: '1.5em',
             backgroundColor: theme === 'cotton-candy-glow' ? '#ff1fbc' : '#21b1ff',
             animation: 'blinkCaret 1s infinite',
             zIndex: 10,
             pointerEvents: 'none',
-            left: (() => {
-              if (chars[pos] && chars[pos].offsetLeft !== undefined) {
-                return chars[pos].offsetLeft - (textFlowRef.current?.scrollLeft ?? 0);
-              }
-              return '0px';
-            })(),
-            top: '50%',
-            transform: 'translateY(-50%)'
+            transform: 'translateY(-10%)'
           }}
           id="typing-cursor"
         />

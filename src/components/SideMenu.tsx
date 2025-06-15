@@ -7,7 +7,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Switch } from "@/components/ui/switch";
 import { CustomDurationSlider } from './CustomDurationSlider';
 
 interface SideMenuProps {
@@ -29,8 +28,6 @@ interface SideMenuProps {
   setFontSize: (size: number) => void;
   fontStyle: string;
   setFontStyle: (style: string) => void;
-  soundEnabled: boolean;
-  setSoundEnabled: (enabled: boolean) => void;
 }
 
 export const SideMenu: React.FC<SideMenuProps> = ({
@@ -51,34 +48,19 @@ export const SideMenu: React.FC<SideMenuProps> = ({
   fontSize,
   setFontSize,
   fontStyle,
-  setFontStyle,
-  soundEnabled,
-  setSoundEnabled
+  setFontStyle
 }) => {
   const [showCustomDuration, setShowCustomDuration] = useState(false);
-  const [show, setShow] = useState(sideMenuOpen);
 
-  React.useEffect(() => {
-    if (sideMenuOpen) {
-      setShow(true);
-    } else {
-      const timeout = setTimeout(() => setShow(false), 350);
-      return () => clearTimeout(timeout);
-    }
-  }, [sideMenuOpen]);
-
-  if (!show && !sideMenuOpen) return null;
-
-  const backdropVisible = sideMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none';
-  const sidebarVisible = sideMenuOpen ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0';
+  if (!sideMenuOpen) return null;
 
   const getGlassBackground = () => {
     if (theme === 'midnight-black') {
-      return 'rgba(20, 20, 20, 0.38)';
+      return 'rgba(20, 20, 20, 0.9)';
     } else if (theme === 'cotton-candy-glow') {
-      return 'rgba(255, 255, 255, 0.11)';
+      return 'rgba(255, 255, 255, 0.2)';
     }
-    return 'rgba(30, 30, 60, 0.38)';
+    return 'rgba(30, 30, 60, 0.9)';
   };
 
   const getTextColor = () => {
@@ -145,23 +127,38 @@ export const SideMenu: React.FC<SideMenuProps> = ({
     <>
       {/* Backdrop */}
       <div
-        className={`fixed top-0 left-0 w-full h-full z-[1000] transition-opacity duration-300 ease-in-out ${backdropVisible}`}
         style={{
-          background: 'rgba(0,0,0,0.44)',
-          backdropFilter: 'blur(4px)'
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          background: 'rgba(0, 0, 0, 0.5)',
+          backdropFilter: 'blur(4px)',
+          zIndex: 1000
         }}
         onClick={() => setSideMenuOpen(false)}
       />
 
       {/* Side Menu */}
       <div
-        className={`fixed top-0 right-0 w-[400px] max-w-[90vw] h-full z-[1001] p-5 overflow-y-auto transition-all duration-350 ease-in-out ${sidebarVisible}`}
         style={{
+          position: 'fixed',
+          top: 0,
+          right: 0,
+          width: '400px',
+          maxWidth: '90vw',
+          height: '100vh',
           background: getGlassBackground(),
-          backdropFilter: 'blur(24px)',
-          borderLeft: '1px solid rgba(255,255,255,0.18)',
-          boxShadow: '-10px 0 30px rgba(0,0,0,0.28)',
+          backdropFilter: 'blur(20px)',
+          borderLeft: '1px solid rgba(255, 255, 255, 0.2)',
+          boxShadow: '-10px 0 30px rgba(0, 0, 0, 0.3)',
+          zIndex: 1001,
+          padding: '20px',
+          overflowY: 'auto',
           color: getTextColor(),
+          transform: sideMenuOpen ? 'translateX(0)' : 'translateX(100%)',
+          transition: 'transform 0.3s ease-in-out'
         }}
       >
         {/* Header */}
@@ -365,70 +362,6 @@ export const SideMenu: React.FC<SideMenuProps> = ({
           </div>
         </div>
 
-        {/* Theme - Moved up below test duration */}
-        <div style={{ marginBottom: '25px' }}>
-          <h3 style={{
-            marginBottom: '15px',
-            fontSize: '1.1rem',
-            fontWeight: '600',
-            opacity: 0.9
-          }}>
-            Theme
-          </h3>
-          <div style={{
-            background: 'rgba(255, 255, 255, 0.1)',
-            borderRadius: '12px',
-            padding: '15px',
-            border: '1px solid rgba(255, 255, 255, 0.1)'
-          }}>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  style={{
-                    width: '100%',
-                    padding: '8px 12px',
-                    borderRadius: '6px',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    background: 'rgba(255, 255, 255, 0.1)',
-                    color: getTextColor(),
-                    cursor: 'pointer',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center'
-                  }}
-                >
-                  {themeOptions.find(t => t.id === theme)?.name || 'Cosmic Nebula'}
-                  <ChevronDown size={16} />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                style={{
-                  background: getGlassBackground(),
-                  backdropFilter: 'blur(20px)',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  borderRadius: '8px',
-                  color: getTextColor(),
-                  zIndex: 1002
-                }}
-              >
-                {themeOptions.map((themeOption) => (
-                  <DropdownMenuItem
-                    key={themeOption.id}
-                    onClick={() => applyTheme(themeOption.id)}
-                    style={{
-                      cursor: 'pointer',
-                      padding: '8px 12px',
-                      background: theme === themeOption.id ? 'rgba(255, 255, 255, 0.2)' : 'transparent'
-                    }}
-                  >
-                    {themeOption.name}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
-
         {/* Font Size */}
         <div style={{ marginBottom: '25px' }}>
           <h3 style={{
@@ -558,7 +491,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
           </div>
         </div>
 
-        {/* Sound Effects - Moved lower */}
+        {/* Theme */}
         <div style={{ marginBottom: '25px' }}>
           <h3 style={{
             marginBottom: '15px',
@@ -566,7 +499,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
             fontWeight: '600',
             opacity: 0.9
           }}>
-            Sound Effects
+            Theme
           </h3>
           <div style={{
             background: 'rgba(255, 255, 255, 0.1)',
@@ -574,19 +507,51 @@ export const SideMenu: React.FC<SideMenuProps> = ({
             padding: '15px',
             border: '1px solid rgba(255, 255, 255, 0.1)'
           }}>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between'
-            }}>
-              <span style={{ fontSize: '0.95rem' }}>
-                Enable keyboard and error sounds
-              </span>
-              <Switch
-                checked={soundEnabled}
-                onCheckedChange={setSoundEnabled}
-              />
-            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    borderRadius: '6px',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    color: getTextColor(),
+                    cursor: 'pointer',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
+                  }}
+                >
+                  {themeOptions.find(t => t.id === theme)?.name || 'Cosmic Nebula'}
+                  <ChevronDown size={16} />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                style={{
+                  background: getGlassBackground(),
+                  backdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  borderRadius: '8px',
+                  color: getTextColor(),
+                  zIndex: 1002
+                }}
+              >
+                {themeOptions.map((themeOption) => (
+                  <DropdownMenuItem
+                    key={themeOption.id}
+                    onClick={() => applyTheme(themeOption.id)}
+                    style={{
+                      cursor: 'pointer',
+                      padding: '8px 12px',
+                      background: theme === themeOption.id ? 'rgba(255, 255, 255, 0.2)' : 'transparent'
+                    }}
+                  >
+                    {themeOption.name}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 
