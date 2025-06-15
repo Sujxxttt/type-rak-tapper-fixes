@@ -161,7 +161,7 @@ const Index = () => {
     // Use a longer timeout to ensure the component is properly mounted
     setTimeout(() => {
       console.log('Attempting to render text, ref available:', !!textFlowRef.current);
-      renderText(textToUse, textFlowRef.current);
+      renderText(textToUse);
     }, 500);
   };
 
@@ -170,7 +170,7 @@ const Index = () => {
       startNewTest(testName);
     } else {
       const extendedText = extendText();
-      renderText(extendedText, textFlowRef.current);
+      renderText(extendedText);
     }
     setContinueTestMode(true);
   };
@@ -200,7 +200,7 @@ const Index = () => {
       
       if (pos + 1 >= chars.length * 0.8) {
         const extendedText = extendText();
-        renderText(extendedText, textFlowRef.current);
+        renderText(extendedText);
       }
     } else {
       playErrorSound(); // Play error sound for incorrect character
@@ -510,7 +510,7 @@ const Index = () => {
                     setShowReturnConfirm(false);
                     const textToUse = generateWords(100);
                     setTimeout(() => {
-                      renderText(textToUse, textFlowRef.current);
+                      renderText(textToUse);
                     }, 500);
                   }}
                   style={{
