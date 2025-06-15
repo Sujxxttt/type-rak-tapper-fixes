@@ -29,7 +29,7 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
   };
 
   const getGlassStyle = () => {
-    let background = 'rgba(255, 255, 255, 0.1)';
+    let background = 'rgba(0, 0, 0, 0.1)';
     if (theme === 'cotton-candy-glow') {
       background = 'rgba(255, 255, 255, 0.2)';
     } else if (theme === 'midnight-black') {
@@ -87,7 +87,13 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
             padding: '1.5rem',
             textAlign: 'center'
           }}>
-            <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: getButtonColor() }}>
+            <div style={{ 
+              fontSize: '2.5rem', 
+              fontWeight: 'bold', 
+              background: getButtonColor(),
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent'
+            }}>
               {wpm}
             </div>
             <div style={{ fontSize: '1rem', opacity: 0.8 }}>WPM</div>
@@ -98,7 +104,13 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
             padding: '1.5rem',
             textAlign: 'center'
           }}>
-            <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: getButtonColor() }}>
+            <div style={{ 
+              fontSize: '2.5rem', 
+              fontWeight: 'bold', 
+              background: getButtonColor(),
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent'
+            }}>
               {accuracy.toFixed(1)}%
             </div>
             <div style={{ fontSize: '1rem', opacity: 0.8 }}>Accuracy</div>
@@ -109,7 +121,13 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
             padding: '1.5rem',
             textAlign: 'center'
           }}>
-            <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: getButtonColor() }}>
+            <div style={{ 
+              fontSize: '2.5rem', 
+              fontWeight: 'bold', 
+              background: getButtonColor(),
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent'
+            }}>
               {totalErrors}
             </div>
             <div style={{ fontSize: '1rem', opacity: 0.8 }}>Errors</div>
@@ -120,7 +138,13 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
             padding: '1.5rem',
             textAlign: 'center'
           }}>
-            <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: getButtonColor() }}>
+            <div style={{ 
+              fontSize: '2.5rem', 
+              fontWeight: 'bold', 
+              background: getButtonColor(),
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent'
+            }}>
               {correctCharacters}
             </div>
             <div style={{ fontSize: '1rem', opacity: 0.8 }}>Characters</div>
@@ -138,7 +162,8 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
               borderRadius: '8px',
               cursor: 'pointer',
               fontSize: '1.1rem',
-              fontWeight: 'bold'
+              fontWeight: 'bold',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)'
             }}
           >
             Try Again
@@ -153,7 +178,8 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
               padding: '1rem 2rem',
               borderRadius: '8px',
               cursor: 'pointer',
-              fontSize: '1.1rem'
+              fontSize: '1.1rem',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)'
             }}
           >
             Back to Home

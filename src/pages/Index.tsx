@@ -11,6 +11,7 @@ import { Footer } from '../components/Footer';
 import { useTypingGame } from '../hooks/useTypingGame';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { useSoundEffects } from '../hooks/useSoundEffects';
+import { Menu } from 'lucide-react';
 
 const Index = () => {
   const [currentScreen, setCurrentScreen] = useState<'greeting' | 'typing' | 'history' | 'results'>('greeting');
@@ -113,10 +114,10 @@ const Index = () => {
 
   const getButtonColor = () => {
     switch (theme) {
-      case 'cosmic-nebula': return '#8b5cf6';
-      case 'midnight-black': return '#6366f1';
-      case 'cotton-candy-glow': return '#f472b6';
-      default: return '#8b5cf6';
+      case 'cosmic-nebula': return 'linear-gradient(90deg, #8b5cf6 0%, #a855f7 100%)';
+      case 'midnight-black': return 'linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%)';
+      case 'cotton-candy-glow': return 'linear-gradient(90deg, #f472b6 0%, #ec4899 100%)';
+      default: return 'linear-gradient(90deg, #8b5cf6 0%, #a855f7 100%)';
     }
   };
 
@@ -134,7 +135,7 @@ const Index = () => {
   };
 
   const getGlassStyle = () => {
-    let background = 'rgba(255, 255, 255, 0.1)';
+    let background = 'rgba(0, 0, 0, 0.1)';
     if (theme === 'cotton-candy-glow') {
       background = 'rgba(255, 255, 255, 0.2)';
     } else if (theme === 'midnight-black') {
@@ -199,7 +200,6 @@ const Index = () => {
     setShowReturnConfirm(false);
     setCurrentScreen('typing');
 
-    // Generate text and render it immediately
     const textToUse = generateWords(100);
     console.log('Generated text for new test:', textToUse.substring(0, 50) + '...');
     
@@ -364,6 +364,27 @@ const Index = () => {
           minHeight: '100vh',
           textAlign: 'center'
         }}>
+          <button
+            onClick={() => setSideMenuOpen(true)}
+            style={{
+              position: 'fixed',
+              top: '20px',
+              right: '20px',
+              background: getButtonColor(),
+              border: 'none',
+              borderRadius: '8px',
+              padding: '12px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+              zIndex: 999
+            }}
+          >
+            <Menu size={20} color="white" />
+          </button>
+
           <h1 style={{
             fontSize: '4rem',
             fontWeight: 'bold',
@@ -392,6 +413,12 @@ const Index = () => {
                   setUsersList(prev => [...prev, newName]);
                 }
               }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && currentActiveUser) {
+                  setCurrentScreen('typing');
+                  setTimeout(() => startNewTest(), 100);
+                }
+              }}
               style={{
                 width: '100%',
                 padding: '1rem',
@@ -404,30 +431,6 @@ const Index = () => {
                 marginBottom: '1rem'
               }}
             />
-            
-            <button
-              onClick={() => {
-                if (currentActiveUser) {
-                  setCurrentScreen('typing');
-                  setTimeout(() => startNewTest(), 100);
-                } else {
-                  showMessage('Please enter your name first.');
-                }
-              }}
-              style={{
-                width: '100%',
-                padding: '1rem',
-                fontSize: '1.2rem',
-                backgroundColor: getButtonColor(),
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                fontWeight: 'bold'
-              }}
-            >
-              Start Typing Test
-            </button>
           </div>
         </div>
       )}
@@ -465,14 +468,18 @@ const Index = () => {
             <button
               onClick={() => setSideMenuOpen(true)}
               style={{
-                ...getGlassStyle(),
-                color: getTextColor(),
+                background: getButtonColor(),
                 border: 'none',
-                padding: '0.5rem 1rem',
-                cursor: 'pointer'
+                borderRadius: '8px',
+                padding: '12px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)'
               }}
             >
-              Settings ⚙️
+              <Menu size={20} color="white" />
             </button>
           </div>
 
@@ -495,14 +502,18 @@ const Index = () => {
             textFlowRef={textFlowRef}
           />
 
-          <div style={{
-            display: 'flex',
-            gap: '1rem',
-            marginTop: '2rem',
-            flexWrap: 'wrap',
-            justifyContent: 'center'
-          }}>
-            {!testActive && !gameOver && (
+          {!testActive && !gameOver && (
+            <div style={{
+              marginTop: '2rem',
+              textAlign: 'center'
+            }}>
+              <p style={{
+                fontSize: '1.2rem',
+                marginBottom: '1rem',
+                opacity: 0.8
+              }}>
+                Click here or start typing to begin the test
+              </p>
               <button
                 onClick={handleTestStart}
                 style={{
@@ -513,30 +524,32 @@ const Index = () => {
                   borderRadius: '8px',
                   cursor: 'pointer',
                   fontSize: '1.1rem',
-                  fontWeight: 'bold'
+                  fontWeight: 'bold',
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)'
                 }}
               >
-                Start Test
+                Click to Start
               </button>
-            )}
+            </div>
+          )}
 
-            {testActive && (
-              <button
-                onClick={() => setShowReturnConfirm(true)}
-                style={{
-                  background: '#6c757d',
-                  color: 'white',
-                  border: 'none',
-                  padding: '1rem 2rem',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  fontSize: '1.1rem'
-                }}
-              >
-                End Test
-              </button>
-            )}
-          </div>
+          {testActive && (
+            <button
+              onClick={() => setShowReturnConfirm(true)}
+              style={{
+                background: '#6c757d',
+                color: 'white',
+                border: 'none',
+                padding: '1rem 2rem',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '1.1rem',
+                marginTop: '2rem'
+              }}
+            >
+              End Test
+            </button>
+          )}
 
           {showReturnConfirm && (
             <div style={{

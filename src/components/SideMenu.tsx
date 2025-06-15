@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { X, ChevronDown } from 'lucide-react';
 import {
@@ -54,24 +55,18 @@ export const SideMenu: React.FC<SideMenuProps> = ({
   soundEnabled,
   setSoundEnabled
 }) => {
-  // Fix: Define showCustomDuration state for the custom duration slider
   const [showCustomDuration, setShowCustomDuration] = useState(false);
-
-  // New: Add "show" state for smooth open/close animation
   const [show, setShow] = useState(sideMenuOpen);
 
-  // Track menu open/close so we can animate out smoothly
   React.useEffect(() => {
     if (sideMenuOpen) {
       setShow(true);
     } else {
-      // Wait for animation before hiding sidebar
       const timeout = setTimeout(() => setShow(false), 350);
       return () => clearTimeout(timeout);
     }
   }, [sideMenuOpen]);
 
-  // Animate sidebar and backdrop using Tailwind and conditional classes
   if (!show && !sideMenuOpen) return null;
 
   const backdropVisible = sideMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none';
@@ -208,38 +203,6 @@ export const SideMenu: React.FC<SideMenuProps> = ({
           >
             <X size={24} />
           </button>
-        </div>
-
-        {/* Sound Settings */}
-        <div style={{ marginBottom: '25px' }}>
-          <h3 style={{
-            marginBottom: '15px',
-            fontSize: '1.1rem',
-            fontWeight: '600',
-            opacity: 0.9
-          }}>
-            Sound Effects
-          </h3>
-          <div style={{
-            background: 'rgba(255, 255, 255, 0.1)',
-            borderRadius: '12px',
-            padding: '15px',
-            border: '1px solid rgba(255, 255, 255, 0.1)'
-          }}>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between'
-            }}>
-              <span style={{ fontSize: '0.95rem' }}>
-                Enable keyboard and error sounds
-              </span>
-              <Switch
-                checked={soundEnabled}
-                onCheckedChange={setSoundEnabled}
-              />
-            </div>
-          </div>
         </div>
 
         {/* Users Section */}
@@ -402,6 +365,70 @@ export const SideMenu: React.FC<SideMenuProps> = ({
           </div>
         </div>
 
+        {/* Theme - Moved up below test duration */}
+        <div style={{ marginBottom: '25px' }}>
+          <h3 style={{
+            marginBottom: '15px',
+            fontSize: '1.1rem',
+            fontWeight: '600',
+            opacity: 0.9
+          }}>
+            Theme
+          </h3>
+          <div style={{
+            background: 'rgba(255, 255, 255, 0.1)',
+            borderRadius: '12px',
+            padding: '15px',
+            border: '1px solid rgba(255, 255, 255, 0.1)'
+          }}>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    borderRadius: '6px',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    color: getTextColor(),
+                    cursor: 'pointer',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
+                  }}
+                >
+                  {themeOptions.find(t => t.id === theme)?.name || 'Cosmic Nebula'}
+                  <ChevronDown size={16} />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                style={{
+                  background: getGlassBackground(),
+                  backdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  borderRadius: '8px',
+                  color: getTextColor(),
+                  zIndex: 1002
+                }}
+              >
+                {themeOptions.map((themeOption) => (
+                  <DropdownMenuItem
+                    key={themeOption.id}
+                    onClick={() => applyTheme(themeOption.id)}
+                    style={{
+                      cursor: 'pointer',
+                      padding: '8px 12px',
+                      background: theme === themeOption.id ? 'rgba(255, 255, 255, 0.2)' : 'transparent'
+                    }}
+                  >
+                    {themeOption.name}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+
         {/* Font Size */}
         <div style={{ marginBottom: '25px' }}>
           <h3 style={{
@@ -531,7 +558,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
           </div>
         </div>
 
-        {/* Theme */}
+        {/* Sound Effects - Moved lower */}
         <div style={{ marginBottom: '25px' }}>
           <h3 style={{
             marginBottom: '15px',
@@ -539,7 +566,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
             fontWeight: '600',
             opacity: 0.9
           }}>
-            Theme
+            Sound Effects
           </h3>
           <div style={{
             background: 'rgba(255, 255, 255, 0.1)',
@@ -547,51 +574,19 @@ export const SideMenu: React.FC<SideMenuProps> = ({
             padding: '15px',
             border: '1px solid rgba(255, 255, 255, 0.1)'
           }}>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  style={{
-                    width: '100%',
-                    padding: '8px 12px',
-                    borderRadius: '6px',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    background: 'rgba(255, 255, 255, 0.1)',
-                    color: getTextColor(),
-                    cursor: 'pointer',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center'
-                  }}
-                >
-                  {themeOptions.find(t => t.id === theme)?.name || 'Cosmic Nebula'}
-                  <ChevronDown size={16} />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                style={{
-                  background: getGlassBackground(),
-                  backdropFilter: 'blur(20px)',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  borderRadius: '8px',
-                  color: getTextColor(),
-                  zIndex: 1002
-                }}
-              >
-                {themeOptions.map((themeOption) => (
-                  <DropdownMenuItem
-                    key={themeOption.id}
-                    onClick={() => applyTheme(themeOption.id)}
-                    style={{
-                      cursor: 'pointer',
-                      padding: '8px 12px',
-                      background: theme === themeOption.id ? 'rgba(255, 255, 255, 0.2)' : 'transparent'
-                    }}
-                  >
-                    {themeOption.name}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between'
+            }}>
+              <span style={{ fontSize: '0.95rem' }}>
+                Enable keyboard and error sounds
+              </span>
+              <Switch
+                checked={soundEnabled}
+                onCheckedChange={setSoundEnabled}
+              />
+            </div>
           </div>
         </div>
 

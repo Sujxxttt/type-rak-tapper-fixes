@@ -114,22 +114,31 @@
   transition: all 0.1s ease;
 }
 
-.char.correct {
+/* Cosmic Nebula theme text colors */
+.cosmic-nebula .char {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.cosmic-nebula .char.correct {
   color: #4ade80 !important;
   background-color: rgba(74, 222, 128, 0.2) !important;
 }
 
-.char.incorrect {
+.cosmic-nebula .char.incorrect {
   color: #ef4444 !important;
   background-color: rgba(239, 68, 68, 0.2) !important;
 }
 
-.char.extra {
+.cosmic-nebula .char.extra {
   color: #ef4444 !important;
   background-color: rgba(239, 68, 68, 0.3) !important;
 }
 
-/* Cotton candy theme adjustments */
+/* Cotton candy theme text colors */
+.cotton-candy-glow .char {
+  color: rgba(51, 51, 51, 0.7);
+}
+
 .cotton-candy-glow .char.correct {
   color: #059669 !important;
   background-color: rgba(5, 150, 105, 0.2) !important;
@@ -145,7 +154,11 @@
   background-color: rgba(220, 38, 38, 0.3) !important;
 }
 
-/* Midnight black theme adjustments */
+/* Midnight black theme text colors */
+.midnight-black .char {
+  color: rgba(255, 255, 255, 0.7);
+}
+
 .midnight-black .char.correct {
   color: #22c55e !important;
   background-color: rgba(34, 197, 94, 0.2) !important;
