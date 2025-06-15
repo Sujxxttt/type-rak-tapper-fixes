@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { TypingTest } from '../components/TypingTest';
 import { StatsDisplay } from '../components/StatsDisplay';
@@ -25,7 +26,8 @@ const Index = () => {
   const [message, setMessage] = useState<string | null>(null);
   const [deleteConfirmState, setDeleteConfirmState] = useState<boolean>(false);
   const [duration, setDuration] = useState<number>(60);
-  const [testNameMenuOpen, setTestNameMenuOpen] = useState<boolean>(false);
+  const [showTestNameMenu, setShowTestNameMenu] = useState<boolean>(false);
+  const [newTestName, setNewTestName] = useState<string>('');
   const [showIntroduction, setShowIntroduction] = useState<boolean>(false);
   const [continueTestMode, setContinueTestMode] = useState<boolean>(false);
   const [extraChars, setExtraChars] = useState<string[]>([]);
@@ -159,8 +161,8 @@ const Index = () => {
     // Use a longer timeout to ensure the component is properly mounted
     setTimeout(() => {
       console.log('Attempting to render text, ref available:', !!textFlowRef.current);
-      renderText(textToUse);
-    }, 200);
+      renderText(textToUse, textFlowRef.current);
+    }, 500);
   };
 
   const continueTest = (testName?: string) => {
@@ -168,7 +170,7 @@ const Index = () => {
       startNewTest(testName);
     } else {
       const extendedText = extendText();
-      renderText(extendedText);
+      renderText(extendedText, textFlowRef.current);
     }
     setContinueTestMode(true);
   };
@@ -198,7 +200,7 @@ const Index = () => {
       
       if (pos + 1 >= chars.length * 0.8) {
         const extendedText = extendText();
-        renderText(extendedText);
+        renderText(extendedText, textFlowRef.current);
       }
     } else {
       playErrorSound(); // Play error sound for incorrect character
@@ -255,6 +257,26 @@ const Index = () => {
       
       showMessage(`Test completed! WPM: ${finalWPM}, Accuracy: ${accuracy}%`);
     });
+  };
+
+  const getAllTestHistory = () => {
+    const allHistory: any[] = [];
+    usersList.forEach(user => {
+      const userResults = JSON.parse(localStorage.getItem(`typingResults_${user}`) || '[]');
+      userResults.forEach((result: any) => {
+        allHistory.push({
+          ...result,
+          user: user,
+          name: result.testName || 'Unnamed Test',
+          date: result.date,
+          wpm: result.wpm,
+          errorRate: 100 - result.accuracy,
+          score: Math.round(result.wpm * (result.accuracy / 100)),
+          time: result.duration
+        });
+      });
+    });
+    return allHistory;
   };
 
   return (
@@ -419,9 +441,10 @@ const Index = () => {
           </div>
 
           <StatsDisplay
-            wpm={getCurrentWPM()}
-            accuracy={actualTypedCount > 0 ? Math.round(((actualTypedCount - totalErrors) / actualTypedCount) * 100) : 100}
-            timer={Math.max(0, duration - elapsed)}
+            elapsed={elapsed}
+            correctSigns={correctCharacters}
+            totalErrors={totalErrors}
+            currentErrorRate={getCurrentErrorRate()}
             theme={theme}
           />
 
@@ -487,8 +510,8 @@ const Index = () => {
                     setShowReturnConfirm(false);
                     const textToUse = generateWords(100);
                     setTimeout(() => {
-                      renderText(textToUse);
-                    }, 100);
+                      renderText(textToUse, textFlowRef.current);
+                    }, 500);
                   }}
                   style={{
                     background: getButtonColor(),
@@ -590,28 +613,34 @@ const Index = () => {
 
       {currentScreen === 'history' && (
         <HistoryPage
-          currentActiveUser={currentActiveUser}
-          onBack={() => setCurrentScreen('greeting')}
+          allTestHistory={getAllTestHistory()}
           theme={theme}
+          onBack={() => setCurrentScreen('greeting')}
+          getButtonColor={getButtonColor}
         />
       )}
 
       <TestNameMenu
-        testNameMenuOpen={testNameMenuOpen}
-        setTestNameMenuOpen={setTestNameMenuOpen}
-        currentTest={currentTest}
-        setCurrentTest={setCurrentTest}
-        theme={theme}
-        startNewTest={startNewTest}
-        continueTest={continueTest}
-        continueTestMode={continueTestMode}
-        setContinueTestMode={setContinueTestMode}
-        duration={duration}
-        setDuration={setDuration}
+        showTestNameMenu={showTestNameMenu}
+        newTestName={newTestName}
+        setNewTestName={setNewTestName}
+        onConfirm={() => {
+          if (newTestName.trim()) {
+            startNewTest(newTestName.trim());
+            setShowTestNameMenu(false);
+            setNewTestName('');
+            setCurrentScreen('typing');
+          }
+        }}
+        onCancel={() => {
+          setShowTestNameMenu(false);
+          setNewTestName('');
+        }}
+        getButtonColor={getButtonColor}
       />
 
       {showIntroduction && (
-        <Introduction onClose={() => setShowIntroduction(false)} theme={theme} />
+        <Introduction onComplete={() => setShowIntroduction(false)} />
       )}
 
       <Toast message={message} onClose={closeToast} />
@@ -639,7 +668,7 @@ const Index = () => {
         </button>
         
         <button
-          onClick={() => setTestNameMenuOpen(true)}
+          onClick={() => setShowTestNameMenu(true)}
           style={{
             background: 'none',
             border: 'none',
