@@ -38,11 +38,12 @@ export const TypingTest: React.FC<TypingTestProps> = ({
         // Calculate position for smooth horizontal scrolling
         const charLeft = currentChar.offsetLeft;
         const containerWidth = textFlowElement.clientWidth;
+        // Start scrolling when cursor is past the halfway point
         const scrollLeft = Math.max(0, charLeft - containerWidth / 2);
         
         textFlowElement.scrollTo({
           left: scrollLeft,
-          behavior: 'auto'
+          behavior: 'smooth' // Changed from 'auto' for smoother animation
         });
       }
     }
@@ -95,7 +96,8 @@ export const TypingTest: React.FC<TypingTestProps> = ({
           overflowY: 'hidden',
           whiteSpace: 'nowrap',
           scrollbarWidth: 'none',
-          msOverflowStyle: 'none'
+          msOverflowStyle: 'none',
+          transition: 'transform 0.2s ease-out' // Added for smoothness
         }}
         tabIndex={0}
       />

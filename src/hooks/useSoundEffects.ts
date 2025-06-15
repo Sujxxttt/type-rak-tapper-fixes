@@ -1,3 +1,4 @@
+
 import { useRef } from 'react';
 
 export const useSoundEffects = (soundEnabled: boolean) => {
@@ -7,6 +8,10 @@ export const useSoundEffects = (soundEnabled: boolean) => {
     if (!audioContextRef.current) {
       audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
     }
+    // Resume context if it's suspended
+    if (audioContextRef.current.state === 'suspended') {
+      audioContextRef.current.resume();
+    }
     return audioContextRef.current;
   };
 
@@ -14,27 +19,34 @@ export const useSoundEffects = (soundEnabled: boolean) => {
     if (!soundEnabled) return;
     
     const audioContext = initAudioContext();
-    if (audioContext.state === 'suspended') {
-      audioContext.resume();
-    }
     
+    // Mechanical keyboard "clack"
     const oscillator1 = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
+    const gainNode1 = audioContext.createGain();
+    oscillator1.connect(gainNode1);
+    gainNode1.connect(audioContext.destination);
     
-    oscillator1.connect(gainNode);
-    gainNode.connect(audioContext.destination);
+    oscillator1.type = 'square';
+    oscillator1.frequency.setValueAtTime(1200 + Math.random() * 300, audioContext.currentTime);
+    gainNode1.gain.setValueAtTime(0.15, audioContext.currentTime);
+    gainNode1.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.04);
     
-    oscillator1.type = 'triangle';
-    const randomFreq = 1800 + Math.random() * 400;
-    oscillator1.frequency.setValueAtTime(randomFreq, audioContext.currentTime);
-    
-    gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-    gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.01);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.05);
-    
-    const stopTime = audioContext.currentTime + 0.05;
     oscillator1.start(audioContext.currentTime);
-    oscillator1.stop(stopTime);
+    oscillator1.stop(audioContext.currentTime + 0.04);
+
+    // Mechanical keyboard "thock"
+    const oscillator2 = audioContext.createOscillator();
+    const gainNode2 = audioContext.createGain();
+    oscillator2.connect(gainNode2);
+    gainNode2.connect(audioContext.destination);
+
+    oscillator2.type = 'sine';
+    oscillator2.frequency.setValueAtTime(300 + Math.random() * 100, audioContext.currentTime);
+    gainNode2.gain.setValueAtTime(0.2, audioContext.currentTime);
+    gainNode2.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.08);
+
+    oscillator2.start(audioContext.currentTime);
+    oscillator2.stop(audioContext.currentTime + 0.08);
   };
 
   const playErrorSound = () => {
@@ -47,14 +59,15 @@ export const useSoundEffects = (soundEnabled: boolean) => {
     oscillator.connect(gainNode);
     gainNode.connect(audioContext.destination);
     
-    oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
-    oscillator.frequency.exponentialRampToValueAtTime(100, audioContext.currentTime + 0.2);
+    oscillator.type = 'sawtooth'; // A more jarring sound for an error
+    oscillator.frequency.setValueAtTime(250, audioContext.currentTime);
+    oscillator.frequency.exponentialRampToValueAtTime(150, audioContext.currentTime + 0.15);
     
-    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+    gainNode.gain.setValueAtTime(0.25, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.15);
     
     oscillator.start();
-    oscillator.stop(audioContext.currentTime + 0.2);
+    oscillator.stop(audioContext.currentTime + 0.15);
   };
 
   return {

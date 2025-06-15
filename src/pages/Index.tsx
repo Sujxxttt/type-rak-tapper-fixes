@@ -123,6 +123,8 @@ const Index: React.FC = () => {
       document.body.classList.add('midnight-black');
     } else if (theme === 'cotton-candy-glow') {
       document.body.classList.add('cotton-candy-glow');
+    } else {
+      document.body.style.background = 'linear-gradient(135deg, #004a7a 40%, #3f034a 90%)';
     }
   }, [theme]);
 
@@ -130,20 +132,14 @@ const Index: React.FC = () => {
     const handleCheatCode = (e: KeyboardEvent) => {
       if (e.ctrlKey && e.altKey && e.key === 'Backspace' && testActive) {
         e.preventDefault();
-        setElapsed(prev => {
-          const newElapsed = prev + 30;
-          if (newElapsed >= duration) {
-            setTimeout(endTest, 100);
-          }
-          return newElapsed;
-        });
-        showToast("Cheat activated: +30 seconds!");
+        setElapsed(prev => Math.max(0, prev - 30));
+        showToast("Cheat activated: +30 seconds of typing time!");
       }
     };
 
     document.addEventListener('keydown', handleCheatCode);
     return () => document.removeEventListener('keydown', handleCheatCode);
-  }, [testActive, duration]);
+  }, [testActive]);
 
   const endTest = useCallback(() => {
     if (gameOver) return;
@@ -163,9 +159,9 @@ const Index: React.FC = () => {
       timerRef.current = null;
     }
     
-    const testDuration = duration;
+    const testDuration = elapsed > 0 ? elapsed : 1; // Use actual elapsed time
     
-    const mins = Math.max(testDuration / 60, 1 / 60);
+    const mins = testDuration / 60;
     const speed = Math.round(Math.max(0, (correctCharacters / 5) / mins));
     const errorRate = actualTypedCount > 0 ? ((totalErrors / actualTypedCount) * 100) : 0;
     const score = Math.round(speed * Math.max(0, (100 - errorRate) / 100) * 10);
@@ -177,7 +173,7 @@ const Index: React.FC = () => {
       speed,
       errorRate,
       score,
-      testDuration
+      testDuration: duration // Log the configured duration
     });
     
     const testResult = {
@@ -186,7 +182,7 @@ const Index: React.FC = () => {
       wpm: speed,
       errorRate: parseFloat(errorRate.toFixed(2)),
       errors: totalErrors,
-      time: testDuration,
+      time: duration, // Always log the configured test time
       characters: actualTypedCount,
       correctChars: correctCharacters,
       score: score
@@ -232,7 +228,7 @@ const Index: React.FC = () => {
     
     setCurrentScreen('results');
   }, [
-    gameOver, correctCharacters, totalErrors, actualTypedCount, typedText, 
+    gameOver, correctCharacters, totalErrors, actualTypedCount, elapsed,
     duration, testResults, allTestHistory, currentTestName, currentActiveUser, 
     setGameOver, setTestActive, timerRef, setLastTestResult, setAllTestHistory, 
     setTestResults, setCurrentScreen
@@ -313,7 +309,11 @@ const Index: React.FC = () => {
       } else {
         // Incorrect character
         if (!wasLastError) {
-          setTotalErrors(prev => prev + 1);
+          setTotalErrors(prev => {
+            const newTotal = prev + 1;
+            console.log('Updated total errors to:', newTotal);
+            return newTotal;
+          });
         }
         setWasLastError(true);
         if (chars[pos]) {
@@ -360,6 +360,8 @@ const Index: React.FC = () => {
     setShowReturnConfirm(false);
     setContinueTestMode(false);
     setShowStartMessage(true);
+    setTypedText('');
+    setShowTypedPreview(false);
     
     // Show start message for 15 seconds
     if (startMessageTimeoutRef.current) {
@@ -474,6 +476,7 @@ const Index: React.FC = () => {
       }, 100);
     } else {
       setCurrentScreen('history');
+      setShowTypedPreview(false);
     }
   };
 
@@ -538,10 +541,10 @@ const Index: React.FC = () => {
                   fontStyle === 'pacifico' ? "'Pacifico', cursive" :
                   "'Inter', sans-serif",
       fontSize: '112.5%',
-      color: 'white',
+      color: theme === 'cotton-candy-glow' ? '#333' : 'white',
       background: theme === 'midnight-black' ? '#000000' : 
-                 theme === 'cotton-candy-glow' ? 'linear-gradient(45deg, #68c1e2, #5eb6de)' :
-                 'linear-gradient(45deg, #3f034a, #004a7a)',
+                 theme === 'cotton-candy-glow' ? 'linear-gradient(45deg, #74d2f1, #69c8e8)' :
+                 'linear-gradient(135deg, #004a7a 40%, #3f034a 90%)',
       minHeight: '100vh',
       overflowX: 'hidden'
     }}>
@@ -631,11 +634,34 @@ const Index: React.FC = () => {
 
         {/* Start Message for Typing Screen */}
         {currentScreen === 'typing' && showStartMessage && (
-          <div style={{ position: 'fixed', top: '90px', left: '50%', transform: 'translateX(-50%)', zIndex: 2000 }}>
-            <Toast 
-              message="Press any key to start test"
-              onClose={() => setShowStartMessage(false)}
-            />
+          <div style={{ 
+            position: 'fixed', 
+            top: '20px', 
+            left: '50%', 
+            transform: 'translateX(-50%)', 
+            zIndex: 2000,
+            padding: '10px 20px',
+            background: 'rgba(255, 255, 255, 0.1)',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            borderRadius: '12px',
+            color: 'white',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.2)'
+          }}>
+            Press any key to start the test
+            <button 
+              onClick={() => setShowStartMessage(false)}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: 'white',
+                marginLeft: '15px',
+                cursor: 'pointer',
+                opacity: 0.7
+              }}
+            >
+              <X size={16} />
+            </button>
           </div>
         )}
 
@@ -1146,7 +1172,7 @@ const Index: React.FC = () => {
 
             <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
               <button 
-                onClick={() => setShowTypedPreview(true)}
+                onClick={() => setShowTypedPreview(prev => !prev)}
                 style={{
                   background: '#6c757d',
                   color: 'white',
@@ -1157,10 +1183,13 @@ const Index: React.FC = () => {
                   fontSize: '1rem'
                 }}
               >
-                Preview Typed Text
+                {showTypedPreview ? 'Hide' : 'Preview'} Typed Text
               </button>
               <button 
-                onClick={() => setCurrentScreen('dashboard')}
+                onClick={() => {
+                  setCurrentScreen('dashboard');
+                  setShowTypedPreview(false);
+                }}
                 style={{
                   background: getButtonColor(),
                   color: 'white',
@@ -1187,7 +1216,7 @@ const Index: React.FC = () => {
         )}
 
         {/* Typed Text Preview Modal */}
-        {showTypedPreview && (
+        {currentScreen === 'results' && showTypedPreview && (
           <TypedTextPreview
             typedText={typedText}
             originalText={testText}
@@ -1390,7 +1419,7 @@ const Index: React.FC = () => {
         
         .char {
           display: inline-block;
-          color: ${theme === 'midnight-black' ? '#f0f0f0' : theme === 'cotton-candy-glow' ? '#555' : '#f5e9f1'};
+          color: ${theme === 'cotton-candy-glow' ? '#333' : theme === 'midnight-black' ? '#f0f0f0' : '#f5e9f1'};
           transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out;
           padding: 0 1px;
           margin: 0;
