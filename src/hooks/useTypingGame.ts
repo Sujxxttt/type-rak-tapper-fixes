@@ -72,36 +72,33 @@ export const useTypingGame = () => {
     return generatedTextRef.current;
   };
 
-  const renderText = (text: string) => {
+  const renderText = useCallback((text: string) => {
     console.log('Rendering text with length:', text.length);
     
-    setTimeout(() => {
-      const textFlowElement = document.getElementById('text-flow');
-      if (!textFlowElement) {
-        console.log('Text flow element not found, retrying...');
-        setTimeout(() => renderText(text), 100);
-        return;
-      }
-      
-      setTestText(text);
-      textFlowElement.innerHTML = "";
-      const newChars: HTMLElement[] = [];
-      const frag = document.createDocumentFragment();
-      
-      for (let i = 0; i < text.length; i++) {
-        const char = text[i];
-        const span = document.createElement("span");
-        span.className = "char";
-        span.textContent = char === " " ? "\u00A0" : char;
-        frag.appendChild(span);
-        newChars.push(span);
-      }
-      
-      textFlowElement.appendChild(frag);
-      setChars(newChars);
-      console.log('Text successfully rendered with', newChars.length, 'characters');
-    }, 50);
-  };
+    const textFlowElement = document.getElementById('text-flow');
+    if (!textFlowElement) {
+      console.log('Text flow element not found');
+      return;
+    }
+    
+    setTestText(text);
+    textFlowElement.innerHTML = "";
+    const newChars: HTMLElement[] = [];
+    const frag = document.createDocumentFragment();
+    
+    for (let i = 0; i < text.length; i++) {
+      const char = text[i];
+      const span = document.createElement("span");
+      span.className = "char";
+      span.textContent = char === " " ? "\u00A0" : char;
+      frag.appendChild(span);
+      newChars.push(span);
+    }
+    
+    textFlowElement.appendChild(frag);
+    setChars(newChars);
+    console.log('Text successfully rendered with', newChars.length, 'characters');
+  }, []);
 
   const startTimer = useCallback((duration: number, onComplete: () => void) => {
     console.log('Starting timer for', duration, 'seconds');
@@ -161,7 +158,7 @@ export const useTypingGame = () => {
     testActive,
     setTestActive,
     elapsed,
-    setElapsed, // This was missing!
+    setElapsed,
     pos,
     setPos,
     chars,

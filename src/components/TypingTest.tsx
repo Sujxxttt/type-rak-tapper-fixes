@@ -55,25 +55,6 @@ export const TypingTest: React.FC<TypingTestProps> = ({
     }
   };
 
-  if (!testText) {
-    return (
-      <div style={{
-        width: '90%',
-        maxWidth: '1000px',
-        margin: '2rem auto',
-        padding: '2rem',
-        background: theme === 'cotton-candy-glow' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.1)',
-        borderRadius: '16px',
-        backdropFilter: 'blur(10px)',
-        border: '1px solid rgba(255, 255, 255, 0.2)',
-        textAlign: 'center',
-        color: theme === 'cotton-candy-glow' ? '#333' : 'white'
-      }}>
-        Loading text...
-      </div>
-    );
-  }
-
   return (
     <div style={{
       width: '90%',
@@ -84,7 +65,6 @@ export const TypingTest: React.FC<TypingTestProps> = ({
       borderRadius: '16px',
       backdropFilter: 'blur(10px)',
       border: '1px solid rgba(255, 255, 255, 0.2)',
-      // Removed box-shadow
       position: 'relative',
       fontSize: `${fontSize}%`,
       fontFamily: getFontFamily(),
@@ -103,7 +83,8 @@ export const TypingTest: React.FC<TypingTestProps> = ({
           wordBreak: 'break-word',
           overflowWrap: 'break-word',
           userSelect: 'none',
-          cursor: 'text'
+          cursor: 'text',
+          minHeight: '3em'
         }}
         tabIndex={0}
       />
