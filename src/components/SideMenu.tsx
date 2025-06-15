@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect } from 'react';
 import { X } from 'lucide-react';
 import {
@@ -59,39 +60,28 @@ export const SideMenu: React.FC<SideMenuProps> = ({
 }) => {
   const sideMenuRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (sideMenuOpen && sideMenuRef.current && !sideMenuRef.current.contains(event.target as Node)) {
-        // Prevent closing if a click is inside a Radix UI dropdown
-        const target = event.target as HTMLElement;
-        if (target.closest('[data-radix-popper-content-wrapper]')) {
-          return;
-        }
-        setSideMenuOpen(false);
-      }
-    };
-
-    if (sideMenuOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [sideMenuOpen, setSideMenuOpen]);
-
-  const handleOptionClick = (e: React.MouseEvent) => {
-    // This is not strictly necessary anymore but doesn't hurt.
-    e.stopPropagation();
-  };
-
   if (!sideMenuOpen) return null;
 
+  const getFontFamilyString = (font: string) => {
+    switch (font) {
+      case 'roboto': return "'Roboto', sans-serif";
+      case 'open-sans': return "'Open Sans', sans-serif";
+      case 'lato': return "'Lato', sans-serif";
+      case 'source-sans-pro': return "'Source Sans Pro', sans-serif";
+      case 'inter': return "'Inter', sans-serif";
+      case 'dancing-script': return "'Dancing Script', cursive";
+      case 'pacifico': return "'Pacifico', cursive";
+      default: return "'Inter', sans-serif";
+    }
+  };
+
   const dropdownContentStyle: React.CSSProperties = {
-    background: 'rgba(20, 20, 20, 0.7)',
+    background: theme === 'cotton-candy-glow' ? 
+      'rgba(255, 255, 255, 0.4)' : 
+      'rgba(20, 20, 20, 0.7)',
     backdropFilter: 'blur(10px)',
     border: '1px solid rgba(255, 255, 255, 0.2)',
-    color: theme === 'cotton-candy-glow' ? '#333' : 'white',
+    color: 'white',
     zIndex: 1001
   };
 
@@ -101,7 +91,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
     borderRadius: '4px',
     border: '1px solid rgba(255, 255, 255, 0.3)',
     background: 'rgba(255, 255, 255, 0.1)',
-    color: theme === 'cotton-candy-glow' ? '#333' : 'white',
+    color: 'white',
     textAlign: 'left',
     cursor: 'pointer',
     display: 'flex',
@@ -113,6 +103,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
     <>
       {/* Backdrop */}
       <div 
+        onClick={() => setSideMenuOpen(false)}
         style={{
           position: 'fixed',
           top: 0,
@@ -121,13 +112,14 @@ export const SideMenu: React.FC<SideMenuProps> = ({
           bottom: 0,
           background: 'rgba(0, 0, 0, 0.5)',
           zIndex: 998,
-          animation: 'fadeIn 0.15s ease-out'
+          animation: 'fadeIn 0.12s ease-out'
         }}
       />
       
       {/* Side Menu */}
       <div
         ref={sideMenuRef}
+        onClick={(e) => e.stopPropagation()}
         style={{
           position: 'fixed',
           top: 0,
@@ -142,8 +134,8 @@ export const SideMenu: React.FC<SideMenuProps> = ({
           zIndex: 999,
           padding: '20px',
           overflowY: 'auto',
-          color: theme === 'cotton-candy-glow' ? '#333' : 'white',
-          animation: sideMenuOpen ? 'slideInRight 0.15s ease-out' : 'slideOutRight 0.15s ease-out forwards'
+          color: 'white',
+          animation: sideMenuOpen ? 'slideInRight 0.12s ease-out' : 'slideOutRight 0.12s ease-out forwards'
         }}
       >
         {/* Close Button */}
@@ -155,7 +147,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
             right: '15px',
             background: 'none',
             border: 'none',
-            color: theme === 'cotton-candy-glow' ? '#333' : 'white',
+            color: 'white',
             fontSize: '1.5rem',
             cursor: 'pointer',
             padding: '5px'
@@ -249,7 +241,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button style={dropdownTriggerStyle}>
-                <span style={{ fontFamily: `'${fontStyle}', sans-serif` }}>{fontStyle.replace('-', ' ')}</span>
+                <span style={{ fontFamily: getFontFamilyString(fontStyle) }}>{fontStyle.replace(/-/g, ' ')}</span>
                 <span>▼</span>
               </button>
             </DropdownMenuTrigger>
@@ -257,8 +249,8 @@ export const SideMenu: React.FC<SideMenuProps> = ({
               <DropdownMenuLabel>Select Font</DropdownMenuLabel>
               <DropdownMenuSeparator style={{ background: 'rgba(255,255,255,0.2)'}} />
               <DropdownMenuRadioGroup value={fontStyle} onValueChange={setFontStyle}>
-                {['inter', 'roboto', 'open-sans', 'lato', 'source-sans', 'dancing-script', 'pacifico'].map(font => (
-                  <DropdownMenuRadioItem key={font} value={font} style={{textTransform: 'capitalize'}}>{font.replace('-', ' ')}</DropdownMenuRadioItem>
+                {['inter', 'roboto', 'open-sans', 'lato', 'source-sans-pro', 'dancing-script', 'pacifico'].map(font => (
+                  <DropdownMenuRadioItem key={font} value={font} style={{ fontFamily: getFontFamilyString(font), textTransform: 'capitalize'}}>{font.replace(/-/g, ' ')}</DropdownMenuRadioItem>
                 ))}
               </DropdownMenuRadioGroup>
             </DropdownMenuContent>
@@ -266,11 +258,23 @@ export const SideMenu: React.FC<SideMenuProps> = ({
         </div>
 
         {/* Sound Toggle */}
-        <div style={{ marginBottom: '1.5rem' }} onClick={handleOptionClick}>
+        <div style={{ marginBottom: '1.5rem' }}>
           <h4 style={{ marginBottom: '0.5rem', fontSize: '1rem', fontWeight: '600' }}>Sound Effects:</h4>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(255, 255, 255, 0.1)', padding: '8px 12px', borderRadius: '4px' }}>
+          <div style={{ 
+            '--switch-checked-color': getButtonColor(),
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'space-between', 
+            background: 'rgba(255, 255, 255, 0.1)', 
+            padding: '8px 12px', 
+            borderRadius: '4px' 
+          } as React.CSSProperties}>
             <span>{soundEnabled ? 'Enabled' : 'Disabled'}</span>
-            <Switch checked={soundEnabled} onCheckedChange={setSoundEnabled} />
+            <Switch 
+              checked={soundEnabled} 
+              onCheckedChange={setSoundEnabled}
+              className="data-[state=checked]:bg-[--switch-checked-color]"
+            />
           </div>
         </div>
 
@@ -280,7 +284,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button style={dropdownTriggerStyle}>
-                <span style={{textTransform: 'capitalize'}}>{theme.replace('-', ' ')}</span>
+                <span style={{textTransform: 'capitalize'}}>{theme.replace(/-/g, ' ')}</span>
                 <span>▼</span>
               </button>
             </DropdownMenuTrigger>
@@ -303,13 +307,10 @@ export const SideMenu: React.FC<SideMenuProps> = ({
         {/* Navigation */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           <button 
-            onClick={(e) => {
-              e.stopPropagation();
-              handleHistoryClick();
-            }}
+            onClick={handleHistoryClick}
             style={{
               background: 'rgba(255, 255, 255, 0.2)',
-              color: theme === 'cotton-candy-glow' ? '#333' : 'white',
+              color: 'white',
               border: 'none',
               padding: '12px',
               borderRadius: '6px',
@@ -320,13 +321,10 @@ export const SideMenu: React.FC<SideMenuProps> = ({
             View Test History
           </button>
           <button 
-            onClick={(e) => {
-              e.stopPropagation();
-              handleContactMe();
-            }}
+            onClick={handleContactMe}
             style={{
               background: 'rgba(255, 255, 255, 0.2)',
-              color: theme === 'cotton-candy-glow' ? '#333' : 'white',
+              color: 'white',
               border: 'none',
               padding: '12px',
               borderRadius: '6px',

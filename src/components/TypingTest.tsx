@@ -35,9 +35,6 @@ export const TypingTest: React.FC<TypingTestProps> = ({
       const textFlowElement = document.getElementById('text-flow');
       
       if (currentChar && textFlowElement) {
-        const charRect = currentChar.getBoundingClientRect();
-        const containerRect = textFlowElement.getBoundingClientRect();
-        
         // Calculate position for smooth horizontal scrolling
         const charLeft = currentChar.offsetLeft;
         const containerWidth = textFlowElement.clientWidth;
@@ -45,7 +42,7 @@ export const TypingTest: React.FC<TypingTestProps> = ({
         
         textFlowElement.scrollTo({
           left: scrollLeft,
-          behavior: 'smooth'
+          behavior: 'auto'
         });
       }
     }
@@ -56,7 +53,7 @@ export const TypingTest: React.FC<TypingTestProps> = ({
       case 'roboto': return "'Roboto', sans-serif";
       case 'open-sans': return "'Open Sans', sans-serif";
       case 'lato': return "'Lato', sans-serif";
-      case 'source-sans': return "'Source Sans Pro', sans-serif";
+      case 'source-sans-pro': return "'Source Sans Pro', sans-serif";
       case 'inter': return "'Inter', sans-serif";
       case 'dancing-script': return "'Dancing Script', cursive";
       case 'pacifico': return "'Pacifico', cursive";
@@ -67,9 +64,9 @@ export const TypingTest: React.FC<TypingTestProps> = ({
   return (
     <div style={{
       width: '100%',
-      maxWidth: '1040px', // 30% wider than 800px
+      maxWidth: '1040px',
       height: '120px',
-      margin: '4rem auto 2rem auto', // 2cm lower (approximately 4rem instead of 2rem)
+      margin: '4rem auto 2rem auto',
       padding: '1.5rem',
       background: theme === 'cotton-candy-glow' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.1)',
       borderRadius: '12px',
@@ -85,7 +82,7 @@ export const TypingTest: React.FC<TypingTestProps> = ({
       <div
         id="text-flow"
         style={{
-          color: theme === 'cotton-candy-glow' ? '#333' : 'white',
+          color: 'white',
           outline: 'none',
           fontSize: 'inherit',
           fontFamily: 'inherit',
