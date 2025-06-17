@@ -16,6 +16,7 @@ const Index: React.FC = () => {
   // Introduction state
   const [showIntroduction, setShowIntroduction] = useState(true);
   const [titleClickCount, setTitleClickCount] = useState(0);
+  const [titleClickMessage, setTitleClickMessage] = useState('');
   
   // Global state variables
   const [usersList, setUsersList] = useLocalStorage<string[]>("typeRakUsersList", []);
@@ -45,6 +46,7 @@ const Index: React.FC = () => {
 
   const messageTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
   const startMessageTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+  const titleMessageTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
   // Define showToast function early
   const showToast = (msg: string, isError = false) => {
@@ -101,10 +103,28 @@ const Index: React.FC = () => {
 
   const handleTitleClick = () => {
     setTitleClickCount(prev => prev + 1);
-    if (titleClickCount >= 2) {
+    
+    if (titleClickCount === 0) {
+      setTitleClickMessage('Click 2 more times');
+    } else if (titleClickCount === 1) {
+      setTitleClickMessage('Click Again !!');
+    } else if (titleClickCount >= 2) {
       setShowIntroduction(true);
       setTitleClickCount(0);
+      setTitleClickMessage('');
+      if (titleMessageTimeoutRef.current) {
+        clearTimeout(titleMessageTimeoutRef.current);
+      }
+      return;
     }
+    
+    if (titleMessageTimeoutRef.current) {
+      clearTimeout(titleMessageTimeoutRef.current);
+    }
+    titleMessageTimeoutRef.current = setTimeout(() => {
+      setTitleClickMessage('');
+      setTitleClickCount(0);
+    }, 3000);
   };
 
   const handleIntroReplay = () => {
@@ -148,7 +168,7 @@ const Index: React.FC = () => {
     } else if (theme === 'cotton-candy-glow') {
       document.body.classList.add('cotton-candy-glow');
     } else {
-      document.body.style.background = 'linear-gradient(135deg, #3f034a 40%, #004a7a 60%)';
+      document.body.style.background = 'linear-gradient(135deg, #3f034a 42%, #004a7a 58%)';
     }
   }, [theme]);
 
@@ -156,14 +176,14 @@ const Index: React.FC = () => {
     const handleCheatCode = (e: KeyboardEvent) => {
       if (e.ctrlKey && e.altKey && e.key === 'Backspace' && testActive) {
         e.preventDefault();
-        addCheatTime();
-        showToast("Cheat activated: +30 seconds of typing time added!");
+        setElapsed(prev => prev + 30);
+        showToast("Cheat activated: +30 seconds added to your typing time!");
       }
     };
 
     document.addEventListener('keydown', handleCheatCode);
     return () => document.removeEventListener('keydown', handleCheatCode);
-  }, [testActive, addCheatTime, showToast]);
+  }, [testActive, setElapsed, showToast]);
 
   const endTest = useCallback(() => {
     if (gameOver) return;
@@ -185,12 +205,15 @@ const Index: React.FC = () => {
     }
     
     const testDuration = elapsed > 0 ? elapsed : 1;
-    const effectiveTime = Math.max(1, testDuration - cheatTimeAdded);
     
-    const mins = effectiveTime / 60;
+    const mins = testDuration / 60;
     const speed = Math.round(Math.max(0, (correctCharacters / 5) / mins));
     const errorRate = actualTypedCount > 0 ? ((totalErrors / actualTypedCount) * 100) : 0;
-    const score = Math.round(speed * Math.max(0, (100 - errorRate) / 100) * 10);
+    
+    // Fixed score calculation - max 1000
+    const accuracy = Math.max(0, 100 - errorRate);
+    const baseScore = (speed * accuracy) / 100;
+    const score = Math.min(1000, Math.round(baseScore * 10));
     
     console.log('Final calculated test results:', {
       correctCharacters,
@@ -198,9 +221,9 @@ const Index: React.FC = () => {
       totalErrors,
       speed,
       errorRate,
+      accuracy,
       score,
-      testDuration: duration,
-      effectiveTime
+      testDuration: duration
     });
     
     const testResult = {
@@ -554,7 +577,7 @@ const Index: React.FC = () => {
       color: 'white',
       background: theme === 'midnight-black' ? '#000000' : 
                  theme === 'cotton-candy-glow' ? 'linear-gradient(45deg, #74d2f1, #69c8e8)' :
-                 'linear-gradient(135deg, #3f034a 40%, #004a7a 60%)',
+                 'linear-gradient(135deg, #3f034a 42%, #004a7a 58%)',
       minHeight: '100vh',
       overflowX: 'hidden'
     }}>
@@ -573,7 +596,7 @@ const Index: React.FC = () => {
           marginBottom: '1rem',
           zIndex: 10
         }}>
-          <div>
+          <div style={{ position: 'relative' }}>
             <h1 
               onClick={handleTitleClick}
               style={{
@@ -592,6 +615,25 @@ const Index: React.FC = () => {
             >
               TypeWave
             </h1>
+            {titleClickMessage && (
+              <div style={{
+                position: 'absolute',
+                top: '100%',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                marginTop: '10px',
+                padding: '8px 16px',
+                background: 'rgba(255, 255, 255, 0.1)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                borderRadius: '8px',
+                fontSize: '0.9rem',
+                whiteSpace: 'nowrap',
+                zIndex: 100
+              }}>
+                {titleClickMessage}
+              </div>
+            )}
           </div>
           <div style={{ display: 'flex', alignItems: 'center' }}>
             <div style={{
@@ -991,7 +1033,8 @@ const Index: React.FC = () => {
             alignItems: 'center',
             padding: '20px 0',
             flex: 1,
-            position: 'relative'
+            position: 'relative',
+            marginTop: '2cm'
           }}>
             <TypingTest
               testText={testText}
@@ -1411,28 +1454,6 @@ const Index: React.FC = () => {
             }}
           >
             WhatsApp
-          </a>
-          <a 
-            href="https://raktherock.github.io/Rak/" 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            style={{ 
-              color: 'white', 
-              textDecoration: 'none', 
-              fontSize: '0.9rem',
-              transition: 'color 0.3s ease'
-            }}
-            onMouseEnter={(e) => {
-              const target = e.target as HTMLElement;
-              target.style.color = theme === 'midnight-black' ? '#c559f7' : 
-                                   theme === 'cotton-candy-glow' ? '#ff59e8' : '#8a2be2';
-            }}
-            onMouseLeave={(e) => {
-              const target = e.target as HTMLElement;
-              target.style.color = 'white';
-            }}
-          >
-            Check this out
           </a>
           <a 
             href="mailto:rakshankumaraa@gmail.com" 

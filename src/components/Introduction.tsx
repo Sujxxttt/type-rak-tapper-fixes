@@ -15,7 +15,7 @@ export const Introduction: React.FC<IntroductionProps> = ({ onComplete, onReplay
   const themes = [
     {
       id: 'cosmic-nebula',
-      background: 'linear-gradient(135deg, #3f034a 40%, #004a7a 60%)',
+      background: 'linear-gradient(135deg, #3f034a 42%, #004a7a 58%)',
       titleGradient: 'linear-gradient(45deg, #a729f0 0%, #3c95fa 100%)'
     },
     {
@@ -110,7 +110,7 @@ export const Introduction: React.FC<IntroductionProps> = ({ onComplete, onReplay
             'background-image 1s ease-in-out' : 
             'all 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), background-image 2s ease-in-out',
           textAlign: 'center',
-          animation: animationPhase === 'themes' ? 'heartbeat 1.5s ease-in-out infinite' : 'none',
+          animation: animationPhase === 'themes' ? 'heartbeat 2.5s ease-in-out infinite' : 'none',
           cursor: titlePosition === 'top-left' ? 'pointer' : 'default'
         }}
       >
@@ -123,10 +123,10 @@ export const Introduction: React.FC<IntroductionProps> = ({ onComplete, onReplay
             transform: scale(1);
           }
           25% { 
-            transform: scale(1.05);
+            transform: scale(1.03);
           }
           75% { 
-            transform: scale(0.95);
+            transform: scale(0.97);
           }
         }
       `}</style>

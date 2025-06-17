@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { X } from 'lucide-react';
 import {
@@ -145,6 +144,11 @@ export const SideMenu: React.FC<SideMenuProps> = ({
 
   const fontSizes = [80, 90, 100, 110, 120, 130, 140, 150, 175, 200];
 
+  const handleCheckThisOut = () => {
+    window.open('https://raktherock.github.io/Rak/', '_blank');
+    setSideMenuOpen(false);
+  };
+
   return (
     <>
       <div 
@@ -172,6 +176,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
           background: 'rgba(255, 255, 255, 0.1)',
           backdropFilter: 'blur(20px)',
           borderLeft: '1px solid rgba(255, 255, 255, 0.2)',
+          borderRadius: '20px 0 0 20px',
           zIndex: 999,
           padding: '20px',
           overflowY: 'auto',
@@ -216,7 +221,18 @@ export const SideMenu: React.FC<SideMenuProps> = ({
             </DropdownMenuContent>
           </DropdownMenu>
           {currentActiveUser && (
-             <button onClick={handleDeleteUser} style={{ width: '100%', marginTop: '10px', padding: '8px 12px', borderRadius: '4px', border: 'none', background: deleteConfirmState ? '#b91c1c' : '#dc2626', color: 'white', cursor: 'pointer', transition: 'background-color 0.2s' }}>
+             <button onClick={handleDeleteUser} style={{ 
+               width: '100%', 
+               marginTop: '10px', 
+               padding: '8px 12px', 
+               borderRadius: '4px', 
+               border: 'none', 
+               background: deleteConfirmState ? 'rgba(185, 28, 28, 0.45)' : 'rgba(220, 38, 38, 0.45)', 
+               color: 'white', 
+               cursor: 'pointer', 
+               transition: 'background-color 0.2s',
+               opacity: 0.8
+             }}>
                {deleteConfirmState ? 'Confirm Delete' : `Delete ${currentActiveUser}`}
              </button>
           )}
@@ -331,6 +347,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           <button onClick={handleHistoryClick} style={{...dropdownTriggerStyle, justifyContent: 'center' }}>View Test History</button>
           <button onClick={handleContactMe} style={{...dropdownTriggerStyle, justifyContent: 'center' }}>Contact Me</button>
+          <button onClick={handleCheckThisOut} style={{...dropdownTriggerStyle, justifyContent: 'center' }}>Check this out</button>
         </div>
       </div>
 
