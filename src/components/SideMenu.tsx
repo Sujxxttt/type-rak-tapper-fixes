@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { X } from 'lucide-react';
 import {
@@ -124,14 +125,14 @@ export const SideMenu: React.FC<SideMenuProps> = ({
     backdropFilter: 'blur(15px)',
     border: '1px solid rgba(255, 255, 255, 0.2)',
     color: 'white',
-    borderRadius: '8px',
+    borderRadius: '12px',
     zIndex: 1001
   };
 
   const dropdownTriggerStyle: React.CSSProperties = {
     width: '100%',
     padding: '8px 12px',
-    borderRadius: '4px',
+    borderRadius: '12px',
     border: '1px solid rgba(255, 255, 255, 0.3)',
     background: 'rgba(255, 255, 255, 0.1)',
     color: 'white',
@@ -139,7 +140,8 @@ export const SideMenu: React.FC<SideMenuProps> = ({
     cursor: 'pointer',
     display: 'flex',
     justifyContent: 'space-between',
-    alignItems: 'center'
+    alignItems: 'center',
+    fontSize: '0.9rem'
   };
 
   const fontSizes = [80, 90, 100, 110, 120, 130, 140, 150, 175, 200];
@@ -161,7 +163,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
           bottom: 0,
           background: 'rgba(0, 0, 0, 0.5)',
           zIndex: 998,
-          animation: 'fadeIn 0.2s ease-out'
+          animation: sideMenuOpen ? 'fadeIn 0.3s ease-out' : 'fadeOut 0.3s ease-out'
         }}
       />
       
@@ -176,12 +178,12 @@ export const SideMenu: React.FC<SideMenuProps> = ({
           background: 'rgba(255, 255, 255, 0.1)',
           backdropFilter: 'blur(20px)',
           borderLeft: '1px solid rgba(255, 255, 255, 0.2)',
-          borderRadius: '20px 0 0 20px',
+          borderRadius: '24px 0 0 24px',
           zIndex: 999,
           padding: '20px',
           overflowY: 'auto',
           color: 'white',
-          animation: sideMenuOpen ? 'slideInRight 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'slideOutRight 0.3s cubic-bezier(0.55, 0.085, 0.68, 0.53) forwards'
+          animation: sideMenuOpen ? 'slideInRight 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'slideOutRight 0.4s cubic-bezier(0.55, 0.085, 0.68, 0.53) forwards'
         }}
       >
         <button 
@@ -201,10 +203,10 @@ export const SideMenu: React.FC<SideMenuProps> = ({
           <X size={24} />
         </button>
 
-        <h3 style={{ marginBottom: '1.5rem', paddingTop: '1rem' }}>Settings</h3>
+        <h3 style={{ marginBottom: '1.5rem', paddingTop: '1rem', fontSize: '1.2rem' }}>Settings</h3>
 
         <div style={{ marginBottom: '1.5rem' }}>
-          <h4 style={{ marginBottom: '0.5rem', fontSize: '1rem', fontWeight: '600' }}>User:</h4>
+          <h4 style={{ marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: '600' }}>User:</h4>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button style={dropdownTriggerStyle}>
@@ -225,13 +227,14 @@ export const SideMenu: React.FC<SideMenuProps> = ({
                width: '100%', 
                marginTop: '10px', 
                padding: '8px 12px', 
-               borderRadius: '4px', 
+               borderRadius: '12px', 
                border: 'none', 
-               background: deleteConfirmState ? 'rgba(185, 28, 28, 0.45)' : 'rgba(220, 38, 38, 0.45)', 
+               background: deleteConfirmState ? 'rgba(220, 38, 38, 0.5)' : 'rgba(239, 68, 68, 0.5)', 
                color: 'white', 
                cursor: 'pointer', 
                transition: 'background-color 0.2s',
-               opacity: 0.8
+               opacity: 0.5,
+               fontSize: '0.9rem'
              }}>
                {deleteConfirmState ? 'Confirm Delete' : `Delete ${currentActiveUser}`}
              </button>
@@ -239,7 +242,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
         </div>
 
         <div style={{ marginBottom: '1.5rem' }}>
-          <h4 style={{ marginBottom: '0.5rem', fontSize: '1rem', fontWeight: '600' }}>Test Duration:</h4>
+          <h4 style={{ marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: '600' }}>Test Duration:</h4>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button style={dropdownTriggerStyle}>
@@ -268,45 +271,49 @@ export const SideMenu: React.FC<SideMenuProps> = ({
         </div>
 
         <div style={{ marginBottom: '1.5rem' }}>
-          <h4 style={{ marginBottom: '0.5rem', fontSize: '1rem', fontWeight: '600' }}>Font Size:</h4>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button style={dropdownTriggerStyle}>
-                <span>{fontSize}%</span>
-                <span>▼</span>
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent style={dropdownContentStyle} className="w-[310px]">
-              <DropdownMenuRadioGroup value={String(fontSize)} onValueChange={val => setFontSize(Number(val))}>
-                {fontSizes.map(size => (
-                  <DropdownMenuRadioItem key={size} value={String(size)}>{size}%</DropdownMenuRadioItem>
-                ))}
-              </DropdownMenuRadioGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+          <h4 style={{ marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: '600' }}>Font Settings:</h4>
+          
+          <div style={{ marginBottom: '10px' }}>
+            <label style={{ fontSize: '0.8rem', marginBottom: '5px', display: 'block' }}>Font Size:</label>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button style={dropdownTriggerStyle}>
+                  <span>{fontSize}%</span>
+                  <span>▼</span>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent style={dropdownContentStyle} className="w-[310px]">
+                <DropdownMenuRadioGroup value={String(fontSize)} onValueChange={val => setFontSize(Number(val))}>
+                  {fontSizes.map(size => (
+                    <DropdownMenuRadioItem key={size} value={String(size)}>{size}%</DropdownMenuRadioItem>
+                  ))}
+                </DropdownMenuRadioGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
 
-        <div style={{ marginBottom: '1.5rem' }}>
-          <h4 style={{ marginBottom: '0.5rem', fontSize: '1rem', fontWeight: '600' }}>Font Style:</h4>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button style={dropdownTriggerStyle}>
-                <span style={{ fontFamily: getFontFamilyString(fontStyle), textTransform: 'capitalize' }}>{fontStyle.replace(/-/g, ' ')}</span>
-                <span>▼</span>
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent style={dropdownContentStyle} className="w-[310px]">
-              <DropdownMenuRadioGroup value={fontStyle} onValueChange={setFontStyle}>
-                {['inter', 'roboto', 'open-sans', 'lato', 'source-sans-pro', 'dancing-script', 'pacifico'].map(font => (
-                  <DropdownMenuRadioItem key={font} value={font} style={{ fontFamily: getFontFamilyString(font), textTransform: 'capitalize'}}>{font.replace(/-/g, ' ')}</DropdownMenuRadioItem>
-                ))}
-              </DropdownMenuRadioGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div>
+            <label style={{ fontSize: '0.8rem', marginBottom: '5px', display: 'block' }}>Font Style:</label>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button style={dropdownTriggerStyle}>
+                  <span style={{ fontFamily: getFontFamilyString(fontStyle), textTransform: 'capitalize' }}>{fontStyle.replace(/-/g, ' ')}</span>
+                  <span>▼</span>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent style={dropdownContentStyle} className="w-[310px]">
+                <DropdownMenuRadioGroup value={fontStyle} onValueChange={setFontStyle}>
+                  {['inter', 'roboto', 'open-sans', 'lato', 'source-sans-pro', 'dancing-script', 'pacifico'].map(font => (
+                    <DropdownMenuRadioItem key={font} value={font} style={{ fontFamily: getFontFamilyString(font), textTransform: 'capitalize'}}>{font.replace(/-/g, ' ')}</DropdownMenuRadioItem>
+                  ))}
+                </DropdownMenuRadioGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
         
         <div style={{ marginBottom: '1.5rem' }}>
-          <h4 style={{ marginBottom: '0.5rem', fontSize: '1rem', fontWeight: '600' }}>Theme:</h4>
+          <h4 style={{ marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: '600' }}>Theme:</h4>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button style={dropdownTriggerStyle}>
@@ -325,7 +332,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
         </div>
 
         <div style={{ marginBottom: '1.5rem' }}>
-          <h4 style={{ marginBottom: '0.5rem', fontSize: '1rem', fontWeight: '600' }}>Sound Effects:</h4>
+          <h4 style={{ marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: '600' }}>Sound Effects:</h4>
           <div style={{ 
             '--switch-checked-color': getButtonColor(),
             display: 'flex', 
@@ -333,7 +340,8 @@ export const SideMenu: React.FC<SideMenuProps> = ({
             justifyContent: 'space-between', 
             background: 'rgba(255, 255, 255, 0.1)', 
             padding: '8px 12px', 
-            borderRadius: '4px' 
+            borderRadius: '12px',
+            fontSize: '0.9rem'
           } as React.CSSProperties}>
             <span>{soundEnabled ? 'Enabled' : 'Disabled'}</span>
             <Switch 
@@ -355,6 +363,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
         @keyframes slideInRight { from { transform: translateX(100%); opacity: 0.8; } to { transform: translateX(0); opacity: 1; } }
         @keyframes slideOutRight { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0.8; } }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
         .DropdownMenuContent[data-state="open"] { animation: fadeIn 0.1s ease-out, scale-in 0.1s ease-out; }
         .DropdownMenuContent[data-state="closed"] { animation: fade-out 0.1s ease-in, scale-out 0.1s ease-in; }
       `}</style>
