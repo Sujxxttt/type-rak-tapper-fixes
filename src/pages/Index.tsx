@@ -133,7 +133,7 @@ const Index: React.FC = () => {
     } else if (theme === 'cotton-candy-glow') {
       document.body.classList.add('cotton-candy-glow');
     } else {
-      document.body.style.background = 'linear-gradient(45deg, #3f034a 0%, #3f034a 60%, #004a7a 100%)';
+      document.body.style.background = 'linear-gradient(45deg, #3f034a 0%, #3f034a 45%, #004a7a 100%)';
     }
   }, [theme]);
 
@@ -141,9 +141,9 @@ const Index: React.FC = () => {
     const handleCheatCode = (e: KeyboardEvent) => {
       if (e.ctrlKey && e.altKey && e.key === 'Backspace' && testActive) {
         e.preventDefault();
-        // Add 30 seconds to the remaining time by reducing elapsed time
-        setElapsed(prev => Math.max(0, prev - 30));
-        showToast("Cheat activated: +30 seconds of typing time!");
+        // Add 30 seconds to elapsed time (making it seem like user has been typing longer)
+        setElapsed(prev => prev + 30);
+        showToast("Cheat activated: +30 seconds added to your typing time!");
       }
     };
 
@@ -546,7 +546,7 @@ const Index: React.FC = () => {
       color: theme === 'cotton-candy-glow' ? 'white' : 'white',
       background: theme === 'midnight-black' ? '#000000' : 
                  theme === 'cotton-candy-glow' ? 'linear-gradient(45deg, #74d2f1, #69c8e8)' :
-                 'linear-gradient(45deg, #3f034a 0%, #3f034a 60%, #004a7a 100%)',
+                 'linear-gradient(45deg, #3f034a 0%, #3f034a 45%, #004a7a 100%)',
       minHeight: '100vh',
       overflowX: 'hidden'
     }}>
@@ -586,10 +586,11 @@ const Index: React.FC = () => {
               alignItems: 'center',
               marginRight: '20px',
               background: 'rgba(255, 255, 255, 0.1)',
-              borderRadius: '8px',
+              borderRadius: '12px',
               padding: '5px 15px',
               backdropFilter: 'blur(10px)',
-              border: '1px solid rgba(255, 255, 255, 0.3)'
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              transition: 'border-radius 0.3s ease'
             }}>
               <span style={{ marginRight: '10px', fontSize: '1.15rem' }}>User: {currentActiveUser}</span>
               <button 
@@ -616,7 +617,9 @@ const Index: React.FC = () => {
                 color: 'white',
                 fontSize: '1.5rem',
                 cursor: 'pointer',
-                padding: '5px'
+                padding: '5px',
+                borderRadius: '12px',
+                transition: 'border-radius 0.3s ease'
               }}
             >
               ☰
@@ -1109,7 +1112,7 @@ const Index: React.FC = () => {
               fontSize: '3em',
               fontWeight: 'bold',
               marginBottom: '0.5rem',
-              color: theme === 'cotton-candy-glow' ? '#333' : 'white',
+              color: theme === 'cotton-candy-glow' ? 'white' : 'white',
               textAlign: 'center'
             }}>
               <span style={{ fontSize: '0.5em', opacity: 0.8, marginRight: '5px' }}>Score:</span>
@@ -1121,7 +1124,7 @@ const Index: React.FC = () => {
               fontSize: '1.5em',
               marginBottom: '2rem',
               textAlign: 'center',
-              color: theme === 'cotton-candy-glow' ? '#333' : 'white'
+              color: theme === 'cotton-candy-glow' ? 'white' : 'white'
             }}>
               {lastTestResult.score >= 800 ? "Excellent! Impressive Speed and Low Error Rate!" :
                lastTestResult.score >= 600 ? "Great job! Keep practicing!" :
@@ -1172,6 +1175,36 @@ const Index: React.FC = () => {
               </div>
             </div>
 
+            {/* Typed Text Preview Section */}
+            {showTypedPreview && typedText && (
+              <div style={{
+                width: '100%',
+                maxWidth: '700px',
+                background: 'rgba(255, 255, 255, 0.1)',
+                borderRadius: '16px',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                padding: '20px',
+                marginBottom: '1.5rem'
+              }}>
+                <h3 style={{ marginBottom: '15px', textAlign: 'center' }}>Your Typed Text</h3>
+                <div style={{
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  borderRadius: '8px',
+                  padding: '15px',
+                  maxHeight: '200px',
+                  overflowY: 'auto',
+                  fontFamily: 'monospace',
+                  fontSize: '0.9rem',
+                  lineHeight: '1.4',
+                  whiteSpace: 'pre-wrap',
+                  wordBreak: 'break-word'
+                }}>
+                  {typedText}
+                </div>
+              </div>
+            )}
+
             <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
               <button 
                 onClick={() => setShowTypedPreview(prev => !prev)}
@@ -1214,16 +1247,6 @@ const Index: React.FC = () => {
             theme={theme}
             onBack={() => setCurrentScreen('dashboard')}
             getButtonColor={getButtonColor}
-          />
-        )}
-
-        {/* Typed Text Preview Modal */}
-        {currentScreen === 'results' && showTypedPreview && (
-          <TypedTextPreview
-            typedText={typedText}
-            originalText={testText}
-            theme={theme}
-            onClose={() => setShowTypedPreview(false)}
           />
         )}
 
@@ -1421,7 +1444,7 @@ const Index: React.FC = () => {
         
         .char {
           display: inline-block;
-          color: ${theme === 'cotton-candy-glow' ? '#333' : theme === 'midnight-black' ? '#f0f0f0' : '#f5e9f1'};
+          color: ${theme === 'cotton-candy-glow' ? 'white' : theme === 'midnight-black' ? '#f0f0f0' : '#f5e9f1'};
           transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out;
           padding: 0 1px;
           margin: 0;

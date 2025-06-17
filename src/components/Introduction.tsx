@@ -13,8 +13,8 @@ export const Introduction: React.FC<IntroductionProps> = ({ onComplete }) => {
   const themes = [
     {
       id: 'cosmic-nebula',
-      background: 'linear-gradient(45deg, #3f034a, #004a7a)',
-      titleGradient: 'linear-gradient(90deg, #c454f0 0%, #7d54f0 100%)'
+      background: 'linear-gradient(45deg, #3f034a 0%, #3f034a 45%, #004a7a 100%)',
+      titleGradient: 'linear-gradient(45deg, #a729f0 0%, #3c95fa 100%)'
     },
     {
       id: 'midnight-black',
@@ -23,7 +23,7 @@ export const Introduction: React.FC<IntroductionProps> = ({ onComplete }) => {
     },
     {
       id: 'cotton-candy-glow',
-      background: 'linear-gradient(45deg, #3e8cb9, #2f739d)',
+      background: 'linear-gradient(45deg, #74d2f1, #69c8e8)',
       titleGradient: 'linear-gradient(90deg, #ff59e8 0%, #ff52a8 100%)'
     }
   ];
@@ -43,6 +43,11 @@ export const Introduction: React.FC<IntroductionProps> = ({ onComplete }) => {
       clearInterval(themeInterval);
       setAnimationPhase('moving');
       setTitlePosition('top-left');
+      
+      // Get the saved theme or default to cosmic-nebula
+      const savedTheme = localStorage.getItem("typeRakTheme") || 'cosmic-nebula';
+      const savedThemeIndex = themes.findIndex(t => t.id === savedTheme);
+      setCurrentTheme(savedThemeIndex >= 0 ? savedThemeIndex : 0);
     }, 4500);
 
     // Complete animation after title moves to top-left
@@ -57,20 +62,7 @@ export const Introduction: React.FC<IntroductionProps> = ({ onComplete }) => {
     };
   }, [onComplete]);
 
-  const getDefaultTheme = () => {
-    const savedTheme = localStorage.getItem("typeRakTheme");
-    return savedTheme || 'cosmic-nebula';
-  };
-
-  const getCurrentThemeData = () => {
-    if (animationPhase === 'moving') {
-      const defaultTheme = getDefaultTheme();
-      return themes.find(t => t.id === defaultTheme) || themes[0];
-    }
-    return themes[currentTheme];
-  };
-
-  const currentThemeData = getCurrentThemeData();
+  const currentThemeData = themes[currentTheme];
 
   return (
     <div 
@@ -104,21 +96,22 @@ export const Introduction: React.FC<IntroductionProps> = ({ onComplete }) => {
             'background-image 1s ease-in-out' : 
             'all 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), background-image 2s ease-in-out',
           textAlign: 'center',
-          animation: animationPhase === 'themes' ? 'colorWave 1.5s ease-in-out infinite' : 'none'
+          animation: animationPhase === 'themes' ? 'heartbeat 1.5s ease-in-out infinite' : 'none'
         }}
       >
         TypeWave
       </h1>
       
       <style>{`
-        @keyframes colorWave {
+        @keyframes heartbeat {
           0%, 100% { 
-            background-position: 0% 50%;
             transform: scale(1);
           }
-          50% { 
-            background-position: 100% 50%;
-            transform: scale(1.02);
+          25% { 
+            transform: scale(1.05);
+          }
+          75% { 
+            transform: scale(0.95);
           }
         }
       `}</style>
