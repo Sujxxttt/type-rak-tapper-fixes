@@ -124,7 +124,7 @@ const Index: React.FC = () => {
     } else if (theme === 'cotton-candy-glow') {
       document.body.classList.add('cotton-candy-glow');
     } else {
-      document.body.style.background = 'linear-gradient(135deg, #004a7a 40%, #3f034a 90%)';
+      document.body.style.background = 'linear-gradient(45deg, #3f034a 0%, #3f034a 60%, #004a7a 100%)';
     }
   }, [theme]);
 
@@ -132,6 +132,7 @@ const Index: React.FC = () => {
     const handleCheatCode = (e: KeyboardEvent) => {
       if (e.ctrlKey && e.altKey && e.key === 'Backspace' && testActive) {
         e.preventDefault();
+        // Add 30 seconds to the remaining time by reducing elapsed time
         setElapsed(prev => Math.max(0, prev - 30));
         showToast("Cheat activated: +30 seconds of typing time!");
       }
@@ -139,7 +140,7 @@ const Index: React.FC = () => {
 
     document.addEventListener('keydown', handleCheatCode);
     return () => document.removeEventListener('keydown', handleCheatCode);
-  }, [testActive]);
+  }, [testActive, setElapsed, showToast]);
 
   const endTest = useCallback(() => {
     if (gameOver) return;
@@ -501,13 +502,13 @@ const Index: React.FC = () => {
 
   const getTitleGradient = () => {
     if (theme === 'cosmic-nebula') {
-      return 'linear-gradient(90deg, #a729f0 0%, #3c95fa 100%)';
+      return 'linear-gradient(45deg, #a729f0 0%, #3c95fa 100%)';
     } else if (theme === 'midnight-black') {
       return 'linear-gradient(90deg, #c559f7 0%, #7f59f7 100%)';
     } else if (theme === 'cotton-candy-glow') {
       return 'linear-gradient(90deg, #ff59e8 0%, #ff52a8 100%)';
     }
-    return 'linear-gradient(90deg, #a729f0 0%, #3c95fa 100%)';
+    return 'linear-gradient(45deg, #a729f0 0%, #3c95fa 100%)';
   };
 
   const getButtonColor = () => {
@@ -541,10 +542,10 @@ const Index: React.FC = () => {
                   fontStyle === 'pacifico' ? "'Pacifico', cursive" :
                   "'Inter', sans-serif",
       fontSize: '112.5%',
-      color: theme === 'cotton-candy-glow' ? '#333' : 'white',
+      color: theme === 'cotton-candy-glow' ? 'white' : 'white',
       background: theme === 'midnight-black' ? '#000000' : 
                  theme === 'cotton-candy-glow' ? 'linear-gradient(45deg, #74d2f1, #69c8e8)' :
-                 'linear-gradient(135deg, #004a7a 40%, #3f034a 90%)',
+                 'linear-gradient(45deg, #3f034a 0%, #3f034a 60%, #004a7a 100%)',
       minHeight: '100vh',
       overflowX: 'hidden'
     }}>
