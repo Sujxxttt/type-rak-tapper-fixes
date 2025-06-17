@@ -3,17 +3,19 @@ import React, { useState, useEffect } from 'react';
 
 interface IntroductionProps {
   onComplete: () => void;
+  onReplay?: () => void;
 }
 
-export const Introduction: React.FC<IntroductionProps> = ({ onComplete }) => {
+export const Introduction: React.FC<IntroductionProps> = ({ onComplete, onReplay }) => {
   const [currentTheme, setCurrentTheme] = useState(0);
   const [animationPhase, setAnimationPhase] = useState('themes'); // 'themes' or 'moving'
   const [titlePosition, setTitlePosition] = useState('center');
+  const [isReplay, setIsReplay] = useState(false);
 
   const themes = [
     {
       id: 'cosmic-nebula',
-      background: 'linear-gradient(45deg, #3f034a 0%, #3f034a 45%, #004a7a 100%)',
+      background: 'linear-gradient(135deg, #3f034a 40%, #004a7a 60%)',
       titleGradient: 'linear-gradient(45deg, #a729f0 0%, #3c95fa 100%)'
     },
     {
@@ -52,7 +54,11 @@ export const Introduction: React.FC<IntroductionProps> = ({ onComplete }) => {
 
     // Complete animation after title moves to top-left
     completeTimeout = setTimeout(() => {
-      onComplete();
+      if (onReplay && isReplay) {
+        onReplay();
+      } else {
+        onComplete();
+      }
     }, 6000);
 
     return () => {
@@ -60,7 +66,14 @@ export const Introduction: React.FC<IntroductionProps> = ({ onComplete }) => {
       clearTimeout(phaseTimeout);
       clearTimeout(completeTimeout);
     };
-  }, [onComplete]);
+  }, [onComplete, onReplay, isReplay]);
+
+  const replayAnimation = () => {
+    setIsReplay(true);
+    setCurrentTheme(0);
+    setAnimationPhase('themes');
+    setTitlePosition('center');
+  };
 
   const currentThemeData = themes[currentTheme];
 
@@ -83,6 +96,7 @@ export const Introduction: React.FC<IntroductionProps> = ({ onComplete }) => {
       }}
     >
       <h1 
+        onClick={replayAnimation}
         style={{
           backgroundImage: currentThemeData.titleGradient,
           WebkitBackgroundClip: 'text',
@@ -96,7 +110,8 @@ export const Introduction: React.FC<IntroductionProps> = ({ onComplete }) => {
             'background-image 1s ease-in-out' : 
             'all 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), background-image 2s ease-in-out',
           textAlign: 'center',
-          animation: animationPhase === 'themes' ? 'heartbeat 1.5s ease-in-out infinite' : 'none'
+          animation: animationPhase === 'themes' ? 'heartbeat 1.5s ease-in-out infinite' : 'none',
+          cursor: titlePosition === 'top-left' ? 'pointer' : 'default'
         }}
       >
         TypeWave

@@ -11,6 +11,7 @@ export const useTypingGame = () => {
   const [totalErrors, setTotalErrors] = useState<number>(0);
   const [actualTypedCount, setActualTypedCount] = useState<number>(0);
   const [wasLastError, setWasLastError] = useState<boolean>(false);
+  const [cheatTimeAdded, setCheatTimeAdded] = useState<number>(0);
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const textFlowRef = useRef<HTMLDivElement>(null);
@@ -123,6 +124,7 @@ export const useTypingGame = () => {
     setCorrectCharacters(0);
     setActualTypedCount(0);
     setWasLastError(false);
+    setCheatTimeAdded(0);
     usedWordsRef.current = [];
     generatedTextRef.current = '';
     wordListUsedRef.current = false;
@@ -148,6 +150,10 @@ export const useTypingGame = () => {
     return (totalErrors / actualTypedCount) * 100;
   };
 
+  const addCheatTime = () => {
+    setCheatTimeAdded(prev => prev + 30);
+  };
+
   return {
     gameOver,
     setGameOver,
@@ -167,6 +173,7 @@ export const useTypingGame = () => {
     setActualTypedCount,
     wasLastError,
     setWasLastError,
+    cheatTimeAdded,
     timerRef,
     generateWords,
     renderText,
@@ -174,6 +181,7 @@ export const useTypingGame = () => {
     resetTest,
     extendText,
     getCurrentWPM,
-    getCurrentErrorRate
+    getCurrentErrorRate,
+    addCheatTime
   };
 };

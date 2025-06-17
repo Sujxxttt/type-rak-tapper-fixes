@@ -13,8 +13,9 @@ import { useLocalStorage } from '../hooks/useLocalStorage';
 import { useSoundEffects } from '../hooks/useSoundEffects';
 
 const Index: React.FC = () => {
-  // Introduction state - show on every reload
+  // Introduction state
   const [showIntroduction, setShowIntroduction] = useState(true);
+  const [titleClickCount, setTitleClickCount] = useState(0);
   
   // Global state variables
   const [usersList, setUsersList] = useLocalStorage<string[]>("typeRakUsersList", []);
@@ -45,6 +46,15 @@ const Index: React.FC = () => {
   const messageTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
   const startMessageTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
+  // Define showToast function early
+  const showToast = (msg: string, isError = false) => {
+    setMessage(msg);
+    if (messageTimeoutRef.current) {
+      clearTimeout(messageTimeoutRef.current);
+    }
+    messageTimeoutRef.current = setTimeout(() => setMessage(''), 5000);
+  };
+
   // Use the typing game hook
   const {
     gameOver,
@@ -65,6 +75,7 @@ const Index: React.FC = () => {
     setActualTypedCount,
     wasLastError,
     setWasLastError,
+    cheatTimeAdded,
     timerRef,
     generateWords,
     renderText,
@@ -72,20 +83,12 @@ const Index: React.FC = () => {
     resetTest,
     extendText,
     getCurrentWPM,
-    getCurrentErrorRate
+    getCurrentErrorRate,
+    addCheatTime
   } = useTypingGame();
 
   // Use sound effects
   const { playKeyboardSound, playErrorSound } = useSoundEffects(soundEnabled);
-
-  // Define showToast function before useEffects that use it
-  const showToast = (msg: string, isError = false) => {
-    setMessage(msg);
-    if (messageTimeoutRef.current) {
-      clearTimeout(messageTimeoutRef.current);
-    }
-    messageTimeoutRef.current = setTimeout(() => setMessage(''), 5000);
-  };
 
   // Show introduction on first load
   useEffect(() => {
@@ -93,6 +96,18 @@ const Index: React.FC = () => {
   }, []);
 
   const handleIntroComplete = () => {
+    setShowIntroduction(false);
+  };
+
+  const handleTitleClick = () => {
+    setTitleClickCount(prev => prev + 1);
+    if (titleClickCount >= 2) {
+      setShowIntroduction(true);
+      setTitleClickCount(0);
+    }
+  };
+
+  const handleIntroReplay = () => {
     setShowIntroduction(false);
   };
 
@@ -133,7 +148,7 @@ const Index: React.FC = () => {
     } else if (theme === 'cotton-candy-glow') {
       document.body.classList.add('cotton-candy-glow');
     } else {
-      document.body.style.background = 'linear-gradient(45deg, #3f034a 0%, #3f034a 45%, #004a7a 100%)';
+      document.body.style.background = 'linear-gradient(135deg, #3f034a 40%, #004a7a 60%)';
     }
   }, [theme]);
 
@@ -141,15 +156,14 @@ const Index: React.FC = () => {
     const handleCheatCode = (e: KeyboardEvent) => {
       if (e.ctrlKey && e.altKey && e.key === 'Backspace' && testActive) {
         e.preventDefault();
-        // Add 30 seconds to elapsed time (making it seem like user has been typing longer)
-        setElapsed(prev => prev + 30);
-        showToast("Cheat activated: +30 seconds added to your typing time!");
+        addCheatTime();
+        showToast("Cheat activated: +30 seconds of typing time added!");
       }
     };
 
     document.addEventListener('keydown', handleCheatCode);
     return () => document.removeEventListener('keydown', handleCheatCode);
-  }, [testActive, setElapsed, showToast]);
+  }, [testActive, addCheatTime, showToast]);
 
   const endTest = useCallback(() => {
     if (gameOver) return;
@@ -159,7 +173,8 @@ const Index: React.FC = () => {
       correctCharacters,
       totalErrors,
       actualTypedCount,
-      typedTextLength: typedText.length
+      typedTextLength: typedText.length,
+      cheatTimeAdded
     });
 
     setGameOver(true);
@@ -169,9 +184,10 @@ const Index: React.FC = () => {
       timerRef.current = null;
     }
     
-    const testDuration = elapsed > 0 ? elapsed : 1; // Use actual elapsed time
+    const testDuration = elapsed > 0 ? elapsed : 1;
+    const effectiveTime = Math.max(1, testDuration - cheatTimeAdded);
     
-    const mins = testDuration / 60;
+    const mins = effectiveTime / 60;
     const speed = Math.round(Math.max(0, (correctCharacters / 5) / mins));
     const errorRate = actualTypedCount > 0 ? ((totalErrors / actualTypedCount) * 100) : 0;
     const score = Math.round(speed * Math.max(0, (100 - errorRate) / 100) * 10);
@@ -183,7 +199,8 @@ const Index: React.FC = () => {
       speed,
       errorRate,
       score,
-      testDuration: duration // Log the configured duration
+      testDuration: duration,
+      effectiveTime
     });
     
     const testResult = {
@@ -192,7 +209,7 @@ const Index: React.FC = () => {
       wpm: speed,
       errorRate: parseFloat(errorRate.toFixed(2)),
       errors: totalErrors,
-      time: duration, // Always log the configured test time
+      time: duration,
       characters: actualTypedCount,
       correctChars: correctCharacters,
       score: score
@@ -241,7 +258,7 @@ const Index: React.FC = () => {
     gameOver, correctCharacters, totalErrors, actualTypedCount, elapsed,
     duration, testResults, allTestHistory, currentTestName, currentActiveUser, 
     setGameOver, setTestActive, timerRef, setLastTestResult, setAllTestHistory, 
-    setTestResults, setCurrentScreen
+    setTestResults, setCurrentScreen, cheatTimeAdded
   ]);
 
   useEffect(() => {
@@ -255,7 +272,6 @@ const Index: React.FC = () => {
     
     if (gameOver) return;
 
-    // Disable backspace completely during active tests
     if (e.key === "Backspace") {
       e.preventDefault();
       return;
@@ -263,7 +279,6 @@ const Index: React.FC = () => {
     
     e.preventDefault();
     
-    // Hide start message when first key is pressed
     if (showStartMessage) {
       setShowStartMessage(false);
       if (startMessageTimeoutRef.current) {
@@ -280,7 +295,6 @@ const Index: React.FC = () => {
     
     if (!testActive) return;
     
-    // Check if we need to extend text
     if (pos >= testText.length - 100) {
       const newText = extendText();
       renderText(newText);
@@ -292,10 +306,8 @@ const Index: React.FC = () => {
     if (typedChar && typedChar.length === 1) {
       console.log('Processing character:', typedChar, 'Expected:', expectedChar, 'Position:', pos);
       
-      // Update typed text immediately
       setTypedText(prev => prev + typedChar);
       
-      // Update actual typed count immediately
       setActualTypedCount(prev => {
         const newCount = prev + 1;
         console.log('Updated typed count to:', newCount);
@@ -303,7 +315,6 @@ const Index: React.FC = () => {
       });
       
       if (expectedChar === typedChar) {
-        // Correct character
         if (chars[pos]) {
           chars[pos].classList.remove("incorrect");
           chars[pos].classList.add("correct");
@@ -317,7 +328,6 @@ const Index: React.FC = () => {
         setWasLastError(false);
         playKeyboardSound();
       } else {
-        // Incorrect character
         if (!wasLastError) {
           setTotalErrors(prev => {
             const newTotal = prev + 1;
@@ -329,7 +339,6 @@ const Index: React.FC = () => {
         if (chars[pos]) {
           chars[pos].classList.add("incorrect");
         }
-        // Still advance position to continue typing
         setPos(prev => prev + 1);
         playErrorSound();
       }
@@ -373,7 +382,6 @@ const Index: React.FC = () => {
     setTypedText('');
     setShowTypedPreview(false);
     
-    // Show start message for 15 seconds
     if (startMessageTimeoutRef.current) {
       clearTimeout(startMessageTimeoutRef.current);
     }
@@ -530,7 +538,7 @@ const Index: React.FC = () => {
 
   // Show introduction first - always
   if (showIntroduction) {
-    return <Introduction onComplete={handleIntroComplete} />;
+    return <Introduction onComplete={handleIntroComplete} onReplay={handleIntroReplay} />;
   }
 
   return (
@@ -543,10 +551,10 @@ const Index: React.FC = () => {
                   fontStyle === 'pacifico' ? "'Pacifico', cursive" :
                   "'Inter', sans-serif",
       fontSize: '112.5%',
-      color: theme === 'cotton-candy-glow' ? 'white' : 'white',
+      color: 'white',
       background: theme === 'midnight-black' ? '#000000' : 
                  theme === 'cotton-candy-glow' ? 'linear-gradient(45deg, #74d2f1, #69c8e8)' :
-                 'linear-gradient(45deg, #3f034a 0%, #3f034a 45%, #004a7a 100%)',
+                 'linear-gradient(135deg, #3f034a 40%, #004a7a 60%)',
       minHeight: '100vh',
       overflowX: 'hidden'
     }}>
@@ -566,17 +574,22 @@ const Index: React.FC = () => {
           zIndex: 10
         }}>
           <div>
-            <h1 style={{
-              backgroundImage: getTitleGradient(),
-              WebkitBackgroundClip: 'text',
-              backgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              color: 'transparent',
-              fontSize: '2.5rem',
-              fontWeight: 700,
-              margin: 0,
-              fontFamily: "'Inter', sans-serif"
-            }}>
+            <h1 
+              onClick={handleTitleClick}
+              style={{
+                backgroundImage: getTitleGradient(),
+                WebkitBackgroundClip: 'text',
+                backgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                color: 'transparent',
+                fontSize: '2.5rem',
+                fontWeight: 700,
+                margin: 0,
+                fontFamily: "'Inter', sans-serif",
+                cursor: 'pointer',
+                userSelect: 'none'
+              }}
+            >
               TypeWave
             </h1>
           </div>
@@ -1012,7 +1025,6 @@ const Index: React.FC = () => {
                   setShowReturnConfirm(false);
                   setShowStartMessage(true);
                   
-                  // Show start message for 15 seconds
                   if (startMessageTimeoutRef.current) {
                     clearTimeout(startMessageTimeoutRef.current);
                   }
@@ -1053,7 +1065,6 @@ const Index: React.FC = () => {
               </button>
             </div>
 
-            {/* Fixed Return Button with Glass Style */}
             <div style={{
               position: 'fixed',
               bottom: '30px',
@@ -1112,7 +1123,7 @@ const Index: React.FC = () => {
               fontSize: '3em',
               fontWeight: 'bold',
               marginBottom: '0.5rem',
-              color: theme === 'cotton-candy-glow' ? 'white' : 'white',
+              color: 'white',
               textAlign: 'center'
             }}>
               <span style={{ fontSize: '0.5em', opacity: 0.8, marginRight: '5px' }}>Score:</span>
@@ -1124,7 +1135,7 @@ const Index: React.FC = () => {
               fontSize: '1.5em',
               marginBottom: '2rem',
               textAlign: 'center',
-              color: theme === 'cotton-candy-glow' ? 'white' : 'white'
+              color: 'white'
             }}>
               {lastTestResult.score >= 800 ? "Excellent! Impressive Speed and Low Error Rate!" :
                lastTestResult.score >= 600 ? "Great job! Keep practicing!" :
@@ -1400,6 +1411,28 @@ const Index: React.FC = () => {
             }}
           >
             WhatsApp
+          </a>
+          <a 
+            href="https://raktherock.github.io/Rak/" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            style={{ 
+              color: 'white', 
+              textDecoration: 'none', 
+              fontSize: '0.9rem',
+              transition: 'color 0.3s ease'
+            }}
+            onMouseEnter={(e) => {
+              const target = e.target as HTMLElement;
+              target.style.color = theme === 'midnight-black' ? '#c559f7' : 
+                                   theme === 'cotton-candy-glow' ? '#ff59e8' : '#8a2be2';
+            }}
+            onMouseLeave={(e) => {
+              const target = e.target as HTMLElement;
+              target.style.color = 'white';
+            }}
+          >
+            Check this out
           </a>
           <a 
             href="mailto:rakshankumaraa@gmail.com" 
