@@ -78,6 +78,15 @@ const Index: React.FC = () => {
   // Use sound effects
   const { playKeyboardSound, playErrorSound } = useSoundEffects(soundEnabled);
 
+  // Define showToast function before useEffects that use it
+  const showToast = (msg: string, isError = false) => {
+    setMessage(msg);
+    if (messageTimeoutRef.current) {
+      clearTimeout(messageTimeoutRef.current);
+    }
+    messageTimeoutRef.current = setTimeout(() => setMessage(''), 5000);
+  };
+
   // Show introduction on first load
   useEffect(() => {
     setShowIntroduction(false);
@@ -389,14 +398,6 @@ const Index: React.FC = () => {
 
   const applyTheme = (newTheme: string) => {
     setTheme(newTheme);
-  };
-
-  const showToast = (msg: string, isError = false) => {
-    setMessage(msg);
-    if (messageTimeoutRef.current) {
-      clearTimeout(messageTimeoutRef.current);
-    }
-    messageTimeoutRef.current = setTimeout(() => setMessage(''), 5000);
   };
 
   const closeToast = () => {
