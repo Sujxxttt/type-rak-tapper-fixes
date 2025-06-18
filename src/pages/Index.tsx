@@ -1,9 +1,5 @@
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { GetServerSideProps } from 'next';
-import { useSession, signIn, signOut } from 'next-auth/react';
-import { useRouter } from 'next/router';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 import { Settings } from 'lucide-react';
 import { SideMenu } from '@/components/SideMenu';
 import { Introduction } from '@/components/Introduction';
@@ -21,9 +17,6 @@ interface TestHistory {
 }
 
 export default function Index() {
-  const { data: session } = useSession();
-  const router = useRouter();
-
   const [showIntroduction, setShowIntroduction] = useState(true);
   const [sideMenuOpen, setSideMenuOpen] = useState(false);
   const [historyPageOpen, setHistoryPageOpen] = useState(false);
@@ -60,6 +53,7 @@ export default function Index() {
     pos,
     setPos,
     chars,
+    setChars,
     testText,
     correctCharacters,
     setCorrectCharacters,
@@ -243,54 +237,14 @@ export default function Index() {
     }
   }, [elapsed, duration, testActive, cheatTimeAdded]);
 
-  useEffect(() => {
-    if (!session) return;
-
-    const fetchUsers = async () => {
-      try {
-        const response = await fetch('/api/users');
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        setUsersList(data.users);
-      } catch (error) {
-        console.error("Could not fetch users:", error);
-        toast.error('Failed to load users. Please try again.');
-      }
-    };
-
-    fetchUsers();
-  }, [session]);
-
   const switchUser = (username: string) => {
     setCurrentActiveUser(username);
   };
 
   const handleCreateUser = async (username: string) => {
-    if (!session) return;
-
-    try {
-      const response = await fetch('/api/users', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      setUsersList(data.users);
-      setCurrentActiveUser(username);
-      toast.success('User created successfully!');
-    } catch (error) {
-      console.error("Could not create user:", error);
-      toast.error('Failed to create user. Please try again.');
-    }
+    // Mock implementation for now
+    setUsersList(prev => [...prev, username]);
+    setCurrentActiveUser(username);
   };
 
   const handleDeleteUser = async () => {
@@ -301,28 +255,9 @@ export default function Index() {
       return;
     }
 
-    try {
-      const response = await fetch('/api/users', {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username: currentActiveUser }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      setUsersList(data.users);
-      setCurrentActiveUser(null);
-      setDeleteConfirmState(false);
-      toast.success('User deleted successfully!');
-    } catch (error) {
-      console.error("Could not delete user:", error);
-      toast.error('Failed to delete user. Please try again.');
-    }
+    setUsersList(prev => prev.filter(user => user !== currentActiveUser));
+    setCurrentActiveUser(null);
+    setDeleteConfirmState(false);
   };
 
   const handleHistoryClick = () => {
@@ -420,18 +355,6 @@ export default function Index() {
         soundEnabled={soundEnabled}
         setSoundEnabled={setSoundEnabled}
       />
-      <ToastContainer
-        position="top-right"
-        autoClose={5000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="dark"
-      />
 
       {showScrollMessage && (
         <div style={{
@@ -494,13 +417,6 @@ export default function Index() {
         paddingTop: '4rem', // Moved content down by 2cm
         minHeight: 'calc(100vh - 4rem)' 
       }}>
-        <TestNameMenu 
-          usersList={usersList}
-          currentActiveUser={currentActiveUser || ''}
-          switchUser={switchUser}
-          handleCreateUser={handleCreateUser}
-        />
-
         {/* Text flow container with smooth animations */}
         <div style={{ 
           width: '90%', 

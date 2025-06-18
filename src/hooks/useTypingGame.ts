@@ -1,3 +1,4 @@
+
 import { useState, useRef, useCallback } from 'react';
 
 export const useTypingGame = () => {
@@ -164,6 +165,7 @@ export const useTypingGame = () => {
     pos,
     setPos,
     chars,
+    setChars,
     testText,
     correctCharacters,
     setCorrectCharacters,
