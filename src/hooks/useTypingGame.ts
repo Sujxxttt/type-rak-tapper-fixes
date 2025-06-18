@@ -1,4 +1,3 @@
-
 import { useState, useRef, useCallback } from 'react';
 
 export const useTypingGame = () => {
@@ -152,7 +151,7 @@ export const useTypingGame = () => {
   };
 
   const addCheatTime = () => {
-    setElapsed(prev => prev + 30);
+    setCheatTimeAdded(prev => prev + 30);
   };
 
   return {
@@ -165,7 +164,6 @@ export const useTypingGame = () => {
     pos,
     setPos,
     chars,
-    setChars,
     testText,
     correctCharacters,
     setCorrectCharacters,

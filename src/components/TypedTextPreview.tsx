@@ -15,41 +15,26 @@ export const TypedTextPreview: React.FC<TypedTextPreviewProps> = ({
   theme,
   onClose,
 }) => {
-  const getCorrectColor = () => {
-    switch (theme) {
-      case 'midnight-black':
-        return '#ae1ee3';
-      case 'cotton-candy-glow':
-        return '#ff1fbc';
-      case 'cosmic-nebula':
-      default:
-        return '#21b1ff';
-    }
-  };
-
   const renderTypedText = () => {
     const result = [];
-    const maxLength = Math.max(typedText.length, originalText.length);
-    const correctColor = getCorrectColor();
+    const textToRender = typedText;
 
-    for (let i = 0; i < maxLength; i++) {
-      const typedChar = typedText[i];
+    for (let i = 0; i < textToRender.length; i++) {
+      const typedChar = textToRender[i];
       const originalChar = originalText[i];
       
-      if (i < typedText.length) {
-        if (typedChar === originalChar) {
-          result.push(
-            <span key={i} style={{ color: correctColor }}>
-              {typedChar === ' ' ? '\u00A0' : typedChar}
-            </span>
-          );
-        } else {
-          result.push(
-            <span key={i} style={{ color: '#ff1c14', backgroundColor: 'rgba(255, 28, 20, 0.3)', borderRadius: '2px', padding: '0 1px' }}>
-              {typedChar === ' ' ? '\u00A0' : typedChar}
-            </span>
-          );
-        }
+      if (typedChar === originalChar) {
+        result.push(
+          <span key={i} style={{ color: theme === 'midnight-black' ? '#ae1ee3' : theme === 'cotton-candy-glow' ? '#ff1fbc' : '#21b1ff' }}>
+            {typedChar === ' ' ? '\u00A0' : typedChar}
+          </span>
+        );
+      } else {
+        result.push(
+          <span key={i} style={{ color: '#ff1c14', backgroundColor: 'rgba(255, 28, 20, 0.3)', borderRadius: '2px', padding: '0 1px' }}>
+            {typedChar === ' ' ? '\u00A0' : originalChar === ' ' ? '\u00A0' : typedChar}
+          </span>
+        );
       }
     }
     
@@ -120,7 +105,7 @@ export const TypedTextPreview: React.FC<TypedTextPreviewProps> = ({
           color: theme === 'cotton-candy-glow' ? 'rgba(51, 51, 51, 0.7)' : 'rgba(255, 255, 255, 0.7)'
         }}>
           <div style={{ marginBottom: '5px' }}>
-            <span style={{ color: getCorrectColor() }}>■</span> Correctly typed
+            <span style={{ color: theme === 'midnight-black' ? '#ae1ee3' : theme === 'cotton-candy-glow' ? '#ff1fbc' : '#21b1ff' }}>■</span> Correctly typed
           </div>
           <div>
             <span style={{ color: '#ff1c14' }}>■</span> Incorrectly typed

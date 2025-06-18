@@ -11,14 +11,12 @@ export const Introduction: React.FC<IntroductionProps> = ({ onComplete, onReplay
   const [animationPhase, setAnimationPhase] = useState('themes'); // 'themes' or 'moving'
   const [titlePosition, setTitlePosition] = useState('center');
   const [isReplay, setIsReplay] = useState(false);
-  const [clickCount, setClickCount] = useState(0);
-  const [showClickMessage, setShowClickMessage] = useState('');
 
   const themes = [
     {
       id: 'cosmic-nebula',
-      background: 'linear-gradient(45deg, #b109d6 35%, #0c6dc2 100%)',
-      titleGradient: 'linear-gradient(45deg, #b109d6 0%, #0c6dc2 100%)'
+      background: 'linear-gradient(135deg, #3f034a 42%, #004a7a 58%)',
+      titleGradient: 'linear-gradient(45deg, #a729f0 0%, #3c95fa 100%)'
     },
     {
       id: 'midnight-black',
@@ -30,12 +28,6 @@ export const Introduction: React.FC<IntroductionProps> = ({ onComplete, onReplay
       background: 'linear-gradient(45deg, #74d2f1, #69c8e8)',
       titleGradient: 'linear-gradient(90deg, #ff59e8 0%, #ff52a8 100%)'
     }
-  ];
-
-  const clickMessages = [
-    'keep clicking !!!',
-    'Try again !!!',
-    'Once more ??'
   ];
 
   useEffect(() => {
@@ -76,30 +68,11 @@ export const Introduction: React.FC<IntroductionProps> = ({ onComplete, onReplay
     };
   }, [onComplete, onReplay, isReplay]);
 
-  useEffect(() => {
-    if (showClickMessage) {
-      const timer = setTimeout(() => {
-        setShowClickMessage('');
-      }, 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [showClickMessage]);
-
-  const handleTitleClick = () => {
-    if (titlePosition === 'top-left') {
-      if (clickCount < 3) {
-        setShowClickMessage(clickMessages[clickCount]);
-        setClickCount(prev => prev + 1);
-      } else {
-        // Start animation
-        setIsReplay(true);
-        setCurrentTheme(0);
-        setAnimationPhase('themes');
-        setTitlePosition('center');
-        setClickCount(0);
-        setShowClickMessage('');
-      }
-    }
+  const replayAnimation = () => {
+    setIsReplay(true);
+    setCurrentTheme(0);
+    setAnimationPhase('themes');
+    setTitlePosition('center');
   };
 
   const currentThemeData = themes[currentTheme];
@@ -113,7 +86,7 @@ export const Introduction: React.FC<IntroductionProps> = ({ onComplete, onReplay
         right: 0,
         bottom: 0,
         background: currentThemeData.background,
-        transition: animationPhase === 'themes' ? 'background 1.5s ease-in-out' : 'background 2s ease-in-out',
+        transition: animationPhase === 'themes' ? 'background 1s ease-in-out' : 'background 2s ease-in-out',
         display: 'flex',
         alignItems: titlePosition === 'center' ? 'center' : 'flex-start',
         justifyContent: titlePosition === 'center' ? 'center' : 'flex-start',
@@ -123,7 +96,7 @@ export const Introduction: React.FC<IntroductionProps> = ({ onComplete, onReplay
       }}
     >
       <h1 
-        onClick={handleTitleClick}
+        onClick={replayAnimation}
         style={{
           backgroundImage: currentThemeData.titleGradient,
           WebkitBackgroundClip: 'text',
@@ -134,35 +107,15 @@ export const Introduction: React.FC<IntroductionProps> = ({ onComplete, onReplay
           fontWeight: 700,
           margin: 0,
           transition: animationPhase === 'themes' ? 
-            'background-image 1.5s ease-in-out' : 
+            'background-image 1s ease-in-out' : 
             'all 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), background-image 2s ease-in-out',
           textAlign: 'center',
-          animation: animationPhase === 'themes' ? 'heartbeat 2s ease-in-out infinite' : 'none',
+          animation: animationPhase === 'themes' ? 'heartbeat 2.5s ease-in-out infinite' : 'none',
           cursor: titlePosition === 'top-left' ? 'pointer' : 'default'
         }}
       >
         TypeWave
       </h1>
-
-      {showClickMessage && titlePosition === 'top-left' && (
-        <div style={{
-          position: 'fixed',
-          top: '80px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          background: 'rgba(255, 255, 255, 0.1)',
-          backdropFilter: 'blur(10px)',
-          border: '1px solid rgba(255, 255, 255, 0.2)',
-          borderRadius: '8px',
-          padding: '10px 20px',
-          color: 'white',
-          fontSize: '0.9rem',
-          zIndex: 10000,
-          animation: 'fadeIn 0.3s ease-out'
-        }}>
-          {showClickMessage}
-        </div>
-      )}
       
       <style>{`
         @keyframes heartbeat {
@@ -175,10 +128,6 @@ export const Introduction: React.FC<IntroductionProps> = ({ onComplete, onReplay
           75% { 
             transform: scale(0.97);
           }
-        }
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateX(-50%) translateY(-10px); }
-          to { opacity: 1; transform: translateX(-50%) translateY(0); }
         }
       `}</style>
     </div>
