@@ -6,15 +6,19 @@ interface IntroductionProps {
   onReplay?: () => void;
   clickCount?: number;
   onTitleClick?: () => void;
+  currentTheme?: string;
+  isFromTitleClick?: boolean;
 }
 
 export const Introduction: React.FC<IntroductionProps> = ({ 
   onComplete, 
   onReplay, 
   clickCount = 0, 
-  onTitleClick 
+  onTitleClick,
+  currentTheme = 'cosmic-nebula',
+  isFromTitleClick = false
 }) => {
-  const [currentTheme, setCurrentTheme] = useState(0);
+  const [currentThemeIndex, setCurrentThemeIndex] = useState(0);
   const [animationPhase, setAnimationPhase] = useState('themes');
   const [titlePosition, setTitlePosition] = useState('center');
   const [isReplay, setIsReplay] = useState(false);
@@ -22,8 +26,8 @@ export const Introduction: React.FC<IntroductionProps> = ({
   const themes = [
     {
       id: 'cosmic-nebula',
-      background: 'linear-gradient(45deg, #400354, #03568c)',
-      titleGradient: 'linear-gradient(45deg, #a729f0 0%, #3c95fa 100%)'
+      background: 'linear-gradient(135deg, #400354, #03568c)',
+      titleGradient: 'linear-gradient(45deg, #b109d6 0%, #0c6dc2 100%)'
     },
     {
       id: 'midnight-black',
@@ -37,14 +41,22 @@ export const Introduction: React.FC<IntroductionProps> = ({
     }
   ];
 
+  // Find the current theme index
+  const getCurrentThemeIndex = () => {
+    return themes.findIndex(t => t.id === currentTheme);
+  };
+
   useEffect(() => {
     let themeInterval: NodeJS.Timeout;
     let phaseTimeout: NodeJS.Timeout;
     let completeTimeout: NodeJS.Timeout;
 
+    // Start with cosmic nebula theme (index 0)
+    setCurrentThemeIndex(0);
+
     // Theme switching phase
     themeInterval = setInterval(() => {
-      setCurrentTheme(prev => (prev + 1) % themes.length);
+      setCurrentThemeIndex(prev => (prev + 1) % themes.length);
     }, 1500);
 
     // After 3 theme cycles (4.5 seconds), switch to moving phase
@@ -53,15 +65,17 @@ export const Introduction: React.FC<IntroductionProps> = ({
       setAnimationPhase('moving');
       setTitlePosition('top-left');
       
-      // Get the saved theme or default to cosmic-nebula
-      const savedTheme = localStorage.getItem("typeRakTheme") || 'cosmic-nebula';
-      const savedThemeIndex = themes.findIndex(t => t.id === savedTheme);
-      setCurrentTheme(savedThemeIndex >= 0 ? savedThemeIndex : 0);
+      // Set to the actual current theme for the final transition
+      const actualThemeIndex = getCurrentThemeIndex();
+      setCurrentThemeIndex(actualThemeIndex >= 0 ? actualThemeIndex : 0);
     }, 4500);
 
     // Complete animation after title moves to top-left
     completeTimeout = setTimeout(() => {
-      if (onReplay && isReplay) {
+      if (isFromTitleClick) {
+        // If clicked from title, go to easter egg instead
+        window.dispatchEvent(new CustomEvent('showEasterEgg'));
+      } else if (onReplay && isReplay) {
         onReplay();
       } else {
         onComplete();
@@ -73,20 +87,20 @@ export const Introduction: React.FC<IntroductionProps> = ({
       clearTimeout(phaseTimeout);
       clearTimeout(completeTimeout);
     };
-  }, [onComplete, onReplay, isReplay]);
+  }, [onComplete, onReplay, isReplay, currentTheme, isFromTitleClick]);
 
   const replayAnimation = () => {
     if (onTitleClick) {
       onTitleClick();
     } else {
       setIsReplay(true);
-      setCurrentTheme(0);
+      setCurrentThemeIndex(0);
       setAnimationPhase('themes');
       setTitlePosition('center');
     }
   };
 
-  const currentThemeData = themes[currentTheme];
+  const currentThemeData = themes[currentThemeIndex];
 
   return (
     <div 

@@ -101,7 +101,8 @@ const Index: React.FC = () => {
 
   // Show introduction on first load
   useEffect(() => {
-    setShowIntroduction(false);
+    // Don't automatically hide - let it play
+    setShowIntroduction(true);
   }, []);
 
   const handleIntroComplete = () => {
@@ -139,6 +140,17 @@ const Index: React.FC = () => {
   const handleIntroReplay = () => {
     setShowIntroduction(false);
   };
+
+  // Handle easter egg event
+  useEffect(() => {
+    const handleEasterEgg = () => {
+      setShowEasterEgg(true);
+      setShowIntroduction(false);
+    };
+
+    window.addEventListener('showEasterEgg', handleEasterEgg);
+    return () => window.removeEventListener('showEasterEgg', handleEasterEgg);
+  }, []);
 
   // Handle scroll easter egg
   useEffect(() => {
@@ -227,7 +239,7 @@ const Index: React.FC = () => {
       document.body.classList.add('cotton-candy-glow');
       document.body.style.background = 'linear-gradient(45deg, #74d2f1, #69c8e8)';
     } else {
-      document.body.style.background = 'linear-gradient(45deg, #400354, #03568c)';
+      document.body.style.background = 'linear-gradient(135deg, #400354, #03568c)';
     }
   }, [theme]);
 
@@ -593,25 +605,26 @@ const Index: React.FC = () => {
 
   const getTitleGradient = () => {
     if (theme === 'cosmic-nebula') {
-      return 'linear-gradient(45deg, #a729f0 0%, #3c95fa 100%)';
+      return 'linear-gradient(45deg, #b109d6 0%, #0c6dc2 100%)';
     } else if (theme === 'midnight-black') {
       return 'linear-gradient(90deg, #c559f7 0%, #7f59f7 100%)';
     } else if (theme === 'cotton-candy-glow') {
-      return 'linear-gradient(90deg, #ff59e8 0%, #ff52a8 100%)';
+      // Made 15% brighter
+      return 'linear-gradient(90deg, #ff66ec 0%, #ff5bb0 100%)';
     }
-    return 'linear-gradient(45deg, #a729f0 0%, #3c95fa 100%)';
+    return 'linear-gradient(45deg, #b109d6 0%, #0c6dc2 100%)';
   };
 
   const getButtonColor = () => {
     switch (theme) {
       case 'cosmic-nebula':
-        return '#a729f0';
+        return 'rgba(136, 23, 207, 0.7)'; // #8817cf with 30% less transparency
       case 'midnight-black':
         return '#6a0dad';
       case 'cotton-candy-glow':
-        return '#af01af';
+        return '#ff38eb';
       default:
-        return '#a729f0';
+        return 'rgba(136, 23, 207, 0.7)';
     }
   };
 
@@ -625,6 +638,8 @@ const Index: React.FC = () => {
       onReplay={handleIntroReplay}
       clickCount={titleClickCount}
       onTitleClick={handleTitleClick}
+      currentTheme={theme}
+      isFromTitleClick={titleClickCount >= 3}
     />;
   }
 
@@ -646,7 +661,7 @@ const Index: React.FC = () => {
       color: 'white',
       background: theme === 'midnight-black' ? '#000000' : 
                  theme === 'cotton-candy-glow' ? 'linear-gradient(45deg, #74d2f1, #69c8e8)' :
-                 'linear-gradient(45deg, #400354, #03568c)',
+                 'linear-gradient(135deg, #400354, #03568c)', // Fixed gradient direction
       minHeight: '100vh',
       overflowX: 'hidden',
       transition: 'background 0.5s ease-in-out'

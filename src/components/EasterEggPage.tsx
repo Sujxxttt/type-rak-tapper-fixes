@@ -14,7 +14,7 @@ export const EasterEggPage: React.FC<EasterEggPageProps> = ({ theme, onGoBack })
   const [currentColorCycle, setCurrentColorCycle] = useState(0);
 
   const titleGradients = [
-    'linear-gradient(45deg, #a729f0 0%, #3c95fa 100%)', // cosmic nebula
+    'linear-gradient(45deg, #b109d6 0%, #0c6dc2 100%)', // cosmic nebula
     'linear-gradient(90deg, #c559f7 0%, #7f59f7 100%)', // midnight black
     'linear-gradient(90deg, #ff59e8 0%, #ff52a8 100%)'  // cotton candy
   ];
@@ -41,19 +41,6 @@ export const EasterEggPage: React.FC<EasterEggPageProps> = ({ theme, onGoBack })
     return () => clearInterval(colorInterval);
   }, []);
 
-  const getThemeBackground = () => {
-    switch (theme) {
-      case 'cosmic-nebula':
-        return 'linear-gradient(45deg, #400354, #03568c)';
-      case 'midnight-black':
-        return '#000000';
-      case 'cotton-candy-glow':
-        return 'linear-gradient(45deg, #74d2f1, #69c8e8)';
-      default:
-        return 'linear-gradient(45deg, #400354, #03568c)';
-    }
-  };
-
   const handleNameClick = () => {
     setNameClickCount(prev => prev + 1);
   };
@@ -65,7 +52,7 @@ export const EasterEggPage: React.FC<EasterEggPageProps> = ({ theme, onGoBack })
       left: 0,
       right: 0,
       bottom: 0,
-      background: getThemeBackground(),
+      background: '#000000',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -120,7 +107,7 @@ export const EasterEggPage: React.FC<EasterEggPageProps> = ({ theme, onGoBack })
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        gap: '20px'
+        gap: '10px'
       }}>
         <h1 style={{
           backgroundImage: titleGradients[currentColorCycle],
@@ -138,10 +125,16 @@ export const EasterEggPage: React.FC<EasterEggPageProps> = ({ theme, onGoBack })
         </h1>
         
         <div style={{
-          fontSize: '1.5rem',
-          color: 'white'
+          fontSize: '1rem',
+          color: 'white',
+          marginBottom: '20px'
         }}>
-          by{' '}
+          by
+        </div>
+        
+        <div style={{
+          fontSize: '1.5rem'
+        }}>
           <span
             onClick={handleNameClick}
             style={{
