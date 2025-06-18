@@ -4,18 +4,25 @@ import React, { useState, useEffect } from 'react';
 interface IntroductionProps {
   onComplete: () => void;
   onReplay?: () => void;
+  clickCount?: number;
+  onTitleClick?: () => void;
 }
 
-export const Introduction: React.FC<IntroductionProps> = ({ onComplete, onReplay }) => {
+export const Introduction: React.FC<IntroductionProps> = ({ 
+  onComplete, 
+  onReplay, 
+  clickCount = 0, 
+  onTitleClick 
+}) => {
   const [currentTheme, setCurrentTheme] = useState(0);
-  const [animationPhase, setAnimationPhase] = useState('themes'); // 'themes' or 'moving'
+  const [animationPhase, setAnimationPhase] = useState('themes');
   const [titlePosition, setTitlePosition] = useState('center');
   const [isReplay, setIsReplay] = useState(false);
 
   const themes = [
     {
       id: 'cosmic-nebula',
-      background: 'linear-gradient(135deg, #3f034a 42%, #004a7a 58%)',
+      background: 'linear-gradient(135deg, #b109d6 35%, #0c6dc2 100%)',
       titleGradient: 'linear-gradient(45deg, #a729f0 0%, #3c95fa 100%)'
     },
     {
@@ -69,10 +76,14 @@ export const Introduction: React.FC<IntroductionProps> = ({ onComplete, onReplay
   }, [onComplete, onReplay, isReplay]);
 
   const replayAnimation = () => {
-    setIsReplay(true);
-    setCurrentTheme(0);
-    setAnimationPhase('themes');
-    setTitlePosition('center');
+    if (onTitleClick) {
+      onTitleClick();
+    } else {
+      setIsReplay(true);
+      setCurrentTheme(0);
+      setAnimationPhase('themes');
+      setTitlePosition('center');
+    }
   };
 
   const currentThemeData = themes[currentTheme];
@@ -86,7 +97,7 @@ export const Introduction: React.FC<IntroductionProps> = ({ onComplete, onReplay
         right: 0,
         bottom: 0,
         background: currentThemeData.background,
-        transition: animationPhase === 'themes' ? 'background 1s ease-in-out' : 'background 2s ease-in-out',
+        transition: animationPhase === 'themes' ? 'background 1.5s ease-in-out' : 'background 2s ease-in-out',
         display: 'flex',
         alignItems: titlePosition === 'center' ? 'center' : 'flex-start',
         justifyContent: titlePosition === 'center' ? 'center' : 'flex-start',
@@ -107,7 +118,7 @@ export const Introduction: React.FC<IntroductionProps> = ({ onComplete, onReplay
           fontWeight: 700,
           margin: 0,
           transition: animationPhase === 'themes' ? 
-            'background-image 1s ease-in-out' : 
+            'background-image 1.5s ease-in-out' : 
             'all 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), background-image 2s ease-in-out',
           textAlign: 'center',
           animation: animationPhase === 'themes' ? 'heartbeat 2.5s ease-in-out infinite' : 'none',

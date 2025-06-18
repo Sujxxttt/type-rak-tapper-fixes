@@ -11,6 +11,7 @@ import { TypedTextPreview } from '../components/TypedTextPreview';
 import { useTypingGame } from '../hooks/useTypingGame';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { useSoundEffects } from '../hooks/useSoundEffects';
+import { EasterEggPage } from '../components/EasterEggPage';
 
 const Index: React.FC = () => {
   // Introduction state
@@ -43,10 +44,16 @@ const Index: React.FC = () => {
   const [showStartMessage, setShowStartMessage] = useState<boolean>(false);
   const [typedText, setTypedText] = useState<string>('');
   const [showTypedPreview, setShowTypedPreview] = useState<boolean>(false);
+  
+  // New state for scroll easter egg
+  const [scrollCount, setScrollCount] = useState(0);
+  const [scrollMessage, setScrollMessage] = useState('');
+  const [showEasterEgg, setShowEasterEgg] = useState(false);
 
   const messageTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
   const startMessageTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
   const titleMessageTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+  const scrollTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
   // Define showToast function early
   const showToast = (msg: string, isError = false) => {
@@ -105,10 +112,12 @@ const Index: React.FC = () => {
     setTitleClickCount(prev => prev + 1);
     
     if (titleClickCount === 0) {
-      setTitleClickMessage('Click 2 more times');
+      setTitleClickMessage('keep clicking !!!');
     } else if (titleClickCount === 1) {
-      setTitleClickMessage('Click Again !!');
-    } else if (titleClickCount >= 2) {
+      setTitleClickMessage('Try again !!!');
+    } else if (titleClickCount === 2) {
+      setTitleClickMessage('Once more ??');
+    } else if (titleClickCount >= 3) {
       setShowIntroduction(true);
       setTitleClickCount(0);
       setTitleClickMessage('');
@@ -130,6 +139,52 @@ const Index: React.FC = () => {
   const handleIntroReplay = () => {
     setShowIntroduction(false);
   };
+
+  // Handle scroll easter egg
+  useEffect(() => {
+    const handleScroll = () => {
+      if (testActive || showEasterEgg) return;
+      
+      const scrollMessages = [
+        'Trying something , huh',
+        'well its working maybe you should try again',
+        'Again please !!!'
+      ];
+      
+      if (scrollCount < 3) {
+        setScrollMessage(scrollMessages[scrollCount]);
+        setScrollCount(prev => prev + 1);
+        
+        if (scrollTimeoutRef.current) {
+          clearTimeout(scrollTimeoutRef.current);
+        }
+        scrollTimeoutRef.current = setTimeout(() => {
+          setScrollMessage('');
+        }, 2000);
+      } else if (scrollCount === 3) {
+        setShowEasterEgg(true);
+        setScrollCount(0);
+        setScrollMessage('');
+      }
+    };
+
+    let throttleTimer: NodeJS.Timeout;
+    const throttledScroll = () => {
+      if (throttleTimer) return;
+      throttleTimer = setTimeout(() => {
+        handleScroll();
+        throttleTimer = null as any;
+      }, 500);
+    };
+
+    window.addEventListener('scroll', throttledScroll);
+    return () => {
+      window.removeEventListener('scroll', throttledScroll);
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, [testActive, showEasterEgg, scrollCount]);
 
   useEffect(() => {
     if (showIntroduction) return;
@@ -168,7 +223,7 @@ const Index: React.FC = () => {
     } else if (theme === 'cotton-candy-glow') {
       document.body.classList.add('cotton-candy-glow');
     } else {
-      document.body.style.background = 'linear-gradient(135deg, #3f034a 42%, #004a7a 58%)';
+      document.body.style.background = 'linear-gradient(135deg, #b109d6 35%, #0c6dc2 100%)';
     }
   }, [theme]);
 
@@ -561,7 +616,17 @@ const Index: React.FC = () => {
 
   // Show introduction first - always
   if (showIntroduction) {
-    return <Introduction onComplete={handleIntroComplete} onReplay={handleIntroReplay} />;
+    return <Introduction 
+      onComplete={handleIntroComplete} 
+      onReplay={handleIntroReplay}
+      clickCount={titleClickCount}
+      onTitleClick={handleTitleClick}
+    />;
+  }
+
+  // Show easter egg page
+  if (showEasterEgg) {
+    return <EasterEggPage theme={theme} onGoBack={() => setShowEasterEgg(false)} />;
   }
 
   return (
@@ -577,7 +642,7 @@ const Index: React.FC = () => {
       color: 'white',
       background: theme === 'midnight-black' ? '#000000' : 
                  theme === 'cotton-candy-glow' ? 'linear-gradient(45deg, #74d2f1, #69c8e8)' :
-                 'linear-gradient(135deg, #3f034a 42%, #004a7a 58%)',
+                 'linear-gradient(135deg, #b109d6 35%, #0c6dc2 100%)',
       minHeight: '100vh',
       overflowX: 'hidden'
     }}>
@@ -588,6 +653,27 @@ const Index: React.FC = () => {
         padding: '20px',
         position: 'relative'
       }}>
+        {/* Scroll Message */}
+        {scrollMessage && (
+          <div style={{
+            position: 'fixed',
+            top: '20px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            background: 'rgba(255, 255, 255, 0.1)',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            borderRadius: '12px',
+            padding: '10px 20px',
+            color: 'white',
+            fontSize: '1rem',
+            zIndex: 2000,
+            animation: 'fadeIn 0.3s ease-out'
+          }}>
+            {scrollMessage}
+          </div>
+        )}
+
         {/* Header */}
         <header style={{
           display: 'flex',
@@ -706,7 +792,8 @@ const Index: React.FC = () => {
             border: '1px solid rgba(255, 255, 255, 0.2)',
             borderRadius: '12px',
             color: 'white',
-            boxShadow: '0 4px 20px rgba(0,0,0,0.2)'
+            boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
+            fontSize: '0.9rem'
           }}>
             Press any key to start the test
             <button 
@@ -1495,11 +1582,16 @@ const Index: React.FC = () => {
             transform: translate(-50%, -50%) scale(1.05);
           }
         }
+
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(-10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
         
         .char {
           display: inline-block;
           color: ${theme === 'cotton-candy-glow' ? 'white' : theme === 'midnight-black' ? '#f0f0f0' : '#f5e9f1'};
-          transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out;
+          transition: color 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
           padding: 0 1px;
           margin: 0;
           letter-spacing: 0.01em;
