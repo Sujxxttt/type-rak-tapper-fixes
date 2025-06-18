@@ -341,14 +341,13 @@ export default function Index() {
   }
 
   if (showHistory) {
-    return <HistoryPage onBack={() => setShowHistory(false)} currentUser={currentActiveUser} theme={theme} />;
+    return <HistoryPage onBack={() => setShowHistory(false)} username={currentActiveUser} theme={theme} />;
   }
 
   if (showTestNameMenu) {
     return (
       <TestNameMenu
-        onClose={() => setShowTestNameMenu(false)}
-        onUserSelect={(username) => {
+        onSave={(username) => {
           setCurrentActiveUser(username);
           if (!usersList.includes(username)) {
             setUsersList([...usersList, username]);
@@ -445,12 +444,10 @@ export default function Index() {
           flexWrap: 'wrap'
         }}>
           <StatsDisplay
-            wpm={getCurrentWPM()}
-            accuracy={actualTypedCount > 0 ? ((correctCharacters / actualTypedCount) * 100) : 100}
-            errorRate={getCurrentErrorRate()}
-            timeLeft={Math.max(0, duration - (elapsed - cheatTimeAdded))}
-            gameOver={gameOver}
-            testActive={testActive}
+            elapsed={elapsed}
+            correctSigns={correctCharacters}
+            totalErrors={totalErrors}
+            currentErrorRate={getCurrentErrorRate()}
             theme={theme}
           />
 
@@ -561,7 +558,6 @@ export default function Index() {
         <Toast
           message={toastMessage}
           onClose={() => setToastMessage("")}
-          theme={theme}
         />
       )}
 

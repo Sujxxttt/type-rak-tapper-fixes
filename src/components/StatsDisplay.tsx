@@ -27,6 +27,11 @@ export const StatsDisplay: React.FC<StatsDisplayProps> = ({
     calculatedWPM: currentWPM
   });
 
+  // Make sure we have a safe value for error rate
+  const safeErrorRate = currentErrorRate !== undefined && currentErrorRate !== null 
+    ? currentErrorRate
+    : 0;
+
   return (
     <div style={{
       display: 'flex',
@@ -91,7 +96,7 @@ export const StatsDisplay: React.FC<StatsDisplayProps> = ({
       }}>
         <span style={{ display: 'block', fontSize: '0.9rem', opacity: 0.8, marginBottom: '0.25rem' }}>Error Rate:</span>
         <span style={{ fontWeight: 'bold', fontSize: '1.2em' }}>
-          {currentErrorRate.toFixed(2)}%
+          {safeErrorRate.toFixed(2)}%
         </span>
       </div>
       <div style={{
