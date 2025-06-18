@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { X } from 'lucide-react';
 import {
@@ -61,6 +60,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
 }) => {
   const sideMenuRef = useRef<HTMLDivElement>(null);
   const [showCustomDuration, setShowCustomDuration] = useState(false);
+  const [cursorStyle, setCursorStyle] = useState(localStorage.getItem('typeRakCursor') || 'default');
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -120,6 +120,12 @@ export const SideMenu: React.FC<SideMenuProps> = ({
     return `${duration} seconds`;
   };
 
+  const handleCursorChange = (cursor: string) => {
+    setCursorStyle(cursor);
+    localStorage.setItem('typeRakCursor', cursor);
+    document.body.style.cursor = cursor === 'default' ? 'auto' : cursor;
+  };
+
   const dropdownContentStyle: React.CSSProperties = {
     background: 'rgba(255, 255, 255, 0.1)',
     backdropFilter: 'blur(15px)',
@@ -145,6 +151,14 @@ export const SideMenu: React.FC<SideMenuProps> = ({
   };
 
   const fontSizes = [80, 90, 100, 110, 120, 130, 140, 150, 175, 200];
+  const cursors = [
+    { value: 'default', label: 'Default' },
+    { value: 'pointer', label: 'Pointer' },
+    { value: 'crosshair', label: 'Crosshair' },
+    { value: 'text', label: 'Text' },
+    { value: 'wait', label: 'Wait' },
+    { value: 'help', label: 'Help' }
+  ];
 
   const handleCheckThisOut = () => {
     window.open('https://raktherock.github.io/Rak/', '_blank');
@@ -203,10 +217,10 @@ export const SideMenu: React.FC<SideMenuProps> = ({
           <X size={24} />
         </button>
 
-        <h3 style={{ marginBottom: '1.5rem', paddingTop: '1rem', fontSize: '1.2rem' }}>Settings</h3>
+        <h3 style={{ marginBottom: '1.5rem', paddingTop: '1rem', fontSize: '1.44rem' }}>Settings</h3>
 
         <div style={{ marginBottom: '1.5rem' }}>
-          <h4 style={{ marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: '600' }}>User:</h4>
+          <h4 style={{ marginBottom: '0.5rem', fontSize: '0.81rem', fontWeight: '600' }}>User:</h4>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button style={dropdownTriggerStyle}>
@@ -242,7 +256,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
         </div>
 
         <div style={{ marginBottom: '1.5rem' }}>
-          <h4 style={{ marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: '600' }}>Test Duration:</h4>
+          <h4 style={{ marginBottom: '0.5rem', fontSize: '0.81rem', fontWeight: '600' }}>Test Duration:</h4>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button style={dropdownTriggerStyle}>
@@ -271,10 +285,10 @@ export const SideMenu: React.FC<SideMenuProps> = ({
         </div>
 
         <div style={{ marginBottom: '1.5rem' }}>
-          <h4 style={{ marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: '600' }}>Font Settings:</h4>
+          <h4 style={{ marginBottom: '0.5rem', fontSize: '0.81rem', fontWeight: '600' }}>Font Settings:</h4>
           
           <div style={{ marginBottom: '10px' }}>
-            <label style={{ fontSize: '0.8rem', marginBottom: '5px', display: 'block' }}>Font Size:</label>
+            <label style={{ fontSize: '0.72rem', marginBottom: '5px', display: 'block' }}>Font Size:</label>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button style={dropdownTriggerStyle}>
@@ -293,7 +307,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
           </div>
 
           <div>
-            <label style={{ fontSize: '0.8rem', marginBottom: '5px', display: 'block' }}>Font Style:</label>
+            <label style={{ fontSize: '0.72rem', marginBottom: '5px', display: 'block' }}>Font Style:</label>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button style={dropdownTriggerStyle}>
@@ -313,7 +327,28 @@ export const SideMenu: React.FC<SideMenuProps> = ({
         </div>
         
         <div style={{ marginBottom: '1.5rem' }}>
-          <h4 style={{ marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: '600' }}>Theme:</h4>
+          <h4 style={{ marginBottom: '0.5rem', fontSize: '0.81rem', fontWeight: '600' }}>Cursor Style:</h4>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button style={dropdownTriggerStyle}>
+                <span style={{ textTransform: 'capitalize' }}>{cursorStyle}</span>
+                <span>▼</span>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent style={dropdownContentStyle} className="w-[310px]">
+              <DropdownMenuRadioGroup value={cursorStyle} onValueChange={handleCursorChange}>
+                {cursors.map(cursor => (
+                  <DropdownMenuRadioItem key={cursor.value} value={cursor.value}>
+                    {cursor.label}
+                  </DropdownMenuRadioItem>
+                ))}
+              </DropdownMenuRadioGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        <div style={{ marginBottom: '1.5rem' }}>
+          <h4 style={{ marginBottom: '0.5rem', fontSize: '0.81rem', fontWeight: '600' }}>Theme:</h4>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button style={dropdownTriggerStyle}>
@@ -332,7 +367,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
         </div>
 
         <div style={{ marginBottom: '1.5rem' }}>
-          <h4 style={{ marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: '600' }}>Sound Effects:</h4>
+          <h4 style={{ marginBottom: '0.5rem', fontSize: '0.81rem', fontWeight: '600' }}>Sound Effects:</h4>
           <div style={{ 
             '--switch-checked-color': getButtonColor(),
             display: 'flex', 

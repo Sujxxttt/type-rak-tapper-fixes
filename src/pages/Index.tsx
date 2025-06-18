@@ -218,12 +218,16 @@ const Index: React.FC = () => {
 
   useEffect(() => {
     document.body.className = '';
+    document.body.style.transition = 'background 0.5s ease-in-out';
+    
     if (theme === 'midnight-black') {
       document.body.classList.add('midnight-black');
+      document.body.style.background = '#000000';
     } else if (theme === 'cotton-candy-glow') {
       document.body.classList.add('cotton-candy-glow');
+      document.body.style.background = 'linear-gradient(45deg, #74d2f1, #69c8e8)';
     } else {
-      document.body.style.background = 'linear-gradient(135deg, #b109d6 35%, #0c6dc2 100%)';
+      document.body.style.background = 'linear-gradient(45deg, #400354, #03568c)';
     }
   }, [theme]);
 
@@ -642,9 +646,10 @@ const Index: React.FC = () => {
       color: 'white',
       background: theme === 'midnight-black' ? '#000000' : 
                  theme === 'cotton-candy-glow' ? 'linear-gradient(45deg, #74d2f1, #69c8e8)' :
-                 'linear-gradient(135deg, #b109d6 35%, #0c6dc2 100%)',
+                 'linear-gradient(45deg, #400354, #03568c)',
       minHeight: '100vh',
-      overflowX: 'hidden'
+      overflowX: 'hidden',
+      transition: 'background 0.5s ease-in-out'
     }}>
       <div style={{
         display: 'flex',
@@ -793,7 +798,7 @@ const Index: React.FC = () => {
             borderRadius: '12px',
             color: 'white',
             boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
-            fontSize: '0.9rem'
+            fontSize: '0.81rem'
           }}>
             Press any key to start the test
             <button 

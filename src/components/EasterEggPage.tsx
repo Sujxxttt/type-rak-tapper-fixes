@@ -11,6 +11,13 @@ export const EasterEggPage: React.FC<EasterEggPageProps> = ({ theme, onGoBack })
   const [nameClickCount, setNameClickCount] = useState(0);
   const [showArrow, setShowArrow] = useState(false);
   const [showMessage, setShowMessage] = useState(false);
+  const [currentColorCycle, setCurrentColorCycle] = useState(0);
+
+  const titleGradients = [
+    'linear-gradient(45deg, #a729f0 0%, #3c95fa 100%)', // cosmic nebula
+    'linear-gradient(90deg, #c559f7 0%, #7f59f7 100%)', // midnight black
+    'linear-gradient(90deg, #ff59e8 0%, #ff52a8 100%)'  // cotton candy
+  ];
 
   useEffect(() => {
     setShowMessage(true);
@@ -26,28 +33,25 @@ export const EasterEggPage: React.FC<EasterEggPageProps> = ({ theme, onGoBack })
     }
   }, [nameClickCount]);
 
+  useEffect(() => {
+    const colorInterval = setInterval(() => {
+      setCurrentColorCycle(prev => (prev + 1) % titleGradients.length);
+    }, 2000);
+
+    return () => clearInterval(colorInterval);
+  }, []);
+
   const getThemeBackground = () => {
     switch (theme) {
       case 'cosmic-nebula':
-        return 'linear-gradient(135deg, #b109d6 35%, #0c6dc2 100%)';
+        return 'linear-gradient(45deg, #400354, #03568c)';
       case 'midnight-black':
         return '#000000';
       case 'cotton-candy-glow':
         return 'linear-gradient(45deg, #74d2f1, #69c8e8)';
       default:
-        return 'linear-gradient(135deg, #b109d6 35%, #0c6dc2 100%)';
+        return 'linear-gradient(45deg, #400354, #03568c)';
     }
-  };
-
-  const getTitleGradient = () => {
-    if (theme === 'cosmic-nebula') {
-      return 'linear-gradient(45deg, #a729f0 0%, #3c95fa 100%)';
-    } else if (theme === 'midnight-black') {
-      return 'linear-gradient(90deg, #c559f7 0%, #7f59f7 100%)';
-    } else if (theme === 'cotton-candy-glow') {
-      return 'linear-gradient(90deg, #ff59e8 0%, #ff52a8 100%)';
-    }
-    return 'linear-gradient(45deg, #a729f0 0%, #3c95fa 100%)';
   };
 
   const handleNameClick = () => {
@@ -111,23 +115,50 @@ export const EasterEggPage: React.FC<EasterEggPageProps> = ({ theme, onGoBack })
         </button>
       )}
 
-      <h1
-        onClick={handleNameClick}
-        style={{
-          backgroundImage: getTitleGradient(),
+      <div style={{
+        textAlign: 'center',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '20px'
+      }}>
+        <h1 style={{
+          backgroundImage: titleGradients[currentColorCycle],
           WebkitBackgroundClip: 'text',
           backgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
           color: 'transparent',
-          fontSize: '3rem',
+          fontSize: '4rem',
           fontWeight: 700,
           textAlign: 'center',
-          cursor: 'pointer',
-          userSelect: 'none'
-        }}
-      >
-        Developed by {nameClickCount > 0 ? 'Raktherock' : 'Rakshan Kumaraa'}
-      </h1>
+          margin: 0,
+          transition: 'background-image 0.5s ease-in-out'
+        }}>
+          TypeWave
+        </h1>
+        
+        <div style={{
+          fontSize: '1.5rem',
+          color: 'white'
+        }}>
+          by{' '}
+          <span
+            onClick={handleNameClick}
+            style={{
+              backgroundImage: titleGradients[currentColorCycle],
+              WebkitBackgroundClip: 'text',
+              backgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              color: 'transparent',
+              cursor: 'pointer',
+              userSelect: 'none',
+              transition: 'background-image 0.5s ease-in-out'
+            }}
+          >
+            {nameClickCount % 2 === 0 ? 'Rakshan Kumaraa' : 'Raktherock'}
+          </span>
+        </div>
+      </div>
     </div>
   );
 };

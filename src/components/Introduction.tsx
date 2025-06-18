@@ -22,7 +22,7 @@ export const Introduction: React.FC<IntroductionProps> = ({
   const themes = [
     {
       id: 'cosmic-nebula',
-      background: 'linear-gradient(135deg, #b109d6 35%, #0c6dc2 100%)',
+      background: 'linear-gradient(45deg, #400354, #03568c)',
       titleGradient: 'linear-gradient(45deg, #a729f0 0%, #3c95fa 100%)'
     },
     {
