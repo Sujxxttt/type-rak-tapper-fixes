@@ -15,18 +15,9 @@ export const TypedTextPreview: React.FC<TypedTextPreviewProps> = ({
   theme,
   onClose,
 }) => {
-  const getCorrectColor = () => {
-    switch (theme) {
-      case 'midnight-black': return '#ae1ee3';
-      case 'cotton-candy-glow': return '#ff1fbc';
-      default: return '#21b1ff'; // cosmic-nebula
-    }
-  };
-
   const renderTypedText = () => {
     const result = [];
     const textToRender = typedText;
-    const correctColor = getCorrectColor();
 
     for (let i = 0; i < textToRender.length; i++) {
       const typedChar = textToRender[i];
@@ -34,7 +25,7 @@ export const TypedTextPreview: React.FC<TypedTextPreviewProps> = ({
       
       if (typedChar === originalChar) {
         result.push(
-          <span key={i} style={{ color: correctColor }}>
+          <span key={i} style={{ color: theme === 'midnight-black' ? '#ae1ee3' : theme === 'cotton-candy-glow' ? '#ff1fbc' : '#21b1ff' }}>
             {typedChar === ' ' ? '\u00A0' : typedChar}
           </span>
         );
@@ -114,7 +105,7 @@ export const TypedTextPreview: React.FC<TypedTextPreviewProps> = ({
           color: theme === 'cotton-candy-glow' ? 'rgba(51, 51, 51, 0.7)' : 'rgba(255, 255, 255, 0.7)'
         }}>
           <div style={{ marginBottom: '5px' }}>
-            <span style={{ color: getCorrectColor() }}>■</span> Correctly typed
+            <span style={{ color: theme === 'midnight-black' ? '#ae1ee3' : theme === 'cotton-candy-glow' ? '#ff1fbc' : '#21b1ff' }}>■</span> Correctly typed
           </div>
           <div>
             <span style={{ color: '#ff1c14' }}>■</span> Incorrectly typed
