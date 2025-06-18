@@ -151,7 +151,7 @@ export const useTypingGame = () => {
   };
 
   const addCheatTime = () => {
-    setCheatTimeAdded(prev => prev + 30);
+    setElapsed(prev => prev + 30);
   };
 
   return {
