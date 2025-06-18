@@ -17,8 +17,8 @@ export const Introduction: React.FC<IntroductionProps> = ({ onComplete, onReplay
   const themes = [
     {
       id: 'cosmic-nebula',
-      background: 'linear-gradient(135deg, #9509db 35%, #1c7ed4 100%)',
-      titleGradient: 'linear-gradient(45deg, #a729f0 0%, #3c95fa 100%)'
+      background: 'linear-gradient(45deg, #b109d6 35%, #0c6dc2 100%)',
+      titleGradient: 'linear-gradient(45deg, #b109d6 0%, #0c6dc2 100%)'
     },
     {
       id: 'midnight-black',

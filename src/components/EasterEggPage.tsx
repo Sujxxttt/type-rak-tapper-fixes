@@ -8,73 +8,51 @@ interface EasterEggPageProps {
 }
 
 export const EasterEggPage: React.FC<EasterEggPageProps> = ({ theme, onGoBack }) => {
-  const [nameClickCount, setNameClickCount] = useState(0);
-  const [showArrow, setShowArrow] = useState(false);
+  const [nameClicks, setNameClicks] = useState(0);
+  const [showMessage, setShowMessage] = useState(false);
+
+  useEffect(() => {
+    // Show the glass message when entering
+    setShowMessage(true);
+    const timer = setTimeout(() => {
+      setShowMessage(false);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, []);
 
   const getThemeBackground = () => {
     switch (theme) {
       case 'cosmic-nebula':
-        return 'linear-gradient(135deg, #9509db 35%, #1c7ed4 100%)';
+        return 'linear-gradient(45deg, #b109d6 35%, #0c6dc2 100%)';
       case 'midnight-black':
         return '#000000';
       case 'cotton-candy-glow':
         return 'linear-gradient(45deg, #74d2f1, #69c8e8)';
       default:
-        return 'linear-gradient(135deg, #9509db 35%, #1c7ed4 100%)';
+        return 'linear-gradient(45deg, #b109d6 35%, #0c6dc2 100%)';
     }
   };
 
-  const getThemeTextColor = () => {
+  const getTitleGradient = () => {
     switch (theme) {
       case 'cosmic-nebula':
-        return 'linear-gradient(45deg, #a729f0 0%, #3c95fa 100%)';
+        return 'linear-gradient(45deg, #b109d6 0%, #0c6dc2 100%)';
       case 'midnight-black':
         return 'linear-gradient(90deg, #c559f7 0%, #7f59f7 100%)';
       case 'cotton-candy-glow':
         return 'linear-gradient(90deg, #ff59e8 0%, #ff52a8 100%)';
       default:
-        return 'linear-gradient(45deg, #a729f0 0%, #3c95fa 100%)';
+        return 'linear-gradient(45deg, #b109d6 0%, #0c6dc2 100%)';
     }
   };
 
   const handleNameClick = () => {
-    setNameClickCount(prev => prev + 1);
-    if (nameClickCount === 1) {
-      setShowArrow(true);
+    if (nameClicks === 0) {
+      setNameClicks(1);
     }
   };
 
-  useEffect(() => {
-    // Show "There you go !!!" message
-    const timer = setTimeout(() => {
-      const message = document.createElement('div');
-      message.style.cssText = `
-        position: fixed;
-        top: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 8px;
-        padding: 10px 20px;
-        color: white;
-        font-size: 0.9rem;
-        z-index: 10000;
-        animation: fadeIn 0.3s ease-out;
-      `;
-      message.textContent = 'There you go !!!';
-      document.body.appendChild(message);
-
-      setTimeout(() => {
-        if (document.body.contains(message)) {
-          document.body.removeChild(message);
-        }
-      }, 3000);
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, []);
+  const displayName = nameClicks === 0 ? 'Rakshan Kumaraa' : 'Raktherock';
 
   return (
     <div style={{
@@ -87,54 +65,81 @@ export const EasterEggPage: React.FC<EasterEggPageProps> = ({ theme, onGoBack })
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      zIndex: 9999
+      zIndex: 10000
     }}>
-      {showArrow && (
-        <button
-          onClick={onGoBack}
+      {/* Back arrow */}
+      <button
+        onClick={onGoBack}
+        style={{
+          position: 'absolute',
+          top: '20px',
+          left: '20px',
+          background: 'rgba(255, 255, 255, 0.1)',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+          borderRadius: '50%',
+          width: '50px',
+          height: '50px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          backdropFilter: 'blur(10px)',
+          transition: 'all 0.3s ease'
+        }}
+        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.2)')}
+        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)')}
+      >
+        <ArrowLeft size={24} color="white" />
+      </button>
+
+      {/* Main content */}
+      <div style={{ textAlign: 'center' }}>
+        <p style={{
+          fontSize: '1.5rem',
+          color: 'white',
+          marginBottom: '1rem'
+        }}>
+          Developed by
+        </p>
+        <h1 
+          onClick={handleNameClick}
           style={{
-            position: 'absolute',
-            top: '20px',
-            left: '20px',
-            background: 'rgba(255, 255, 255, 0.1)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            borderRadius: '8px',
-            padding: '10px',
-            color: 'white',
+            backgroundImage: getTitleGradient(),
+            WebkitBackgroundClip: 'text',
+            backgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            color: 'transparent',
+            fontSize: '3rem',
+            fontWeight: 700,
+            margin: 0,
             cursor: 'pointer',
-            backdropFilter: 'blur(10px)',
-            transition: 'all 0.2s ease'
+            transition: 'all 0.3s ease'
           }}
         >
-          <ArrowLeft size={24} />
-        </button>
-      )}
-
-      <div style={{
-        textAlign: 'center'
-      }}>
-        <div style={{
-          fontSize: '2rem',
-          fontWeight: 'bold',
-          backgroundImage: getThemeTextColor(),
-          WebkitBackgroundClip: 'text',
-          backgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          color: 'transparent',
-          marginBottom: '10px'
-        }}>
-          Developed by{' '}
-          <span
-            onClick={handleNameClick}
-            style={{
-              cursor: 'pointer',
-              textDecoration: nameClickCount > 0 ? 'underline' : 'none'
-            }}
-          >
-            {nameClickCount > 0 ? 'Raktherock' : 'Rakshan Kumaraa'}
-          </span>
-        </div>
+          {displayName}
+        </h1>
       </div>
+
+      {/* Glass message */}
+      {showMessage && (
+        <div style={{
+          position: 'fixed',
+          top: '20px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          background: 'rgba(255, 255, 255, 0.1)',
+          backdropFilter: 'blur(10px)',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+          borderRadius: '8px',
+          padding: '10px 20px',
+          color: 'white',
+          fontSize: '0.9rem',
+          zIndex: 10001,
+          animation: 'fadeIn 0.3s ease-out'
+        }}>
+          There you go !!!
+        </div>
+      )}
 
       <style>{`
         @keyframes fadeIn {

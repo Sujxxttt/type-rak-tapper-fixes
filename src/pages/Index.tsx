@@ -78,13 +78,13 @@ export default function Index() {
   const getThemeBackground = () => {
     switch (theme) {
       case 'cosmic-nebula':
-        return 'linear-gradient(135deg, #9509db 35%, #1c7ed4 100%)';
+        return 'linear-gradient(45deg, #b109d6 35%, #0c6dc2 100%)';
       case 'midnight-black':
         return '#000000';
       case 'cotton-candy-glow':
         return 'linear-gradient(45deg, #74d2f1, #69c8e8)';
       default:
-        return 'linear-gradient(135deg, #9509db 35%, #1c7ed4 100%)';
+        return 'linear-gradient(45deg, #b109d6 35%, #0c6dc2 100%)';
     }
   };
 
@@ -104,13 +104,13 @@ export default function Index() {
   const getButtonColor = () => {
     switch (theme) {
       case 'cosmic-nebula':
-        return '#3c95fa';
+        return '#0c6dc2';
       case 'midnight-black':
         return '#c559f7';
       case 'cotton-candy-glow':
         return '#ff52a8';
       default:
-        return '#3c95fa';
+        return '#0c6dc2';
     }
   };
 
@@ -384,7 +384,24 @@ export default function Index() {
         padding: '1rem 2rem',
         position: 'relative'
       }}>
-        <Introduction onComplete={() => setShowIntroduction(false)} />
+        <h1 
+          onClick={() => setShowIntroduction(true)}
+          style={{
+            backgroundImage: theme === 'cosmic-nebula' ? 'linear-gradient(45deg, #b109d6 0%, #0c6dc2 100%)' :
+                             theme === 'midnight-black' ? 'linear-gradient(90deg, #c559f7 0%, #7f59f7 100%)' :
+                             'linear-gradient(90deg, #ff59e8 0%, #ff52a8 100%)',
+            WebkitBackgroundClip: 'text',
+            backgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            color: 'transparent',
+            fontSize: '2.5rem',
+            fontWeight: 700,
+            margin: 0,
+            cursor: 'pointer'
+          }}
+        >
+          TypeWave
+        </h1>
         
         <button
           onClick={() => setSideMenuOpen(true)}
@@ -395,11 +412,7 @@ export default function Index() {
             cursor: 'pointer',
             padding: '0.5rem',
             borderRadius: '50%',
-            transition: 'background-color 0.3s ease',
-            position: 'absolute',
-            top: '1rem',
-            right: '1rem',
-            zIndex: 1000
+            transition: 'background-color 0.3s ease'
           }}
           onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)')}
           onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
@@ -408,16 +421,16 @@ export default function Index() {
         </button>
       </div>
 
-      {/* Main content with updated positioning */}
+      {/* Main content */}
       <div style={{ 
         display: 'flex', 
         flexDirection: 'column', 
         alignItems: 'center', 
         padding: '2rem',
-        paddingTop: '4rem', // Moved content down by 2cm
+        paddingTop: '4rem',
         minHeight: 'calc(100vh - 4rem)' 
       }}>
-        {/* Text flow container with smooth animations */}
+        {/* Text flow container */}
         <div style={{ 
           width: '90%', 
           maxWidth: '1000px', 
@@ -438,7 +451,7 @@ export default function Index() {
               border: '1px solid rgba(255, 255, 255, 0.2)',
               minHeight: '200px',
               fontFamily: getFontFamilyString(fontStyle),
-              transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)', // Extra smooth transitions
+              transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
               wordSpacing: '0.1em',
               letterSpacing: '0.02em'
             }}
@@ -462,7 +475,7 @@ export default function Index() {
             onClick={gameOver ? resetTest : startTest}
             style={{
               padding: '12px 24px',
-              fontSize: '0.9rem', // 10% smaller
+              fontSize: '0.81rem', // 10% smaller
               fontWeight: 'bold',
               color: 'white',
               background: getButtonColor(),
@@ -491,6 +504,16 @@ export default function Index() {
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(-10px); }
           to { opacity: 1; transform: translateY(0); }
+        }
+        .char.correct {
+          color: ${theme === 'cosmic-nebula' ? '#0c6dc2' : theme === 'midnight-black' ? '#c559f7' : '#ff52a8'};
+        }
+        .char.incorrect {
+          color: #ff4444;
+          background-color: rgba(255, 68, 68, 0.2);
+        }
+        .char.extra {
+          background-color: rgba(255, 68, 68, 0.4);
         }
       `}</style>
     </div>
