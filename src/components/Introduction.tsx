@@ -26,12 +26,12 @@ export const Introduction: React.FC<IntroductionProps> = ({
   const themes = [
     {
       id: 'cosmic-nebula',
-      background: 'linear-gradient(135deg, #400354, #03568c)',
-      titleGradient: 'linear-gradient(135deg, #b109d6 0%, #0c6dc2 100%)'
+      background: 'linear-gradient(135deg, #03568c, #400354)',
+      titleGradient: 'linear-gradient(135deg, #0c6dc2 0%, #b109d6 100%)'
     },
     {
       id: 'midnight-black',
-      background: '#000000',
+      background: '#171717',
       titleGradient: 'linear-gradient(90deg, #c559f7 0%, #7f59f7 100%)'
     },
     {
@@ -57,9 +57,9 @@ export const Introduction: React.FC<IntroductionProps> = ({
     // Theme switching phase - longer duration
     themeInterval = setInterval(() => {
       setCurrentThemeIndex(prev => (prev + 1) % themes.length);
-    }, 2500); // Increased from 2000ms to 2500ms
+    }, 3000); // Increased from 2500ms to 3000ms
 
-    // After 3 theme cycles (7.5 seconds), switch to moving phase
+    // After 3 theme cycles (9 seconds), switch to moving phase
     phaseTimeout = setTimeout(() => {
       clearInterval(themeInterval);
       setAnimationPhase('moving');
@@ -68,7 +68,7 @@ export const Introduction: React.FC<IntroductionProps> = ({
       // Set to the actual current theme for the final transition
       const actualThemeIndex = getCurrentThemeIndex();
       setCurrentThemeIndex(actualThemeIndex >= 0 ? actualThemeIndex : 0);
-    }, 7500); // Increased from 6000ms to 7500ms
+    }, 9000); // Increased from 7500ms to 9000ms
 
     // Complete animation after title moves to top-left - longer duration
     completeTimeout = setTimeout(() => {
@@ -80,7 +80,7 @@ export const Introduction: React.FC<IntroductionProps> = ({
       } else {
         onComplete();
       }
-    }, 11000); // Increased from 8500ms to 11000ms
+    }, 13000); // Increased from 11000ms to 13000ms
 
     return () => {
       clearInterval(themeInterval);
@@ -111,7 +111,7 @@ export const Introduction: React.FC<IntroductionProps> = ({
         right: 0,
         bottom: 0,
         background: currentThemeData.background,
-        transition: animationPhase === 'themes' ? 'background 2.5s ease-in-out' : 'background 3s ease-in-out',
+        transition: animationPhase === 'themes' ? 'background 3s ease-in-out' : 'background 4s ease-in-out',
         display: 'flex',
         alignItems: titlePosition === 'center' ? 'center' : 'flex-start',
         justifyContent: titlePosition === 'center' ? 'center' : 'flex-start',
@@ -132,10 +132,10 @@ export const Introduction: React.FC<IntroductionProps> = ({
           fontWeight: 700,
           margin: 0,
           transition: animationPhase === 'themes' ? 
-            'background-image 2.5s ease-in-out' : 
-            'all 3s cubic-bezier(0.25, 0.46, 0.45, 0.94), background-image 3s ease-in-out',
+            'background-image 3s ease-in-out' : 
+            'all 4s cubic-bezier(0.25, 0.46, 0.45, 0.94), background-image 4s ease-in-out',
           textAlign: 'center',
-          animation: animationPhase === 'themes' ? 'heartbeat 3.5s ease-in-out infinite' : 'none',
+          animation: animationPhase === 'themes' ? 'heartbeat 4s ease-in-out infinite' : 'none',
           cursor: titlePosition === 'top-left' ? 'pointer' : 'default'
         }}
       >
