@@ -153,14 +153,16 @@ export const SideMenu: React.FC<SideMenuProps> = ({
 
   const fontSizes = [80, 90, 100, 110, 120, 130, 140, 150, 175, 200];
   
-  // Fixed cursor options with proper shape and color variations
+  // Updated cursor options with different colored cursors
   const cursors = [
-    { value: 'default', label: 'Default Arrow (Black)' },
-    { value: 'pointer', label: 'Hand Pointer (Blue)' },
-    { value: 'crosshair', label: 'Crosshair (Red)' },
-    { value: 'text', label: 'Text Beam (Green)' },
-    { value: 'move', label: 'Move Cross (Purple)' },
-    { value: 'grab', label: 'Open Hand (Orange)' }
+    { value: 'default', label: 'Classic White' },
+    { value: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'24\' height=\'24\' viewBox=\'0 0 24 24\' fill=\'%23000000\'%3E%3Cpath d=\'M8.5 2l7.586 5.586L13.914 9.5l3.5 3.5-1.414 1.414-3.5-3.5-1.914 2.172L8.5 2z\'/%3E%3C/svg%3E") 12 12, auto', label: 'Deep Black' },
+    { value: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'24\' height=\'24\' viewBox=\'0 0 24 24\' fill=\'%23400354\'%3E%3Cpath d=\'M8.5 2l7.586 5.586L13.914 9.5l3.5 3.5-1.414 1.414-3.5-3.5-1.914 2.172L8.5 2z\'/%3E%3C/svg%3E") 12 12, auto', label: 'Blue Breeze' },
+    { value: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'24\' height=\'24\' viewBox=\'0 0 24 24\' fill=\'%23ff6600\'%3E%3Cpath d=\'M8.5 2l7.586 5.586L13.914 9.5l3.5 3.5-1.414 1.414-3.5-3.5-1.914 2.172L8.5 2z\'/%3E%3C/svg%3E") 12 12, auto', label: 'Sunset Orange' },
+    { value: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'24\' height=\'24\' viewBox=\'0 0 24 24\' fill=\'%23ff69b4\'%3E%3Cpath d=\'M8.5 2l7.586 5.586L13.914 9.5l3.5 3.5-1.414 1.414-3.5-3.5-1.914 2.172L8.5 2z\'/%3E%3C/svg%3E") 12 12, auto', label: 'Lollipop' },
+    { value: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'24\' height=\'24\' viewBox=\'0 0 24 24\' fill=\'%23c759f7\'%3E%3Cpath d=\'M8.5 2l7.586 5.586L13.914 9.5l3.5 3.5-1.414 1.414-3.5-3.5-1.914 2.172L8.5 2z\'/%3E%3C/svg%3E") 12 12, auto', label: 'Royal Purple' },
+    { value: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'24\' height=\'24\' viewBox=\'0 0 24 24\' fill=\'%2300ff00\'%3E%3Cpath d=\'M8.5 2l7.586 5.586L13.914 9.5l3.5 3.5-1.414 1.414-3.5-3.5-1.914 2.172L8.5 2z\'/%3E%3C/svg%3E") 12 12, auto', label: 'Electric Green' },
+    { value: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'24\' height=\'24\' viewBox=\'0 0 24 24\' fill=\'%23ff0080\'%3E%3Cpath d=\'M8.5 2l7.586 5.586L13.914 9.5l3.5 3.5-1.414 1.414-3.5-3.5-1.914 2.172L8.5 2z\'/%3E%3C/svg%3E") 12 12, auto', label: 'Neon Pink' }
   ];
 
   const handleCheckThisOut = () => {
@@ -220,10 +222,10 @@ export const SideMenu: React.FC<SideMenuProps> = ({
           <X size={24} />
         </button>
 
-        <h3 style={{ marginBottom: '1.5rem', paddingTop: '1rem', fontSize: '2.08rem' }}>Settings</h3>
+        <h3 style={{ marginBottom: '1.5rem', paddingTop: '1rem', fontSize: '2.5rem' }}>Settings</h3>
 
         <div style={{ marginBottom: '1.5rem' }}>
-          <h4 style={{ marginBottom: '0.5rem', fontSize: '0.73rem', fontWeight: '600' }}>User:</h4>
+          <h4 style={{ marginBottom: '0.5rem', fontSize: '0.8rem', fontWeight: '600' }}>User:</h4>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button style={dropdownTriggerStyle}>
@@ -251,7 +253,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
                cursor: 'pointer', 
                transition: 'background-color 0.2s',
                opacity: 0.9,
-               fontSize: '0.81rem'
+               fontSize: '0.89rem'
              }}>
                {deleteConfirmState ? 'Confirm Delete' : `Delete ${currentActiveUser}`}
              </button>
@@ -259,7 +261,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
         </div>
 
         <div style={{ marginBottom: '1.5rem' }}>
-          <h4 style={{ marginBottom: '0.5rem', fontSize: '0.73rem', fontWeight: '600' }}>Test Duration:</h4>
+          <h4 style={{ marginBottom: '0.5rem', fontSize: '0.8rem', fontWeight: '600' }}>Test Duration:</h4>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button style={dropdownTriggerStyle}>
@@ -288,10 +290,10 @@ export const SideMenu: React.FC<SideMenuProps> = ({
         </div>
 
         <div style={{ marginBottom: '1.5rem' }}>
-          <h4 style={{ marginBottom: '0.5rem', fontSize: '0.66rem', fontWeight: '600' }}>Font Settings:</h4>
+          <h4 style={{ marginBottom: '0.5rem', fontSize: '0.73rem', fontWeight: '600' }}>Font Settings:</h4>
           
           <div style={{ marginBottom: '10px' }}>
-            <label style={{ fontSize: '0.59rem', marginBottom: '5px', display: 'block' }}>Font Size:</label>
+            <label style={{ fontSize: '0.65rem', marginBottom: '5px', display: 'block' }}>Font Size:</label>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button style={dropdownTriggerStyle}>
@@ -310,7 +312,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
           </div>
 
           <div>
-            <label style={{ fontSize: '0.59rem', marginBottom: '5px', display: 'block' }}>Font Style:</label>
+            <label style={{ fontSize: '0.65rem', marginBottom: '5px', display: 'block' }}>Font Style:</label>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button style={dropdownTriggerStyle}>
@@ -330,11 +332,11 @@ export const SideMenu: React.FC<SideMenuProps> = ({
         </div>
         
         <div style={{ marginBottom: '1.5rem' }}>
-          <h4 style={{ marginBottom: '0.5rem', fontSize: '0.66rem', fontWeight: '600' }}>Cursor Style:</h4>
+          <h4 style={{ marginBottom: '0.5rem', fontSize: '0.73rem', fontWeight: '600' }}>Cursor Style:</h4>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button style={dropdownTriggerStyle}>
-                <span style={{ textTransform: 'capitalize' }}>{cursors.find(c => c.value === cursorStyle)?.label || 'Default Arrow (Black)'}</span>
+                <span style={{ textTransform: 'capitalize' }}>{cursors.find(c => c.value === cursorStyle)?.label || 'Classic White'}</span>
                 <span>▼</span>
               </button>
             </DropdownMenuTrigger>
@@ -351,7 +353,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
         </div>
 
         <div style={{ marginBottom: '1.5rem' }}>
-          <h4 style={{ marginBottom: '0.5rem', fontSize: '0.73rem', fontWeight: '600' }}>Theme:</h4>
+          <h4 style={{ marginBottom: '0.5rem', fontSize: '0.8rem', fontWeight: '600' }}>Theme:</h4>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button style={dropdownTriggerStyle}>
@@ -370,7 +372,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
         </div>
 
         <div style={{ marginBottom: '1.5rem' }}>
-          <h4 style={{ marginBottom: '0.5rem', fontSize: '0.73rem', fontWeight: '600' }}>Sound Effects:</h4>
+          <h4 style={{ marginBottom: '0.5rem', fontSize: '0.8rem', fontWeight: '600' }}>Sound Effects:</h4>
           <div style={{ 
             '--switch-checked-color': getButtonColor(),
             display: 'flex', 
@@ -379,7 +381,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
             background: 'rgba(255, 255, 255, 0.1)', 
             padding: '8px 12px', 
             borderRadius: '15px',
-            fontSize: '0.81rem'
+            fontSize: '0.89rem'
           } as React.CSSProperties}>
             <span>{soundEnabled ? 'Enabled' : 'Disabled'}</span>
             <Switch 

@@ -20,7 +20,7 @@ export const useSoundEffects = (soundEnabled: boolean) => {
     
     const audioContext = initAudioContext();
     
-    // Cherry MX Blue style click
+    // More realistic mechanical keyboard sound
     const oscillator1 = audioContext.createOscillator();
     const gainNode1 = audioContext.createGain();
     const filterNode = audioContext.createBiquadFilter();
@@ -29,22 +29,22 @@ export const useSoundEffects = (soundEnabled: boolean) => {
     filterNode.connect(gainNode1);
     gainNode1.connect(audioContext.destination);
     
-    // High frequency click
+    // Sharp click sound
     oscillator1.type = 'square';
-    oscillator1.frequency.setValueAtTime(2200 + Math.random() * 400, audioContext.currentTime);
+    oscillator1.frequency.setValueAtTime(1800 + Math.random() * 200, audioContext.currentTime);
     
-    // Sharp attack, quick decay
-    gainNode1.gain.setValueAtTime(0.3, audioContext.currentTime);
-    gainNode1.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.03);
+    // Very sharp attack, quick decay for realistic click
+    gainNode1.gain.setValueAtTime(0.2, audioContext.currentTime);
+    gainNode1.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.02);
     
     // High-pass filter for crisp sound
     filterNode.type = 'highpass';
-    filterNode.frequency.setValueAtTime(1000, audioContext.currentTime);
+    filterNode.frequency.setValueAtTime(800, audioContext.currentTime);
     
     oscillator1.start(audioContext.currentTime);
-    oscillator1.stop(audioContext.currentTime + 0.03);
+    oscillator1.stop(audioContext.currentTime + 0.02);
 
-    // Mechanical thock (lower frequency component)
+    // Subtle bottom-out thock
     const oscillator2 = audioContext.createOscillator();
     const gainNode2 = audioContext.createGain();
     const filterNode2 = audioContext.createBiquadFilter();
@@ -53,39 +53,49 @@ export const useSoundEffects = (soundEnabled: boolean) => {
     filterNode2.connect(gainNode2);
     gainNode2.connect(audioContext.destination);
 
-    oscillator2.type = 'triangle';
-    oscillator2.frequency.setValueAtTime(150 + Math.random() * 50, audioContext.currentTime);
+    oscillator2.type = 'sine';
+    oscillator2.frequency.setValueAtTime(120 + Math.random() * 30, audioContext.currentTime);
     
-    gainNode2.gain.setValueAtTime(0.15, audioContext.currentTime);
-    gainNode2.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.06);
+    gainNode2.gain.setValueAtTime(0.08, audioContext.currentTime);
+    gainNode2.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.04);
     
-    // Low-pass filter for thump
+    // Low-pass filter for subtle thump
     filterNode2.type = 'lowpass';
-    filterNode2.frequency.setValueAtTime(800, audioContext.currentTime);
+    filterNode2.frequency.setValueAtTime(300, audioContext.currentTime);
 
-    oscillator2.start(audioContext.currentTime);
-    oscillator2.stop(audioContext.currentTime + 0.06);
+    oscillator2.start(audioContext.currentTime + 0.005);
+    oscillator2.stop(audioContext.currentTime + 0.04);
   };
 
   const playErrorSound = () => {
     if (!soundEnabled) return;
     
     const audioContext = initAudioContext();
+    
+    // Error buzz sound
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
+    const filterNode = audioContext.createBiquadFilter();
     
-    oscillator.connect(gainNode);
+    oscillator.connect(filterNode);
+    filterNode.connect(gainNode);
     gainNode.connect(audioContext.destination);
     
+    // Harsh buzz
     oscillator.type = 'sawtooth';
-    oscillator.frequency.setValueAtTime(250, audioContext.currentTime);
-    oscillator.frequency.exponentialRampToValueAtTime(150, audioContext.currentTime + 0.15);
+    oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
+    oscillator.frequency.linearRampToValueAtTime(100, audioContext.currentTime + 0.1);
     
-    gainNode.gain.setValueAtTime(0.25, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.15);
+    gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.1);
+    
+    // Band-pass filter for harsh buzz
+    filterNode.type = 'bandpass';
+    filterNode.frequency.setValueAtTime(300, audioContext.currentTime);
+    filterNode.Q.setValueAtTime(5, audioContext.currentTime);
     
     oscillator.start();
-    oscillator.stop(audioContext.currentTime + 0.15);
+    oscillator.stop(audioContext.currentTime + 0.1);
   };
 
   return {
