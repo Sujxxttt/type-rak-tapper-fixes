@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { X } from 'lucide-react';
 import {
@@ -147,19 +148,19 @@ export const SideMenu: React.FC<SideMenuProps> = ({
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    fontSize: '0.9rem'
+    fontSize: '0.81rem'
   };
 
   const fontSizes = [80, 90, 100, 110, 120, 130, 140, 150, 175, 200];
   
-  // Updated cursor options with different shapes and colors
+  // Fixed cursor options with proper shape and color variations
   const cursors = [
-    { value: 'default', label: 'Default Arrow' },
-    { value: 'pointer', label: 'Hand Pointer' },
-    { value: 'crosshair', label: 'Crosshair' },
-    { value: 'text', label: 'Text Beam' },
-    { value: 'move', label: 'Move Cross' },
-    { value: 'grab', label: 'Open Hand' }
+    { value: 'default', label: 'Default Arrow (Black)' },
+    { value: 'pointer', label: 'Hand Pointer (Blue)' },
+    { value: 'crosshair', label: 'Crosshair (Red)' },
+    { value: 'text', label: 'Text Beam (Green)' },
+    { value: 'move', label: 'Move Cross (Purple)' },
+    { value: 'grab', label: 'Open Hand (Orange)' }
   ];
 
   const handleCheckThisOut = () => {
@@ -219,10 +220,10 @@ export const SideMenu: React.FC<SideMenuProps> = ({
           <X size={24} />
         </button>
 
-        <h3 style={{ marginBottom: '1.5rem', paddingTop: '1rem', fontSize: '1.73rem' }}>Settings</h3>
+        <h3 style={{ marginBottom: '1.5rem', paddingTop: '1rem', fontSize: '2.08rem' }}>Settings</h3>
 
         <div style={{ marginBottom: '1.5rem' }}>
-          <h4 style={{ marginBottom: '0.5rem', fontSize: '0.81rem', fontWeight: '600' }}>User:</h4>
+          <h4 style={{ marginBottom: '0.5rem', fontSize: '0.73rem', fontWeight: '600' }}>User:</h4>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button style={dropdownTriggerStyle}>
@@ -250,7 +251,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
                cursor: 'pointer', 
                transition: 'background-color 0.2s',
                opacity: 0.9,
-               fontSize: '0.9rem'
+               fontSize: '0.81rem'
              }}>
                {deleteConfirmState ? 'Confirm Delete' : `Delete ${currentActiveUser}`}
              </button>
@@ -258,7 +259,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
         </div>
 
         <div style={{ marginBottom: '1.5rem' }}>
-          <h4 style={{ marginBottom: '0.5rem', fontSize: '0.81rem', fontWeight: '600' }}>Test Duration:</h4>
+          <h4 style={{ marginBottom: '0.5rem', fontSize: '0.73rem', fontWeight: '600' }}>Test Duration:</h4>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button style={dropdownTriggerStyle}>
@@ -287,10 +288,10 @@ export const SideMenu: React.FC<SideMenuProps> = ({
         </div>
 
         <div style={{ marginBottom: '1.5rem' }}>
-          <h4 style={{ marginBottom: '0.5rem', fontSize: '0.73rem', fontWeight: '600' }}>Font Settings:</h4>
+          <h4 style={{ marginBottom: '0.5rem', fontSize: '0.66rem', fontWeight: '600' }}>Font Settings:</h4>
           
           <div style={{ marginBottom: '10px' }}>
-            <label style={{ fontSize: '0.65rem', marginBottom: '5px', display: 'block' }}>Font Size:</label>
+            <label style={{ fontSize: '0.59rem', marginBottom: '5px', display: 'block' }}>Font Size:</label>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button style={dropdownTriggerStyle}>
@@ -309,7 +310,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
           </div>
 
           <div>
-            <label style={{ fontSize: '0.65rem', marginBottom: '5px', display: 'block' }}>Font Style:</label>
+            <label style={{ fontSize: '0.59rem', marginBottom: '5px', display: 'block' }}>Font Style:</label>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button style={dropdownTriggerStyle}>
@@ -329,11 +330,11 @@ export const SideMenu: React.FC<SideMenuProps> = ({
         </div>
         
         <div style={{ marginBottom: '1.5rem' }}>
-          <h4 style={{ marginBottom: '0.5rem', fontSize: '0.73rem', fontWeight: '600' }}>Cursor Style:</h4>
+          <h4 style={{ marginBottom: '0.5rem', fontSize: '0.66rem', fontWeight: '600' }}>Cursor Style:</h4>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button style={dropdownTriggerStyle}>
-                <span style={{ textTransform: 'capitalize' }}>{cursors.find(c => c.value === cursorStyle)?.label || 'Default Arrow'}}</span>
+                <span style={{ textTransform: 'capitalize' }}>{cursors.find(c => c.value === cursorStyle)?.label || 'Default Arrow (Black)'}</span>
                 <span>▼</span>
               </button>
             </DropdownMenuTrigger>
@@ -350,7 +351,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
         </div>
 
         <div style={{ marginBottom: '1.5rem' }}>
-          <h4 style={{ marginBottom: '0.5rem', fontSize: '0.81rem', fontWeight: '600' }}>Theme:</h4>
+          <h4 style={{ marginBottom: '0.5rem', fontSize: '0.73rem', fontWeight: '600' }}>Theme:</h4>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button style={dropdownTriggerStyle}>
@@ -369,7 +370,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
         </div>
 
         <div style={{ marginBottom: '1.5rem' }}>
-          <h4 style={{ marginBottom: '0.5rem', fontSize: '0.81rem', fontWeight: '600' }}>Sound Effects:</h4>
+          <h4 style={{ marginBottom: '0.5rem', fontSize: '0.73rem', fontWeight: '600' }}>Sound Effects:</h4>
           <div style={{ 
             '--switch-checked-color': getButtonColor(),
             display: 'flex', 
@@ -378,7 +379,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
             background: 'rgba(255, 255, 255, 0.1)', 
             padding: '8px 12px', 
             borderRadius: '15px',
-            fontSize: '0.9rem'
+            fontSize: '0.81rem'
           } as React.CSSProperties}>
             <span>{soundEnabled ? 'Enabled' : 'Disabled'}</span>
             <Switch 
