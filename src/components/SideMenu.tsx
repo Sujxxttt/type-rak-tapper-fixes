@@ -123,7 +123,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
   const handleCursorChange = (cursor: string) => {
     setCursorStyle(cursor);
     localStorage.setItem('typeRakCursor', cursor);
-    document.body.style.cursor = cursor === 'default' ? 'auto' : cursor;
+    document.body.style.cursor = cursor;
   };
 
   const dropdownContentStyle: React.CSSProperties = {
@@ -151,13 +151,15 @@ export const SideMenu: React.FC<SideMenuProps> = ({
   };
 
   const fontSizes = [80, 90, 100, 110, 120, 130, 140, 150, 175, 200];
+  
+  // Updated cursor options with different shapes and colors
   const cursors = [
-    { value: 'default', label: 'Default' },
-    { value: 'pointer', label: 'Pointer' },
+    { value: 'default', label: 'Default Arrow' },
+    { value: 'pointer', label: 'Hand Pointer' },
     { value: 'crosshair', label: 'Crosshair' },
-    { value: 'text', label: 'Text' },
-    { value: 'wait', label: 'Wait' },
-    { value: 'help', label: 'Help' }
+    { value: 'text', label: 'Text Beam' },
+    { value: 'move', label: 'Move Cross' },
+    { value: 'grab', label: 'Open Hand' }
   ];
 
   const handleCheckThisOut = () => {
@@ -217,7 +219,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
           <X size={24} />
         </button>
 
-        <h3 style={{ marginBottom: '1.5rem', paddingTop: '1rem', fontSize: '1.44rem' }}>Settings</h3>
+        <h3 style={{ marginBottom: '1.5rem', paddingTop: '1rem', fontSize: '1.73rem' }}>Settings</h3>
 
         <div style={{ marginBottom: '1.5rem' }}>
           <h4 style={{ marginBottom: '0.5rem', fontSize: '0.81rem', fontWeight: '600' }}>User:</h4>
@@ -285,10 +287,10 @@ export const SideMenu: React.FC<SideMenuProps> = ({
         </div>
 
         <div style={{ marginBottom: '1.5rem' }}>
-          <h4 style={{ marginBottom: '0.5rem', fontSize: '0.81rem', fontWeight: '600' }}>Font Settings:</h4>
+          <h4 style={{ marginBottom: '0.5rem', fontSize: '0.73rem', fontWeight: '600' }}>Font Settings:</h4>
           
           <div style={{ marginBottom: '10px' }}>
-            <label style={{ fontSize: '0.72rem', marginBottom: '5px', display: 'block' }}>Font Size:</label>
+            <label style={{ fontSize: '0.65rem', marginBottom: '5px', display: 'block' }}>Font Size:</label>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button style={dropdownTriggerStyle}>
@@ -307,7 +309,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
           </div>
 
           <div>
-            <label style={{ fontSize: '0.72rem', marginBottom: '5px', display: 'block' }}>Font Style:</label>
+            <label style={{ fontSize: '0.65rem', marginBottom: '5px', display: 'block' }}>Font Style:</label>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button style={dropdownTriggerStyle}>
@@ -327,11 +329,11 @@ export const SideMenu: React.FC<SideMenuProps> = ({
         </div>
         
         <div style={{ marginBottom: '1.5rem' }}>
-          <h4 style={{ marginBottom: '0.5rem', fontSize: '0.81rem', fontWeight: '600' }}>Cursor Style:</h4>
+          <h4 style={{ marginBottom: '0.5rem', fontSize: '0.73rem', fontWeight: '600' }}>Cursor Style:</h4>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button style={dropdownTriggerStyle}>
-                <span style={{ textTransform: 'capitalize' }}>{cursorStyle}</span>
+                <span style={{ textTransform: 'capitalize' }}>{cursors.find(c => c.value === cursorStyle)?.label || 'Default Arrow'}}</span>
                 <span>▼</span>
               </button>
             </DropdownMenuTrigger>

@@ -26,7 +26,7 @@ export const Introduction: React.FC<IntroductionProps> = ({
   const themes = [
     {
       id: 'cosmic-nebula',
-      background: 'linear-gradient(135deg, #400354, #03568c)',
+      background: 'linear-gradient(45deg, #400354, #03568c)',
       titleGradient: 'linear-gradient(45deg, #b109d6 0%, #0c6dc2 100%)'
     },
     {
@@ -37,7 +37,7 @@ export const Introduction: React.FC<IntroductionProps> = ({
     {
       id: 'cotton-candy-glow',
       background: 'linear-gradient(45deg, #74d2f1, #69c8e8)',
-      titleGradient: 'linear-gradient(90deg, #ff59e8 0%, #ff52a8 100%)'
+      titleGradient: 'linear-gradient(90deg, #fc03df 0%, #ff3be8 100%)'
     }
   ];
 
@@ -54,12 +54,12 @@ export const Introduction: React.FC<IntroductionProps> = ({
     // Start with cosmic nebula theme (index 0)
     setCurrentThemeIndex(0);
 
-    // Theme switching phase
+    // Theme switching phase - extended duration
     themeInterval = setInterval(() => {
       setCurrentThemeIndex(prev => (prev + 1) % themes.length);
-    }, 1500);
+    }, 2000); // Extended from 1500ms to 2000ms
 
-    // After 3 theme cycles (4.5 seconds), switch to moving phase
+    // After 3 theme cycles (6 seconds), switch to moving phase
     phaseTimeout = setTimeout(() => {
       clearInterval(themeInterval);
       setAnimationPhase('moving');
@@ -68,9 +68,9 @@ export const Introduction: React.FC<IntroductionProps> = ({
       // Set to the actual current theme for the final transition
       const actualThemeIndex = getCurrentThemeIndex();
       setCurrentThemeIndex(actualThemeIndex >= 0 ? actualThemeIndex : 0);
-    }, 4500);
+    }, 6000); // Extended from 4500ms to 6000ms
 
-    // Complete animation after title moves to top-left
+    // Complete animation after title moves to top-left - extended duration
     completeTimeout = setTimeout(() => {
       if (isFromTitleClick) {
         // If clicked from title, go to easter egg instead
@@ -80,7 +80,7 @@ export const Introduction: React.FC<IntroductionProps> = ({
       } else {
         onComplete();
       }
-    }, 6000);
+    }, 8500); // Extended from 6000ms to 8500ms
 
     return () => {
       clearInterval(themeInterval);
@@ -111,7 +111,7 @@ export const Introduction: React.FC<IntroductionProps> = ({
         right: 0,
         bottom: 0,
         background: currentThemeData.background,
-        transition: animationPhase === 'themes' ? 'background 1.5s ease-in-out' : 'background 2s ease-in-out',
+        transition: animationPhase === 'themes' ? 'background 2s ease-in-out' : 'background 2.5s ease-in-out',
         display: 'flex',
         alignItems: titlePosition === 'center' ? 'center' : 'flex-start',
         justifyContent: titlePosition === 'center' ? 'center' : 'flex-start',
@@ -132,10 +132,10 @@ export const Introduction: React.FC<IntroductionProps> = ({
           fontWeight: 700,
           margin: 0,
           transition: animationPhase === 'themes' ? 
-            'background-image 1.5s ease-in-out' : 
-            'all 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), background-image 2s ease-in-out',
+            'background-image 2s ease-in-out' : 
+            'all 2.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), background-image 2.5s ease-in-out',
           textAlign: 'center',
-          animation: animationPhase === 'themes' ? 'heartbeat 2.5s ease-in-out infinite' : 'none',
+          animation: animationPhase === 'themes' ? 'heartbeat 3s ease-in-out infinite' : 'none',
           cursor: titlePosition === 'top-left' ? 'pointer' : 'default'
         }}
       >

@@ -117,6 +117,7 @@ const Index: React.FC = () => {
     } else if (titleClickCount === 2) {
       setTitleClickMessage('Once more ??');
     } else if (titleClickCount >= 3) {
+      // Reset count and show introduction that will lead to easter egg
       setShowIntroduction(true);
       setTitleClickCount(0);
       setTitleClickMessage('');
@@ -572,8 +573,7 @@ const Index: React.FC = () => {
     fontFamily: fontStyle === 'roboto' ? "'Roboto', sans-serif" : fontStyle === 'open-sans' ? "'Open Sans', sans-serif" : fontStyle === 'lato' ? "'Lato', sans-serif" : fontStyle === 'source-sans' ? "'Source Sans Pro', sans-serif" : fontStyle === 'dancing-script' ? "'Dancing Script', cursive" : fontStyle === 'pacifico' ? "'Pacifico', cursive" : "'Inter', sans-serif",
     fontSize: '112.5%',
     color: 'white',
-    background: theme === 'midnight-black' ? '#000000' : theme === 'cotton-candy-glow' ? 'linear-gradient(45deg, #74d2f1, #69c8e8)' : 'linear-gradient(135deg, #400354, #03568c)',
-    // Fixed gradient direction
+    background: theme === 'midnight-black' ? '#000000' : theme === 'cotton-candy-glow' ? 'linear-gradient(45deg, #74d2f1, #69c8e8)' : 'linear-gradient(45deg, #400354, #03568c)',
     minHeight: '100vh',
     overflowX: 'hidden',
     transition: 'background 0.5s ease-in-out'
@@ -712,7 +712,7 @@ const Index: React.FC = () => {
         borderRadius: '12px',
         color: 'white',
         boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
-        fontSize: '0.81rem'
+        fontSize: '0.73rem'
       }}>
             Press any key to start the test
             <button onClick={() => setShowStartMessage(false)} style={{
@@ -1068,7 +1068,7 @@ const Index: React.FC = () => {
         padding: '20px 0',
         flex: 1,
         position: 'relative',
-        marginTop: '2cm'
+        marginTop: '3cm'
       }}>
             <TypingTest testText={testText} pos={pos} chars={chars} theme={theme} onKeyDown={handleKeyDown} fontSize={fontSize} fontStyle={fontStyle} />
 
