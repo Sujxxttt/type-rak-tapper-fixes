@@ -216,7 +216,7 @@ const Index: React.FC = () => {
     document.body.style.transition = 'background 0.5s ease-in-out';
     if (theme === 'midnight-black') {
       document.body.classList.add('midnight-black');
-      document.body.style.background = '#171717';
+      document.body.style.background = '#000000';
     } else if (theme === 'cotton-candy-glow') {
       document.body.classList.add('cotton-candy-glow');
       document.body.style.background = 'linear-gradient(45deg, #74d2f1, #69c8e8)';
@@ -573,7 +573,7 @@ const Index: React.FC = () => {
     fontFamily: fontStyle === 'roboto' ? "'Roboto', sans-serif" : fontStyle === 'open-sans' ? "'Open Sans', sans-serif" : fontStyle === 'lato' ? "'Lato', sans-serif" : fontStyle === 'source-sans' ? "'Source Sans Pro', sans-serif" : fontStyle === 'dancing-script' ? "'Dancing Script', cursive" : fontStyle === 'pacifico' ? "'Pacifico', cursive" : "'Inter', sans-serif",
     fontSize: '112.5%',
     color: 'white',
-    background: theme === 'midnight-black' ? '#171717' : theme === 'cotton-candy-glow' ? 'linear-gradient(45deg, #74d2f1, #69c8e8)' : 'linear-gradient(135deg, #400354, #03568c)',
+    background: theme === 'midnight-black' ? '#000000' : theme === 'cotton-candy-glow' ? 'linear-gradient(45deg, #74d2f1, #69c8e8)' : 'linear-gradient(45deg, #400354, #03568c)',
     minHeight: '100vh',
     overflowX: 'hidden',
     transition: 'background 0.5s ease-in-out'
@@ -712,7 +712,7 @@ const Index: React.FC = () => {
         borderRadius: '12px',
         color: 'white',
         boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
-        fontSize: '0.66rem'
+        fontSize: '0.73rem'
       }}>
             Press any key to start the test
             <button onClick={() => setShowStartMessage(false)} style={{
@@ -893,7 +893,7 @@ const Index: React.FC = () => {
           gap: '1rem',
           marginBottom: '2rem'
         }}>
-          <button onClick={handleCreateTestClick} style={{
+              <button onClick={handleCreateTestClick} style={{
             background: getButtonColor(),
             color: 'white',
             border: 'none',
@@ -902,9 +902,9 @@ const Index: React.FC = () => {
             cursor: 'pointer',
             fontSize: '1rem'
           }}>
-            Create New Test
-          </button>
-          {testResults.length > 0 && <button onClick={() => continueTest()} style={{
+                Create New Test
+              </button>
+              {testResults.length > 0 && <button onClick={() => continueTest()} style={{
             background: getButtonColor(),
             color: 'white',
             border: 'none',
@@ -913,11 +913,11 @@ const Index: React.FC = () => {
             cursor: 'pointer',
             fontSize: '1rem'
           }}>
-              Continue Test
-            </button>}
-        </div>
+                  Continue Test
+                </button>}
+            </div>
 
-        {averageStats && <div style={{
+            {averageStats && <div style={{
           width: '100%',
           maxWidth: '700px',
           background: 'rgba(255, 255, 255, 0.1)',
@@ -927,137 +927,138 @@ const Index: React.FC = () => {
           padding: '20px',
           marginBottom: '20px'
         }}>
-            <h3 style={{
+                <h3 style={{
             marginBottom: '15px',
             textAlign: 'center'
           }}>Your Average Performance</h3>
-            <div style={{
+                <div style={{
             display: 'flex',
             justifyContent: 'space-around',
             textAlign: 'center'
           }}>
-            <div>
-              <div style={{
+                  <div>
+                    <div style={{
                 fontSize: '1.5rem',
                 fontWeight: 'bold',
                 color: getButtonColor()
               }}>{averageStats.avgWpm}</div>
-              <div style={{
+                    <div style={{
                 fontSize: '0.9rem',
                 opacity: 0.8
               }}>Avg WPM</div>
-            </div>
-            <div>
-              <div style={{
+                  </div>
+                  <div>
+                    <div style={{
                 fontSize: '1.5rem',
                 fontWeight: 'bold',
                 color: getButtonColor()
               }}>{averageStats.avgErrorRate}%</div>
-              <div style={{
+                    <div style={{
                 fontSize: '0.9rem',
                 opacity: 0.8
               }}>Avg Error Rate</div>
-            </div>
-            <div>
-              <div style={{
+                  </div>
+                  <div>
+                    <div style={{
                 fontSize: '1.5rem',
                 fontWeight: 'bold',
                 color: getButtonColor()
               }}>{averageStats.avgScore}</div>
-              <div style={{
+                    <div style={{
                 fontSize: '0.9rem',
                 opacity: 0.8
               }}>Avg Score</div>
-            </div>
-            <div>
-              <div style={{
+                  </div>
+                  <div>
+                    <div style={{
                 fontSize: '1.5rem',
                 fontWeight: 'bold',
                 color: getButtonColor()
               }}>{averageStats.totalTests}</div>
-              <div style={{
+                    <div style={{
                 fontSize: '0.9rem',
                 opacity: 0.8
               }}>Total Tests</div>
-            </div>
-            <div>
-              <div style={{
+                  </div>
+                  <div>
+                    <div style={{
                 fontSize: '1.5rem',
                 fontWeight: 'bold',
                 color: getButtonColor()
               }}>
-                {Math.floor((averageStats.totalTime || 0) / 60)}:{((averageStats.totalTime || 0) % 60).toString().padStart(2, '0')}
-              </div>
-              <div style={{
+                      {Math.floor((averageStats.totalTime || 0) / 60)}:{((averageStats.totalTime || 0) % 60).toString().padStart(2, '0')}
+                    </div>
+                    <div style={{
                 fontSize: '0.9rem',
                 opacity: 0.8
               }}>Time</div>
-            </div>
-          </div>
-
-          <div style={{
-            width: '100%',
-            maxWidth: '700px',
-            background: 'rgba(255, 255, 255, 0.1)',
-            borderRadius: '16px',
-            backdropFilter: 'blur(10px)',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            padding: '15px'
-          }}>
-            <h3 style={{
-              marginBottom: '10px',
-              borderBottom: '1px solid rgba(255,255,255,0.2)',
-              paddingBottom: '8px'
-            }}>
-              Your Previous Tests:
-            </h3>
-            {testResults.length === 0 ? <p>No tests recorded yet.</p> : <div style={{
-              maxHeight: '300px',
-              overflowY: 'auto'
-            }}>
-                {testResults.map((test, index) => <div key={index} style={{
-                  background: continueTestMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)',
-                  padding: '10px',
-                  borderRadius: '8px',
-                  marginBottom: '8px',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  cursor: continueTestMode ? 'pointer' : 'default',
-                  border: continueTestMode ? '1px solid rgba(255, 255, 255, 0.3)' : 'none'
-                }} onClick={() => continueTestMode && continueTest(test.name)}>
-                    <div>
-                      <div style={{
-                        fontWeight: 'bold'
-                      }}>{test.name}</div>
-                      <div style={{
-                        fontSize: '0.8rem',
-                        opacity: 0.8
-                      }}>
-                        {test.testCount > 1 ? `${test.testCount} tests completed` : '1 test completed'} | Last: {new Date(test.lastDate).toLocaleDateString()}
-                      </div>
-                      <div style={{
-                        fontSize: '0.8rem',
-                        opacity: 0.8
-                      }}>
-                        Time: {Math.floor((test.totalTime || 0) / 60)}:{((test.totalTime || 0) % 60).toString().padStart(2, '0')}
-                      </div>
-                    </div>
-                    <div style={{
-                      textAlign: 'right'
-                    }}>
-                      <div>{test.wpm} WPM | {test.errorRate}% Error Rate | Score: {test.score}</div>
-                      <div style={{
-                        fontSize: '0.8rem',
-                        opacity: 0.8
-                      }}>
-                        Average Stats
-                      </div>
-                    </div>
-                  </div>)}
+                  </div>
+                </div>
               </div>}
-          </div>
-        </div>}
+
+            <div style={{
+          width: '100%',
+          maxWidth: '700px',
+          background: 'rgba(255, 255, 255, 0.1)',
+          borderRadius: '16px',
+          backdropFilter: 'blur(10px)',
+          border: '1px solid rgba(255, 255, 255, 0.3)',
+          padding: '15px'
+        }}>
+              <h3 style={{
+            marginBottom: '10px',
+            borderBottom: '1px solid rgba(255,255,255,0.2)',
+            paddingBottom: '8px'
+          }}>
+                Your Previous Tests:
+              </h3>
+              {testResults.length === 0 ? <p>No tests recorded yet.</p> : <div style={{
+            maxHeight: '300px',
+            overflowY: 'auto'
+          }}>
+                  {testResults.map((test, index) => <div key={index} style={{
+              background: continueTestMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+              padding: '10px',
+              borderRadius: '8px',
+              marginBottom: '8px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              cursor: continueTestMode ? 'pointer' : 'default',
+              border: continueTestMode ? '1px solid rgba(255, 255, 255, 0.3)' : 'none'
+            }} onClick={() => continueTestMode && continueTest(test.name)}>
+                      <div>
+                        <div style={{
+                  fontWeight: 'bold'
+                }}>{test.name}</div>
+                        <div style={{
+                  fontSize: '0.8rem',
+                  opacity: 0.8
+                }}>
+                          {test.testCount > 1 ? `${test.testCount} tests completed` : '1 test completed'} | Last: {new Date(test.lastDate).toLocaleDateString()}
+                        </div>
+                        <div style={{
+                  fontSize: '0.8rem',
+                  opacity: 0.8
+                }}>
+                          Time: {Math.floor((test.totalTime || 0) / 60)}:{((test.totalTime || 0) % 60).toString().padStart(2, '0')}
+                        </div>
+                      </div>
+                      <div style={{
+                textAlign: 'right'
+              }}>
+                        <div>{test.wpm} WPM | {test.errorRate}% Error Rate | Score: {test.score}</div>
+                        <div style={{
+                  fontSize: '0.8rem',
+                  opacity: 0.8
+                }}>
+                          Average Stats
+                        </div>
+                      </div>
+                    </div>)}
+                </div>}
+            </div>
+          </div>}
 
         {currentScreen === 'typing' && <div style={{
         width: '100%',
@@ -1067,19 +1068,19 @@ const Index: React.FC = () => {
         padding: '20px 0',
         flex: 1,
         position: 'relative',
-        marginTop: '4cm'
+        marginTop: '3cm'
       }}>
-        <TypingTest testText={testText} pos={pos} chars={chars} theme={theme} onKeyDown={handleKeyDown} fontSize={fontSize} fontStyle={fontStyle} />
+            <TypingTest testText={testText} pos={pos} chars={chars} theme={theme} onKeyDown={handleKeyDown} fontSize={fontSize} fontStyle={fontStyle} />
 
-        <StatsDisplay elapsed={elapsed} correctSigns={correctCharacters} totalErrors={totalErrors} currentErrorRate={getCurrentErrorRate()} theme={theme} />
+            <StatsDisplay elapsed={elapsed} correctSigns={correctCharacters} totalErrors={totalErrors} currentErrorRate={getCurrentErrorRate()} theme={theme} />
 
-        <div style={{
+            <div style={{
           display: 'flex',
           gap: '1rem',
           alignItems: 'center',
           marginBottom: '2rem'
         }}>
-          <button onClick={() => {
+              <button onClick={() => {
             resetTest();
             setTypedText('');
             setExtraChars([]);
@@ -1104,9 +1105,9 @@ const Index: React.FC = () => {
             cursor: 'pointer',
             fontSize: '1rem'
           }}>
-            Restart Current Test
-          </button>
-          <button onClick={handleHistoryClick} style={{
+                Restart Current Test
+              </button>
+              <button onClick={handleHistoryClick} style={{
             background: '#6c757d',
             color: 'white',
             border: 'none',
@@ -1115,17 +1116,17 @@ const Index: React.FC = () => {
             cursor: 'pointer',
             fontSize: '1rem'
           }}>
-            History
-          </button>
-        </div>
+                History
+              </button>
+            </div>
 
-        <div style={{
+            <div style={{
           position: 'fixed',
           bottom: '30px',
           right: '30px',
           zIndex: 100
         }}>
-          <button onClick={handleReturnToDashboard} style={{
+              <button onClick={handleReturnToDashboard} style={{
             background: showReturnConfirm ? 'rgba(231, 76, 60, 0.7)' : 'rgba(255, 255, 255, 0.1)',
             backdropFilter: 'blur(20px)',
             border: '1px solid rgba(255, 255, 255, 0.3)',
@@ -1147,10 +1148,10 @@ const Index: React.FC = () => {
             e.currentTarget.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.3)';
             e.currentTarget.style.background = showReturnConfirm ? 'rgba(231, 76, 60, 0.7)' : 'rgba(255, 255, 255, 0.1)';
           }}>
-            {showReturnConfirm ? 'Confirm Return?' : 'Return to Dashboard'}
-          </button>
-        </div>
-      </div>}
+                {showReturnConfirm ? 'Confirm Return?' : 'Return to Dashboard'}
+              </button>
+            </div>
+          </div>}
 
         {currentScreen === 'results' && lastTestResult && <div style={{
         width: '100%',
@@ -1160,36 +1161,36 @@ const Index: React.FC = () => {
         padding: '20px 0',
         flex: 1
       }}>
-        <div style={{
+            <div style={{
           fontSize: '3em',
           fontWeight: 'bold',
           marginBottom: '0.5rem',
           color: 'white',
           textAlign: 'center'
         }}>
-          <span style={{
+              <span style={{
             fontSize: '0.5em',
             opacity: 0.8,
             marginRight: '5px'
           }}>Score:</span>
-          <span>{lastTestResult.score}</span>
-          <span style={{
+              <span>{lastTestResult.score}</span>
+              <span style={{
             fontSize: '0.5em',
             opacity: 0.8,
             marginLeft: '5px'
           }}>/ 1000</span>
-        </div>
-        
-        <div style={{
+            </div>
+            
+            <div style={{
           fontSize: '1.5em',
           marginBottom: '2rem',
           textAlign: 'center',
           color: 'white'
         }}>
-          {lastTestResult.score >= 800 ? "Excellent! Impressive Speed and Low Error Rate!" : lastTestResult.score >= 600 ? "Great job! Keep practicing!" : lastTestResult.score >= 400 ? "Good work! Room for improvement!" : "Keep practicing! You'll get better!"}
-        </div>
+              {lastTestResult.score >= 800 ? "Excellent! Impressive Speed and Low Error Rate!" : lastTestResult.score >= 600 ? "Great job! Keep practicing!" : lastTestResult.score >= 400 ? "Good work! Room for improvement!" : "Keep practicing! You'll get better!"}
+            </div>
 
-        <div style={{
+            <div style={{
           width: '100%',
           maxWidth: '700px',
           background: 'rgba(255, 255, 255, 0.1)',
@@ -1199,97 +1200,97 @@ const Index: React.FC = () => {
           padding: '20px',
           marginBottom: '2rem'
         }}>
-          <h3 style={{
+              <h3 style={{
             marginBottom: '15px',
             textAlign: 'center'
           }}>Test Results</h3>
-          <div style={{
+              <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(3, 1fr)',
             gap: '15px',
             textAlign: 'center',
             marginBottom: '15px'
           }}>
-            <div>
-              <div style={{
+                <div>
+                  <div style={{
                 fontSize: '1.5rem',
                 fontWeight: 'bold',
                 color: getButtonColor()
               }}>{lastTestResult.wpm}</div>
-              <div style={{
+                  <div style={{
                 fontSize: '0.9rem',
                 opacity: 0.8
               }}>WPM</div>
-            </div>
-            <div>
-              <div style={{
+                </div>
+                <div>
+                  <div style={{
                 fontSize: '1.5rem',
                 fontWeight: 'bold',
                 color: getButtonColor()
               }}>{lastTestResult.errorRate}%</div>
-              <div style={{
+                  <div style={{
                 fontSize: '0.9rem',
                 opacity: 0.8
               }}>Error Rate</div>
-            </div>
-            <div>
-              <div style={{
+                </div>
+                <div>
+                  <div style={{
                 fontSize: '1.5rem',
                 fontWeight: 'bold',
                 color: getButtonColor()
               }}>{lastTestResult.score}</div>
-              <div style={{
+                  <div style={{
                 fontSize: '0.9rem',
                 opacity: 0.8
               }}>Score</div>
-            </div>
-          </div>
-          <div style={{
+                </div>
+              </div>
+              <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(3, 1fr)',
             gap: '15px',
             textAlign: 'center'
           }}>
-            <div>
-              <div style={{
+                <div>
+                  <div style={{
                 fontSize: '1.5rem',
                 fontWeight: 'bold',
                 color: getButtonColor()
               }}>{lastTestResult.errors}</div>
-              <div style={{
+                  <div style={{
                 fontSize: '0.9rem',
                 opacity: 0.8
               }}>Total Errors</div>
-            </div>
-            <div>
-              <div style={{
+                </div>
+                <div>
+                  <div style={{
                 fontSize: '1.5rem',
                 fontWeight: 'bold',
                 color: getButtonColor()
               }}>{lastTestResult.correctChars}</div>
-              <div style={{
+                  <div style={{
                 fontSize: '0.9rem',
                 opacity: 0.8
               }}>Correct Signs</div>
-            </div>
-            <div>
-              <div style={{
+                </div>
+                <div>
+                  <div style={{
                 fontSize: '1.5rem',
                 fontWeight: 'bold',
                 color: getButtonColor()
               }}>
-                {Math.floor(lastTestResult.time / 60)}:{(lastTestResult.time % 60).toString().padStart(2, '0')}
-              </div>
-              <div style={{
+                    {Math.floor(lastTestResult.time / 60)}:{(lastTestResult.time % 60).toString().padStart(2, '0')}
+                  </div>
+                  <div style={{
                 fontSize: '0.9rem',
                 opacity: 0.8
               }}>Time Taken</div>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
 
-        {/* Typed Text Preview Section */}
-        {showTypedPreview && typedText && <div style={{
+            {/* Typed Text Preview Section */}
+            {showTypedPreview && typedText && <div style={{
           width: '100%',
           maxWidth: '700px',
           background: 'rgba(255, 255, 255, 0.1)',
@@ -1299,32 +1300,32 @@ const Index: React.FC = () => {
           padding: '20px',
           marginBottom: '1.5rem'
         }}>
-            <h3 style={{
+                <h3 style={{
             marginBottom: '15px',
             textAlign: 'center'
           }}>Your Typed Text</h3>
-            <div style={{
-              background: 'rgba(255, 255, 255, 0.05)',
-              borderRadius: '8px',
-              padding: '15px',
-              maxHeight: '200px',
-              overflowY: 'auto',
-              fontFamily: 'monospace',
-              fontSize: '0.9rem',
-              lineHeight: '1.4',
-              whiteSpace: 'pre-wrap',
-              wordBreak: 'break-word'
-            }}>
-              {typedText}
-            </div>
-          </div>}
+                <div style={{
+            background: 'rgba(255, 255, 255, 0.05)',
+            borderRadius: '8px',
+            padding: '15px',
+            maxHeight: '200px',
+            overflowY: 'auto',
+            fontFamily: 'monospace',
+            fontSize: '0.9rem',
+            lineHeight: '1.4',
+            whiteSpace: 'pre-wrap',
+            wordBreak: 'break-word'
+          }}>
+                  {typedText}
+                </div>
+              </div>}
 
-        <div style={{
+            <div style={{
           display: 'flex',
           gap: '1rem',
           marginBottom: '1.5rem'
         }}>
-          <button onClick={() => setShowTypedPreview(prev => !prev)} style={{
+              <button onClick={() => setShowTypedPreview(prev => !prev)} style={{
             background: '#6c757d',
             color: 'white',
             border: 'none',
@@ -1333,9 +1334,9 @@ const Index: React.FC = () => {
             cursor: 'pointer',
             fontSize: '1rem'
           }} className="bg-[#09000a]/[0.37]">
-            {showTypedPreview ? 'Hide' : 'Preview'} Typed Text
-          </button>
-          <button onClick={() => {
+                {showTypedPreview ? 'Hide' : 'Preview'} Typed Text
+              </button>
+              <button onClick={() => {
             setCurrentScreen('dashboard');
             setShowTypedPreview(false);
           }} style={{
@@ -1347,10 +1348,10 @@ const Index: React.FC = () => {
             cursor: 'pointer',
             fontSize: '1rem'
           }}>
-            Back to Test Dashboard
-          </button>
-        </div>
-      </div>}
+                Back to Test Dashboard
+              </button>
+            </div>
+          </div>}
 
         {currentScreen === 'history' && <HistoryPage allTestHistory={allTestHistory} theme={theme} onBack={() => setCurrentScreen('dashboard')} getButtonColor={getButtonColor} />}
 
@@ -1362,100 +1363,100 @@ const Index: React.FC = () => {
 
         {/* Footer */}
         <footer style={{
-          marginTop: 'auto',
-          display: 'flex',
-          flexWrap: 'wrap',
-          justifyContent: 'center',
-          gap: '1.5rem',
-          padding: '1.5rem 0',
-          zIndex: 5,
-          background: highlightFooter ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
-          borderRadius: highlightFooter ? '12px' : '0',
-          transition: 'all 0.3s ease',
-          border: highlightFooter ? '1px solid rgba(255, 255, 255, 0.3)' : 'none'
-        }}>
+        marginTop: 'auto',
+        display: 'flex',
+        flexWrap: 'wrap',
+        justifyContent: 'center',
+        gap: '1.5rem',
+        padding: '1.5rem 0',
+        zIndex: 5,
+        background: highlightFooter ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+        borderRadius: highlightFooter ? '12px' : '0',
+        transition: 'all 0.3s ease',
+        border: highlightFooter ? '1px solid rgba(255, 255, 255, 0.3)' : 'none'
+      }}>
           <a href="https://www.reddit.com/user/Rak_the_rock" target="_blank" rel="noopener noreferrer" style={{
-            color: 'white',
-            textDecoration: 'none',
-            fontSize: '0.9rem',
-            transition: 'color 0.3s ease'
-          }} onMouseEnter={e => {
-            const target = e.target as HTMLElement;
-            target.style.color = theme === 'midnight-black' ? '#c559f7' : theme === 'cotton-candy-glow' ? '#ff59e8' : '#8a2be2';
-          }} onMouseLeave={e => {
-            const target = e.target as HTMLElement;
-            target.style.color = 'white';
-          }}>
+          color: 'white',
+          textDecoration: 'none',
+          fontSize: '0.9rem',
+          transition: 'color 0.3s ease'
+        }} onMouseEnter={e => {
+          const target = e.target as HTMLElement;
+          target.style.color = theme === 'midnight-black' ? '#c559f7' : theme === 'cotton-candy-glow' ? '#ff59e8' : '#8a2be2';
+        }} onMouseLeave={e => {
+          const target = e.target as HTMLElement;
+          target.style.color = 'white';
+        }}>
             Reddit
           </a>
           <a href="https://github.com/Raktherock" target="_blank" rel="noopener noreferrer" style={{
-            color: 'white',
-            textDecoration: 'none',
-            fontSize: '0.9rem',
-            transition: 'color 0.3s ease'
-          }} onMouseEnter={e => {
-            const target = e.target as HTMLElement;
-            target.style.color = theme === 'midnight-black' ? '#c559f7' : theme === 'cotton-candy-glow' ? '#ff59e8' : '#8a2be2';
-          }} onMouseLeave={e => {
-            const target = e.target as HTMLElement;
-            target.style.color = 'white';
-          }}>
+          color: 'white',
+          textDecoration: 'none',
+          fontSize: '0.9rem',
+          transition: 'color 0.3s ease'
+        }} onMouseEnter={e => {
+          const target = e.target as HTMLElement;
+          target.style.color = theme === 'midnight-black' ? '#c559f7' : theme === 'cotton-candy-glow' ? '#ff59e8' : '#8a2be2';
+        }} onMouseLeave={e => {
+          const target = e.target as HTMLElement;
+          target.style.color = 'white';
+        }}>
             GitHub
           </a>
           <a href="https://t.me/RakshanKumaraa" target="_blank" rel="noopener noreferrer" style={{
-            color: 'white',
-            textDecoration: 'none',
-            fontSize: '0.9rem',
-            transition: 'color 0.3s ease'
-          }} onMouseEnter={e => {
-            const target = e.target as HTMLElement;
-            target.style.color = theme === 'midnight-black' ? '#c559f7' : theme === 'cotton-candy-glow' ? '#ff59e8' : '#8a2be2';
-          }} onMouseLeave={e => {
-            const target = e.target as HTMLElement;
-            target.style.color = 'white';
-          }}>
+          color: 'white',
+          textDecoration: 'none',
+          fontSize: '0.9rem',
+          transition: 'color 0.3s ease'
+        }} onMouseEnter={e => {
+          const target = e.target as HTMLElement;
+          target.style.color = theme === 'midnight-black' ? '#c559f7' : theme === 'cotton-candy-glow' ? '#ff59e8' : '#8a2be2';
+        }} onMouseLeave={e => {
+          const target = e.target as HTMLElement;
+          target.style.color = 'white';
+        }}>
             Telegram
           </a>
           <a href="https://www.linkedin.com/in/rakshan-kumaraa-140049365/" target="_blank" rel="noopener noreferrer" style={{
-            color: 'white',
-            textDecoration: 'none',
-            fontSize: '0.9rem',
-            transition: 'color 0.3s ease'
-          }} onMouseEnter={e => {
-            const target = e.target as HTMLElement;
-            target.style.color = theme === 'midnight-black' ? '#c559f7' : theme === 'cotton-candy-glow' ? '#ff59e8' : '#8a2be2';
-          }} onMouseLeave={e => {
-            const target = e.target as HTMLElement;
-            target.style.color = 'white';
-          }}>
+          color: 'white',
+          textDecoration: 'none',
+          fontSize: '0.9rem',
+          transition: 'color 0.3s ease'
+        }} onMouseEnter={e => {
+          const target = e.target as HTMLElement;
+          target.style.color = theme === 'midnight-black' ? '#c559f7' : theme === 'cotton-candy-glow' ? '#ff59e8' : '#8a2be2';
+        }} onMouseLeave={e => {
+          const target = e.target as HTMLElement;
+          target.style.color = 'white';
+        }}>
             LinkedIn
           </a>
           <a href="https://wa.me/916369314244" target="_blank" rel="noopener noreferrer" style={{
-            color: 'white',
-            textDecoration: 'none',
-            fontSize: '0.9rem',
-            transition: 'color 0.3s ease'
-          }} onMouseEnter={e => {
-            const target = e.target as HTMLElement;
-            target.style.color = theme === 'midnight-black' ? '#c559f7' : theme === 'cotton-candy-glow' ? '#ff59e8' : '#8a2be2';
-          }} onMouseLeave={e => {
-            const target = e.target as HTMLElement;
-            target.style.color = 'white';
-          }}>
+          color: 'white',
+          textDecoration: 'none',
+          fontSize: '0.9rem',
+          transition: 'color 0.3s ease'
+        }} onMouseEnter={e => {
+          const target = e.target as HTMLElement;
+          target.style.color = theme === 'midnight-black' ? '#c559f7' : theme === 'cotton-candy-glow' ? '#ff59e8' : '#8a2be2';
+        }} onMouseLeave={e => {
+          const target = e.target as HTMLElement;
+          target.style.color = 'white';
+        }}>
             WhatsApp
           </a>
           <a href="mailto:rakshankumaraa@gmail.com" style={{
-            color: 'white',
-            textDecoration: 'none',
-            fontSize: '0.9rem',
-            transition: 'color 0.3s ease'
-          }} onMouseEnter={e => {
-            const target = e.target as HTMLElement;
-            target.style.color = theme === 'midnight-black' ? '#c559f7' : theme === 'cotton-candy-glow' ? '#ff59e8' : '#8a2be2';
-          }} onMouseLeave={e => {
-            const target = e.target as HTMLElement;
-            target.style.color = 'white';
-          }}>
+          color: 'white',
+          textDecoration: 'none',
+          fontSize: '0.9rem',
+          transition: 'color 0.3s ease'
+        }} onMouseEnter={e => {
+          const target = e.target as HTMLElement;
+          target.style.color = theme === 'midnight-black' ? '#c559f7' : theme === 'cotton-candy-glow' ? '#ff59e8' : '#8a2be2';
+        }} onMouseLeave={e => {
+          const target = e.target as HTMLElement;
+          target.style.color = 'white';
+        }}>
             Gmail
           </a>
         </footer>
@@ -1509,16 +1510,6 @@ const Index: React.FC = () => {
           background-color: rgba(255, 68, 68, 0.2);
           border-radius: 2px;
         }
-
-        /* Improved cursor styles */
-        .cursor-classic-white * { cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><path d="M2 2L15 8L8 15L2 2Z" fill="white" stroke="black" stroke-width="1"/></svg>') 2 2, auto !important; }
-        .cursor-deep-black * { cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><path d="M2 2L15 8L8 15L2 2Z" fill="%23000000" stroke="white" stroke-width="1"/></svg>') 2 2, auto !important; }
-        .cursor-blue-breeze * { cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><path d="M2 2L15 8L8 15L2 2Z" fill="%230c6dc2" stroke="white" stroke-width="1"/></svg>') 2 2, auto !important; }
-        .cursor-sunset-orange * { cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><path d="M2 2L15 8L8 15L2 2Z" fill="%23FF6B35" stroke="white" stroke-width="1"/></svg>') 2 2, auto !important; }
-        .cursor-lollipop * { cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><path d="M2 2L15 8L8 15L2 2Z" fill="%23ff3be8" stroke="white" stroke-width="1"/></svg>') 2 2, auto !important; }
-        .cursor-royal-purple * { cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><path d="M2 2L15 8L8 15L2 2Z" fill="%236A5ACD" stroke="white" stroke-width="1"/></svg>') 2 2, auto !important; }
-        .cursor-electric-green * { cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><path d="M2 2L15 8L8 15L2 2Z" fill="%2300FF41" stroke="black" stroke-width="1"/></svg>') 2 2, auto !important; }
-        .cursor-neon-pink * { cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><path d="M2 2L15 8L8 15L2 2Z" fill="%23FF1493" stroke="white" stroke-width="1"/></svg>') 2 2, auto !important; }
       `}</style>
     </div>;
 };
