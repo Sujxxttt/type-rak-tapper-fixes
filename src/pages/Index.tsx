@@ -569,7 +569,8 @@ const Index: React.FC = () => {
   if (showEasterEgg) {
     return <EasterEggPage theme={theme} onGoBack={() => setShowEasterEgg(false)} />;
   }
-  return <div style={{
+  return (
+    <div style={{
     fontFamily: fontStyle === 'roboto' ? "'Roboto', sans-serif" : fontStyle === 'open-sans' ? "'Open Sans', sans-serif" : fontStyle === 'lato' ? "'Lato', sans-serif" : fontStyle === 'source-sans' ? "'Source Sans Pro', sans-serif" : fontStyle === 'dancing-script' ? "'Dancing Script', cursive" : fontStyle === 'pacifico' ? "'Pacifico', cursive" : "'Inter', sans-serif",
     fontSize: '112.5%',
     color: 'white',
@@ -1511,6 +1512,8 @@ const Index: React.FC = () => {
           border-radius: 2px;
         }
       `}</style>
-    </div>;
+    </div>
+  );
 };
+
 export default Index;
