@@ -31,12 +31,12 @@ export const Introduction: React.FC<IntroductionProps> = ({
     },
     {
       id: 'midnight-black',
-      background: '#000000',
+      background: '#171717',
       titleGradient: 'linear-gradient(90deg, #c559f7 0%, #7f59f7 100%)'
     },
     {
       id: 'cotton-candy-glow',
-      background: 'linear-gradient(45deg, #74d2f1, #69c8e8)',
+      background: 'linear-gradient(135deg, #12cff3, #5ab2f7)',
       titleGradient: 'linear-gradient(90deg, #fc03df 0%, #ff3be8 100%)'
     }
   ];

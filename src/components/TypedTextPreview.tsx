@@ -27,6 +27,10 @@ export const TypedTextPreview: React.FC<TypedTextPreviewProps> = ({
     }
   };
 
+  const getErrorColor = () => {
+    return '#ff1c14'; // Red for all themes
+  };
+
   const renderTypedText = () => {
     const result = [];
     const textToRender = typedText;
@@ -43,7 +47,7 @@ export const TypedTextPreview: React.FC<TypedTextPreviewProps> = ({
         );
       } else {
         result.push(
-          <span key={i} style={{ color: '#ff1c14', backgroundColor: 'rgba(255, 28, 20, 0.3)', borderRadius: '2px', padding: '0 1px' }}>
+          <span key={i} style={{ color: getErrorColor(), backgroundColor: 'rgba(255, 28, 20, 0.3)', borderRadius: '2px', padding: '0 1px' }}>
             {typedChar === ' ' ? '\u00A0' : originalChar === ' ' ? '\u00A0' : typedChar}
           </span>
         );
@@ -120,7 +124,7 @@ export const TypedTextPreview: React.FC<TypedTextPreviewProps> = ({
             <span style={{ color: getCorrectColor() }}>■</span> Correctly typed
           </div>
           <div>
-            <span style={{ color: '#ff1c14' }}>■</span> Incorrectly typed
+            <span style={{ color: getErrorColor() }}>■</span> Incorrectly typed
           </div>
         </div>
       </div>

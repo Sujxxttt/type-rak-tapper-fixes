@@ -19,6 +19,8 @@ export const EasterEggPage: React.FC<EasterEggPageProps> = ({ theme, onGoBack })
     'linear-gradient(90deg, #ff59e8 0%, #ff52a8 100%)'  // cotton candy
   ];
 
+  const [gradientPosition, setGradientPosition] = useState(0);
+
   useEffect(() => {
     setShowMessage(true);
     const timer = setTimeout(() => {
@@ -38,7 +40,14 @@ export const EasterEggPage: React.FC<EasterEggPageProps> = ({ theme, onGoBack })
       setCurrentColorCycle(prev => (prev + 1) % titleGradients.length);
     }, 2000);
 
-    return () => clearInterval(colorInterval);
+    const positionInterval = setInterval(() => {
+      setGradientPosition(prev => (prev + 1) % 100);
+    }, 50);
+
+    return () => {
+      clearInterval(colorInterval);
+      clearInterval(positionInterval);
+    };
   }, []);
 
   const handleNameClick = () => {
@@ -77,30 +86,29 @@ export const EasterEggPage: React.FC<EasterEggPageProps> = ({ theme, onGoBack })
         </div>
       )}
 
-      {showArrow && (
-        <button
-          onClick={onGoBack}
-          style={{
-            position: 'fixed',
-            top: '20px',
-            left: '20px',
-            background: 'rgba(255, 255, 255, 0.1)',
-            backdropFilter: 'blur(10px)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            borderRadius: '50%',
-            width: '50px',
-            height: '50px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'white',
-            cursor: 'pointer',
-            zIndex: 10001
-          }}
-        >
-          <ArrowLeft size={24} />
-        </button>
-      )}
+      <button
+        onClick={onGoBack}
+        style={{
+          position: 'fixed',
+          top: '20px',
+          left: '20px',
+          background: 'rgba(255, 255, 255, 0.1)',
+          backdropFilter: 'blur(10px)',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+          borderRadius: '50%',
+          width: '50px',
+          height: '50px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: 'white',
+          cursor: 'pointer',
+          zIndex: 10001,
+          transition: 'all 0.3s ease'
+        }}
+      >
+        <ArrowLeft size={24} />
+      </button>
 
       <div style={{
         textAlign: 'center',
@@ -110,7 +118,9 @@ export const EasterEggPage: React.FC<EasterEggPageProps> = ({ theme, onGoBack })
         gap: '10px'
       }}>
         <h1 style={{
-          backgroundImage: titleGradients[currentColorCycle],
+          backgroundImage: `${titleGradients[currentColorCycle]}`,
+          backgroundSize: '200% 200%',
+          backgroundPosition: `${gradientPosition}% 50%`,
           WebkitBackgroundClip: 'text',
           backgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
@@ -119,7 +129,8 @@ export const EasterEggPage: React.FC<EasterEggPageProps> = ({ theme, onGoBack })
           fontWeight: 700,
           textAlign: 'center',
           margin: 0,
-          transition: 'background-image 0.5s ease-in-out'
+          transition: 'background-image 0.5s ease-in-out',
+          animation: 'heartbeat 2s ease-in-out infinite'
         }}>
           TypeWave
         </h1>
@@ -127,7 +138,10 @@ export const EasterEggPage: React.FC<EasterEggPageProps> = ({ theme, onGoBack })
         <div style={{
           fontSize: '1rem',
           color: 'white',
-          marginBottom: '20px'
+          marginBottom: '20px',
+          fontFamily: 'serif',
+          fontStyle: 'italic',
+          fontWeight: 300
         }}>
           by
         </div>
@@ -138,7 +152,9 @@ export const EasterEggPage: React.FC<EasterEggPageProps> = ({ theme, onGoBack })
           <span
             onClick={handleNameClick}
             style={{
-              backgroundImage: titleGradients[currentColorCycle],
+              backgroundImage: `${titleGradients[currentColorCycle]}`,
+              backgroundSize: '200% 200%',
+              backgroundPosition: `${gradientPosition}% 50%`,
               WebkitBackgroundClip: 'text',
               backgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
@@ -152,6 +168,17 @@ export const EasterEggPage: React.FC<EasterEggPageProps> = ({ theme, onGoBack })
           </span>
         </div>
       </div>
+      
+      <style>{`
+        @keyframes heartbeat {
+          0%, 100% { 
+            transform: scale(1);
+          }
+          50% { 
+            transform: scale(1.05);
+          }
+        }
+      `}</style>
     </div>
   );
 };

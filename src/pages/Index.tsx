@@ -216,10 +216,10 @@ const Index: React.FC = () => {
     document.body.style.transition = 'background 0.5s ease-in-out';
     if (theme === 'midnight-black') {
       document.body.classList.add('midnight-black');
-      document.body.style.background = '#000000';
+      document.body.style.background = '#171717';
     } else if (theme === 'cotton-candy-glow') {
       document.body.classList.add('cotton-candy-glow');
-      document.body.style.background = 'linear-gradient(45deg, #74d2f1, #69c8e8)';
+      document.body.style.background = 'linear-gradient(135deg, #12cff3, #5ab2f7)';
     } else {
       document.body.style.background = 'linear-gradient(135deg, #400354, #03568c)';
     }
@@ -359,6 +359,7 @@ const Index: React.FC = () => {
         if (chars[pos]) {
           chars[pos].classList.remove("incorrect");
           chars[pos].classList.add("correct");
+          chars[pos].style.transition = 'color 0.25s ease-in-out';
         }
         setCorrectCharacters(prev => {
           const newCorrect = prev + 1;
@@ -1485,11 +1486,25 @@ const Index: React.FC = () => {
           from { opacity: 0; transform: translateY(-10px); }
           to { opacity: 1; transform: translateY(0); }
         }
+
+        @keyframes fadeInChar {
+          0% { 
+            opacity: 0; 
+            transform: scale(0.8);
+          }
+          50% {
+            transform: scale(1.1);
+          }
+          100% { 
+            opacity: 1; 
+            transform: scale(1);
+          }
+        }
         
         .char {
           display: inline-block;
           color: ${theme === 'cotton-candy-glow' ? 'white' : theme === 'midnight-black' ? '#f0f0f0' : '#f5e9f1'};
-          transition: color 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+          transition: color 0.25s ease-in-out, background-color 0.25s ease-in-out, transform 0.1s ease-out;
           padding: 0 1px;
           margin: 0;
           letter-spacing: 0.01em;
@@ -1498,6 +1513,7 @@ const Index: React.FC = () => {
         
         .char.correct {
           color: ${theme === 'midnight-black' ? '#ae1ee3' : theme === 'cotton-candy-glow' ? '#ff1fbc' : '#21b1ff'} !important;
+          animation: fadeInChar 0.25s ease-in-out;
         }
         
         .char.incorrect {
