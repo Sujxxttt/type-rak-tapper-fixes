@@ -12,6 +12,7 @@ export const EasterEggPage: React.FC<EasterEggPageProps> = ({ theme, onGoBack })
   const [showArrow, setShowArrow] = useState(false);
   const [showMessage, setShowMessage] = useState(false);
   const [currentColorCycle, setCurrentColorCycle] = useState(0);
+  const [currentName, setCurrentName] = useState('Rakshan Kumaraa');
 
   const titleGradients = [
     'linear-gradient(45deg, #b109d6 0%, #0c6dc2 100%)', // cosmic nebula
@@ -44,9 +45,15 @@ export const EasterEggPage: React.FC<EasterEggPageProps> = ({ theme, onGoBack })
       setGradientPosition(prev => (prev + 1) % 100);
     }, 50);
 
+    // Name changing interval - every 2 seconds
+    const nameInterval = setInterval(() => {
+      setCurrentName(prev => prev === 'Rakshan Kumaraa' ? 'Raktherock' : 'Rakshan Kumaraa');
+    }, 2000);
+
     return () => {
       clearInterval(colorInterval);
       clearInterval(positionInterval);
+      clearInterval(nameInterval);
     };
   }, []);
 
@@ -164,7 +171,7 @@ export const EasterEggPage: React.FC<EasterEggPageProps> = ({ theme, onGoBack })
               transition: 'background-image 0.5s ease-in-out'
             }}
           >
-            {nameClickCount % 2 === 0 ? 'Rakshan Kumaraa' : 'Raktherock'}
+            {currentName}
           </span>
         </div>
       </div>

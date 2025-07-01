@@ -61,7 +61,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
 }) => {
   const sideMenuRef = useRef<HTMLDivElement>(null);
   const [showCustomDuration, setShowCustomDuration] = useState(false);
-  const [cursorStyle, setCursorStyle] = useState(localStorage.getItem('typeRakCursor') || 'default');
+  const [cursorStyle, setCursorStyle] = useState(localStorage.getItem('typeRakCursor') || 'blue');
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -124,7 +124,10 @@ export const SideMenu: React.FC<SideMenuProps> = ({
   const handleCursorChange = (cursor: string) => {
     setCursorStyle(cursor);
     localStorage.setItem('typeRakCursor', cursor);
-    document.body.style.cursor = cursor;
+    
+    // Remove existing cursor classes and add new one
+    document.body.className = document.body.className.replace(/cursor-\S+/g, '').trim();
+    document.body.classList.add(`cursor-${cursor}`);
   };
 
   const dropdownContentStyle: React.CSSProperties = {
@@ -153,14 +156,12 @@ export const SideMenu: React.FC<SideMenuProps> = ({
 
   const fontSizes = [80, 90, 100, 110, 120, 130, 140, 150, 175, 200];
   
-  // Fixed cursor options with proper shape and color variations
+  // Custom cursor options with arrow design
   const cursors = [
-    { value: 'default', label: 'Default Arrow (Black)' },
-    { value: 'pointer', label: 'Hand Pointer (Blue)' },
-    { value: 'crosshair', label: 'Crosshair (Red)' },
-    { value: 'text', label: 'Text Beam (Green)' },
-    { value: 'move', label: 'Move Cross (Purple)' },
-    { value: 'grab', label: 'Open Hand (Orange)' }
+    { value: 'blue', label: 'Arrow Cursor (Blue)' },
+    { value: 'black', label: 'Arrow Cursor (Black)' },
+    { value: 'pink', label: 'Arrow Cursor (Pink)' },
+    { value: 'white', label: 'Arrow Cursor (White)' }
   ];
 
   const handleCheckThisOut = () => {
@@ -334,7 +335,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button style={dropdownTriggerStyle}>
-                <span style={{ textTransform: 'capitalize' }}>{cursors.find(c => c.value === cursorStyle)?.label || 'Default Arrow (Black)'}</span>
+                <span style={{ textTransform: 'capitalize' }}>{cursors.find(c => c.value === cursorStyle)?.label || 'Arrow Cursor (Blue)'}</span>
                 <span>▼</span>
               </button>
             </DropdownMenuTrigger>

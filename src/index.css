@@ -97,5 +97,36 @@
 
   body {
     @apply bg-background text-foreground;
+    transition: background 0.5s ease-in-out !important;
+  }
+
+  /* Theme backgrounds */
+  .theme-cosmic-nebula {
+    background: linear-gradient(135deg, #400354, #03568c) !important;
+  }
+
+  .theme-midnight-black {
+    background: #171717 !important;
+  }
+
+  .theme-cotton-candy-glow {
+    background: linear-gradient(135deg, #12cff3, #5ab2f7) !important;
+  }
+
+  /* Custom cursor styles */
+  .cursor-blue {
+    cursor: url('./assets/cursor-blue.svg') 12 12, auto;
+  }
+
+  .cursor-black {
+    cursor: url('./assets/cursor-black.svg') 12 12, auto;
+  }
+
+  .cursor-pink {
+    cursor: url('./assets/cursor-pink.svg') 12 12, auto;
+  }
+
+  .cursor-white {
+    cursor: url('./assets/cursor-white.svg') 12 12, auto;
   }
 }

@@ -212,17 +212,16 @@ const Index: React.FC = () => {
     }
   };
   useEffect(() => {
-    document.body.className = '';
-    document.body.style.transition = 'background 0.5s ease-in-out';
-    if (theme === 'midnight-black') {
-      document.body.classList.add('midnight-black');
-      document.body.style.background = '#171717';
-    } else if (theme === 'cotton-candy-glow') {
-      document.body.classList.add('cotton-candy-glow');
-      document.body.style.background = 'linear-gradient(135deg, #12cff3, #5ab2f7)';
-    } else {
-      document.body.style.background = 'linear-gradient(135deg, #400354, #03568c)';
-    }
+    // Remove existing theme classes
+    document.body.className = document.body.className.replace(/theme-\S+/g, '').trim();
+    
+    // Add new theme class
+    document.body.classList.add(`theme-${theme}`);
+    
+    // Apply cursor class from localStorage
+    const cursorStyle = localStorage.getItem('typeRakCursor') || 'blue';
+    document.body.className = document.body.className.replace(/cursor-\S+/g, '').trim();
+    document.body.classList.add(`cursor-${cursorStyle}`);
   }, [theme]);
   useEffect(() => {
     const handleCheatCode = (e: KeyboardEvent) => {
