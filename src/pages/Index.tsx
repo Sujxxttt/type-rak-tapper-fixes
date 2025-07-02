@@ -13,6 +13,9 @@ import { useLocalStorage } from '../hooks/useLocalStorage';
 import { useSoundEffects } from '../hooks/useSoundEffects';
 import { EasterEggPage } from '../components/EasterEggPage';
 import { useBackgroundMusic } from '../hooks/useBackgroundMusic';
+import { AchievementNotification } from '../components/AchievementNotification';
+import { AchievementsPage } from '../components/AchievementsPage';
+import { useAchievements } from '../hooks/useAchievements';
 
 const Index: React.FC = () => {
   // Introduction state
@@ -56,6 +59,16 @@ const Index: React.FC = () => {
   const startMessageTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
   const titleMessageTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
   const scrollTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  // Add achievement system
+  const {
+    achievements,
+    notification: achievementNotification,
+    checkAchievements,
+    dismissNotification: dismissAchievement,
+    getUnlockedAchievements,
+    getProgress
+  } = useAchievements(currentActiveUser);
 
   // Define showToast function early
   const showToast = (msg: string, isError = false) => {
@@ -241,6 +254,17 @@ const Index: React.FC = () => {
     document.addEventListener('keydown', handleCheatCode);
     return () => document.removeEventListener('keydown', handleCheatCode);
   }, [testActive, setElapsed, showToast]);
+
+  // Add event listener for achievements navigation
+  useEffect(() => {
+    const handleAchievementsNavigation = () => {
+      setCurrentScreen('achievements');
+    };
+    
+    window.addEventListener('navigateToAchievements', handleAchievementsNavigation);
+    return () => window.removeEventListener('navigateToAchievements', handleAchievementsNavigation);
+  }, []);
+
   const endTest = useCallback(() => {
     if (gameOver) return;
     console.log('Ending test with current stats:', {
@@ -261,6 +285,11 @@ const Index: React.FC = () => {
     const mins = testDuration / 60;
     const speed = Math.round(Math.max(0, correctCharacters / 5 / mins));
     const errorRate = actualTypedCount > 0 ? totalErrors / actualTypedCount * 100 : 0;
+
+    // Check achievements before calculating final score
+    if (currentActiveUser) {
+      checkAchievements(speed, testDuration);
+    }
 
     // Fixed score calculation - max 1000
     const accuracy = Math.max(0, 100 - errorRate);
@@ -320,12 +349,8 @@ const Index: React.FC = () => {
     setTestResults(newResults);
     localStorage.setItem(`typeRakTests-${currentActiveUser}`, JSON.stringify(newResults));
     setCurrentScreen('results');
-  }, [gameOver, correctCharacters, totalErrors, actualTypedCount, elapsed, duration, testResults, allTestHistory, currentTestName, currentActiveUser, setGameOver, setTestActive, timerRef, setLastTestResult, setAllTestHistory, setTestResults, setCurrentScreen, cheatTimeAdded]);
-  useEffect(() => {
-    if (testActive && elapsed >= duration) {
-      endTest();
-    }
-  }, [testActive, elapsed, duration, endTest]);
+  }, [gameOver, correctCharacters, totalErrors, actualTypedCount, elapsed, duration, testResults, allTestHistory, currentTestName, currentActiveUser, setGameOver, setTestActive, timerRef, setLastTestResult, setAllTestHistory, setTestResults, setCurrentScreen, cheatTimeAdded, checkAchievements]);
+
   const handleKeyDown = (e: KeyboardEvent) => {
     console.log('Key pressed:', e.key, 'Test active:', testActive, 'Game over:', gameOver);
     if (gameOver) return;
@@ -703,6 +728,13 @@ const Index: React.FC = () => {
           </div>
         </header>
 
+        {/* Achievement Notification */}
+        <AchievementNotification
+          notification={achievementNotification}
+          onDismiss={dismissAchievement}
+          theme={theme}
+        />
+
         {/* Test Name Menu */}
         <TestNameMenu showTestNameMenu={showTestNameMenu} newTestName={newTestName} setNewTestName={setNewTestName} onConfirm={handleConfirmTestName} onCancel={() => setShowTestNameMenu(false)} getButtonColor={getButtonColor} />
 
@@ -899,7 +931,9 @@ const Index: React.FC = () => {
             <div style={{
           display: 'flex',
           gap: '1rem',
-          marginBottom: '2rem'
+          marginBottom: '2rem',
+          flexWrap: 'wrap',
+          justifyContent: 'center'
         }}>
           <button onClick={handleCreateTestClick} style={{
             background: getButtonColor(),
@@ -923,6 +957,18 @@ const Index: React.FC = () => {
           }}>
                   Continue Test
                 </button>}
+              <button onClick={() => setCurrentScreen('achievements')} style={{
+            background: '#FFD700',
+            color: '#000',
+            border: 'none',
+            padding: '12px 24px',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            fontSize: '1rem',
+            fontWeight: '600'
+          }}>
+                🏆 Achievements ({getUnlockedAchievements().length}/{achievements.length})
+              </button>
             </div>
 
             {averageStats && <div style={{
@@ -1067,6 +1113,8 @@ const Index: React.FC = () => {
                 </div>}
             </div>
           </div>}
+
+        {currentScreen === 'achievements' && <AchievementsPage achievements={achievements} theme={theme} onBack={() => setCurrentScreen('dashboard')} getButtonColor={getButtonColor} />}
 
         {currentScreen === 'typing' && <div style={{
         width: '100%',
