@@ -12,6 +12,8 @@ import { useTypingGame } from '../hooks/useTypingGame';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { useSoundEffects } from '../hooks/useSoundEffects';
 import { EasterEggPage } from '../components/EasterEggPage';
+import { useBackgroundMusic } from '../hooks/useBackgroundMusic';
+
 const Index: React.FC = () => {
   // Introduction state
   const [showIntroduction, setShowIntroduction] = useState(true);
@@ -29,6 +31,8 @@ const Index: React.FC = () => {
   const [fontSize, setFontSize] = useLocalStorage<number>("typeRakFontSize", 120);
   const [fontStyle, setFontStyle] = useLocalStorage<string>("typeRakFontStyle", 'inter');
   const [soundEnabled, setSoundEnabled] = useLocalStorage<boolean>("typeRakSoundEnabled", true);
+  const [backgroundMusicEnabled, setBackgroundMusicEnabled] = useLocalStorage<boolean>("typeRakBackgroundMusicEnabled", false);
+  const [musicVolume, setMusicVolume] = useLocalStorage<number>("typeRakMusicVolume", 50);
   const [sideMenuOpen, setSideMenuOpen] = useState<boolean>(false);
   const [currentScreen, setCurrentScreen] = useState<string>('greeting');
   const [theme, setTheme] = useLocalStorage<string>("typeRakTheme", 'cosmic-nebula');
@@ -99,6 +103,9 @@ const Index: React.FC = () => {
     playKeyboardSound,
     playErrorSound
   } = useSoundEffects(soundEnabled);
+
+  // Use background music
+  const { isPlaying, hasMusic } = useBackgroundMusic(backgroundMusicEnabled, musicVolume);
 
   // Show introduction on first load
   useEffect(() => {
@@ -894,7 +901,7 @@ const Index: React.FC = () => {
           gap: '1rem',
           marginBottom: '2rem'
         }}>
-              <button onClick={handleCreateTestClick} style={{
+          <button onClick={handleCreateTestClick} style={{
             background: getButtonColor(),
             color: 'white',
             border: 'none',
@@ -1069,7 +1076,7 @@ const Index: React.FC = () => {
         padding: '20px 0',
         flex: 1,
         position: 'relative',
-        marginTop: '3cm'
+        marginTop: '2cm' // Changed from 3cm to 2cm
       }}>
             <TypingTest testText={testText} pos={pos} chars={chars} theme={theme} onKeyDown={handleKeyDown} fontSize={fontSize} fontStyle={fontStyle} />
 
@@ -1356,8 +1363,34 @@ const Index: React.FC = () => {
 
         {currentScreen === 'history' && <HistoryPage allTestHistory={allTestHistory} theme={theme} onBack={() => setCurrentScreen('dashboard')} getButtonColor={getButtonColor} />}
 
-        {/* Side Menu with Sound Toggle */}
-        <SideMenu sideMenuOpen={sideMenuOpen} setSideMenuOpen={setSideMenuOpen} usersList={usersList} currentActiveUser={currentActiveUser} switchUser={switchUser} handleDeleteUser={handleDeleteUser} deleteConfirmState={deleteConfirmState} duration={duration} setDuration={setDuration} theme={theme} applyTheme={applyTheme} handleHistoryClick={handleHistoryClick} handleContactMe={handleContactMe} getButtonColor={getButtonColor} fontSize={fontSize} setFontSize={setFontSize} fontStyle={fontStyle} setFontStyle={setFontStyle} soundEnabled={soundEnabled} setSoundEnabled={setSoundEnabled} />
+        {/* Side Menu with Sound Toggle and Background Music */}
+        <SideMenu 
+          sideMenuOpen={sideMenuOpen} 
+          setSideMenuOpen={setSideMenuOpen} 
+          usersList={usersList} 
+          currentActiveUser={currentActiveUser} 
+          switchUser={switchUser} 
+          handleDeleteUser={handleDeleteUser} 
+          deleteConfirmState={deleteConfirmState} 
+          duration={duration} 
+          setDuration={setDuration} 
+          theme={theme} 
+          applyTheme={applyTheme} 
+          handleHistoryClick={handleHistoryClick} 
+          handleContactMe={handleContactMe} 
+          getButtonColor={getButtonColor} 
+          fontSize={fontSize} 
+          setFontSize={setFontSize} 
+          fontStyle={fontStyle} 
+          setFontStyle={setFontStyle} 
+          soundEnabled={soundEnabled} 
+          setSoundEnabled={setSoundEnabled}
+          backgroundMusicEnabled={backgroundMusicEnabled}
+          setBackgroundMusicEnabled={setBackgroundMusicEnabled}
+          musicVolume={musicVolume}
+          setMusicVolume={setMusicVolume}
+          hasMusic={hasMusic}
+        />
 
         {/* Toast Message */}
         <Toast message={message} onClose={closeToast} />
@@ -1486,24 +1519,19 @@ const Index: React.FC = () => {
           to { opacity: 1; transform: translateY(0); }
         }
 
-        @keyframes fadeInChar {
+        @keyframes fadeInColor {
           0% { 
-            opacity: 0; 
-            transform: scale(0.8);
-          }
-          50% {
-            transform: scale(1.1);
+            opacity: 0.3; 
           }
           100% { 
             opacity: 1; 
-            transform: scale(1);
           }
         }
         
         .char {
           display: inline-block;
           color: ${theme === 'cotton-candy-glow' ? 'white' : theme === 'midnight-black' ? '#f0f0f0' : '#f5e9f1'};
-          transition: color 0.25s ease-in-out, background-color 0.25s ease-in-out, transform 0.1s ease-out;
+          transition: color 0.25s ease-in-out, background-color 0.25s ease-in-out;
           padding: 0 1px;
           margin: 0;
           letter-spacing: 0.01em;
@@ -1512,7 +1540,7 @@ const Index: React.FC = () => {
         
         .char.correct {
           color: ${theme === 'midnight-black' ? '#ae1ee3' : theme === 'cotton-candy-glow' ? '#ff1fbc' : '#21b1ff'} !important;
-          animation: fadeInChar 0.25s ease-in-out;
+          animation: fadeInColor 0.25s ease-in-out;
         }
         
         .char.incorrect {

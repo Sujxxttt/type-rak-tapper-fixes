@@ -66,7 +66,7 @@ export const TypingTest: React.FC<TypingTestProps> = ({
       width: '100%',
       maxWidth: '1040px',
       height: '120px',
-      margin: '4rem auto 2rem auto',
+      margin: '3rem auto 2rem auto', // Changed from 4rem to 3rem to move up by 1cm
       padding: '1.5rem',
       background: theme === 'cotton-candy-glow' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.1)',
       borderRadius: '12px',

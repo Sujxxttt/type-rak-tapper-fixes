@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { X } from 'lucide-react';
 import {
@@ -35,6 +34,11 @@ interface SideMenuProps {
   setFontStyle: (style: string) => void;
   soundEnabled: boolean;
   setSoundEnabled: (enabled: boolean) => void;
+  backgroundMusicEnabled: boolean;
+  setBackgroundMusicEnabled: (enabled: boolean) => void;
+  musicVolume: number;
+  setMusicVolume: (volume: number) => void;
+  hasMusic: boolean;
 }
 
 export const SideMenu: React.FC<SideMenuProps> = ({
@@ -57,7 +61,12 @@ export const SideMenu: React.FC<SideMenuProps> = ({
   fontStyle,
   setFontStyle,
   soundEnabled,
-  setSoundEnabled
+  setSoundEnabled,
+  backgroundMusicEnabled,
+  setBackgroundMusicEnabled,
+  musicVolume,
+  setMusicVolume,
+  hasMusic
 }) => {
   const sideMenuRef = useRef<HTMLDivElement>(null);
   const [showCustomDuration, setShowCustomDuration] = useState(false);
@@ -390,6 +399,55 @@ export const SideMenu: React.FC<SideMenuProps> = ({
             />
           </div>
         </div>
+
+        {hasMusic && (
+          <div style={{ marginBottom: '1.5rem' }}>
+            <h4 style={{ marginBottom: '0.5rem', fontSize: '0.73rem', fontWeight: '600' }}>Background Music:</h4>
+            <div style={{ 
+              '--switch-checked-color': getButtonColor(),
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'space-between', 
+              background: 'rgba(255, 255, 255, 0.1)', 
+              padding: '8px 12px', 
+              borderRadius: '15px',
+              fontSize: '0.81rem',
+              marginBottom: '10px'
+            } as React.CSSProperties}>
+              <span>{backgroundMusicEnabled ? 'Enabled' : 'Disabled'}</span>
+              <Switch 
+                checked={backgroundMusicEnabled} 
+                onCheckedChange={setBackgroundMusicEnabled}
+                className="data-[state=checked]:bg-[--switch-checked-color]"
+              />
+            </div>
+            {backgroundMusicEnabled && (
+              <div style={{ 
+                background: 'rgba(255, 255, 255, 0.1)', 
+                padding: '8px 12px', 
+                borderRadius: '15px',
+                fontSize: '0.81rem'
+              }}>
+                <label style={{ fontSize: '0.59rem', marginBottom: '5px', display: 'block' }}>Volume: {musicVolume}%</label>
+                <input 
+                  type="range" 
+                  min="0" 
+                  max="100" 
+                  value={musicVolume} 
+                  onChange={(e) => setMusicVolume(Number(e.target.value))}
+                  style={{
+                    width: '100%',
+                    height: '4px',
+                    borderRadius: '2px',
+                    background: 'rgba(255, 255, 255, 0.3)',
+                    outline: 'none',
+                    cursor: 'pointer'
+                  }}
+                />
+              </div>
+            )}
+          </div>
+        )}
         
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           <button onClick={handleHistoryClick} style={{...dropdownTriggerStyle, justifyContent: 'center' }}>View Test History</button>
