@@ -31,7 +31,7 @@ export default function Index() {
   const [hasMusic, setHasMusic] = useState(false);
   const navigate = useNavigate();
   const [testResults, setTestResults] = useLocalStorage<TestResult[]>(`testResults-${currentActiveUser}`, []);
-  const { playMusic, stopMusic, isPlaying } = useBackgroundMusic('./music/ambient-piano.mp3', backgroundMusicEnabled, musicVolume);
+  const { playMusic, stopMusic, isPlaying, hasMusic } = useBackgroundMusic(backgroundMusicEnabled, musicVolume);
   const { achievements, notification, checkAchievements, dismissNotification } = useAchievements(currentActiveUser);
 
   useEffect(() => {

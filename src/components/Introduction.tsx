@@ -6,7 +6,7 @@ interface IntroductionProps {
   onReplay?: () => void;
   clickCount?: number;
   onTitleClick?: () => void;
-  currentTheme?: string;
+  theme?: string;
   isFromTitleClick?: boolean;
 }
 
@@ -15,7 +15,7 @@ export const Introduction: React.FC<IntroductionProps> = ({
   onReplay, 
   clickCount = 0, 
   onTitleClick,
-  currentTheme = 'cosmic-nebula',
+  theme = 'cosmic-nebula',
   isFromTitleClick = false
 }) => {
   const [currentThemeIndex, setCurrentThemeIndex] = useState(0);
@@ -43,7 +43,7 @@ export const Introduction: React.FC<IntroductionProps> = ({
 
   // Find the current theme index
   const getCurrentThemeIndex = () => {
-    return themes.findIndex(t => t.id === currentTheme);
+    return themes.findIndex(t => t.id === theme);
   };
 
   useEffect(() => {
@@ -87,7 +87,7 @@ export const Introduction: React.FC<IntroductionProps> = ({
       clearTimeout(phaseTimeout);
       clearTimeout(completeTimeout);
     };
-  }, [onComplete, onReplay, isReplay, currentTheme, isFromTitleClick]);
+  }, [onComplete, onReplay, isReplay, theme, isFromTitleClick]);
 
   const replayAnimation = () => {
     if (onTitleClick) {

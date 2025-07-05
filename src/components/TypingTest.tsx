@@ -1,53 +1,22 @@
 import React, { useEffect } from 'react';
 
 interface TypingTestProps {
-  testText: string;
-  pos: number;
-  chars: HTMLElement[];
+  duration: number;
   theme: string;
-  onKeyDown: (e: KeyboardEvent) => void;
   fontSize: number;
   fontStyle: string;
+  soundEnabled: boolean;
+  onTestComplete: (wpm: number, accuracy: number) => void;
 }
 
 export const TypingTest: React.FC<TypingTestProps> = ({
-  testText,
-  pos,
-  chars,
+  duration,
   theme,
-  onKeyDown,
   fontSize,
-  fontStyle
+  fontStyle,
+  soundEnabled,
+  onTestComplete
 }) => {
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      onKeyDown(e);
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [onKeyDown]);
-
-  useEffect(() => {
-    if (chars.length > 0 && pos < chars.length) {
-      const currentChar = chars[pos];
-      const textFlowElement = document.getElementById('text-flow');
-      
-      if (currentChar && textFlowElement) {
-        // Calculate position for smooth horizontal scrolling
-        const charLeft = currentChar.offsetLeft;
-        const containerWidth = textFlowElement.clientWidth;
-        // Start scrolling when cursor is past the halfway point
-        const scrollLeft = Math.max(0, charLeft - containerWidth / 2);
-        
-        textFlowElement.scrollTo({
-          left: scrollLeft,
-          behavior: 'smooth'
-        });
-      }
-    }
-  }, [pos, chars]);
-
   const getFontFamily = () => {
     switch (fontStyle) {
       case 'roboto': return "'Roboto', sans-serif";
@@ -66,7 +35,7 @@ export const TypingTest: React.FC<TypingTestProps> = ({
       width: '100%',
       maxWidth: '1040px',
       height: '120px',
-      margin: '3rem auto 2rem auto', // Changed from 4rem to 3rem to move up by 1cm
+      margin: '3rem auto 2rem auto',
       padding: '1.5rem',
       background: theme === 'cotton-candy-glow' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.1)',
       borderRadius: '12px',
