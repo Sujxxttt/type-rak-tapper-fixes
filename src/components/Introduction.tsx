@@ -54,10 +54,10 @@ export const Introduction: React.FC<IntroductionProps> = ({
     // Start with cosmic nebula theme (index 0)
     setCurrentThemeIndex(0);
 
-    // Theme switching phase - extended duration
+    // Theme switching phase - 2 seconds per theme
     themeInterval = setInterval(() => {
       setCurrentThemeIndex(prev => (prev + 1) % themes.length);
-    }, 2000); // Extended from 1500ms to 2000ms
+    }, 2000);
 
     // After 3 theme cycles (6 seconds), switch to moving phase
     phaseTimeout = setTimeout(() => {
@@ -68,26 +68,27 @@ export const Introduction: React.FC<IntroductionProps> = ({
       // Set to the actual current theme for the final transition
       const actualThemeIndex = getCurrentThemeIndex();
       setCurrentThemeIndex(actualThemeIndex >= 0 ? actualThemeIndex : 0);
-    }, 6000); // Extended from 4500ms to 6000ms
+    }, 6000);
 
-    // Complete animation after title moves to top-left - extended duration
+    // Complete animation after title moves to top-left
     completeTimeout = setTimeout(() => {
       if (isFromTitleClick) {
         // If clicked from title, go to easter egg instead
         window.dispatchEvent(new CustomEvent('showEasterEgg'));
       } else if (onReplay && isReplay) {
         onReplay();
+        setIsReplay(false); // Reset replay state
       } else {
         onComplete();
       }
-    }, 8500); // Extended from 6000ms to 8500ms
+    }, 8500);
 
     return () => {
       clearInterval(themeInterval);
       clearTimeout(phaseTimeout);
       clearTimeout(completeTimeout);
     };
-  }, [onComplete, onReplay, isReplay, theme, isFromTitleClick]);
+  }, [isReplay]); // Only depend on isReplay to prevent infinite loops
 
   const replayAnimation = () => {
     if (onTitleClick) {
