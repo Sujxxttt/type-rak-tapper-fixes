@@ -35,25 +35,25 @@ export const CustomDurationSlider: React.FC<CustomDurationSliderProps> = ({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 p-4">
       <div className="flex justify-between items-center">
-        <span className="text-sm text-white/80">Duration:</span>
-        <span className="font-medium text-white">{formatTime(value)}</span>
+        <span className="text-sm opacity-80">Duration:</span>
+        <span className="font-medium">{formatTime(value)}</span>
       </div>
       <Slider
         value={[value]}
         onValueChange={(values) => onChange(values[0])}
         min={15}
-        max={7200} // 120 minutes
+        max={7200} // 2 hours
         step={15}
         className="w-full"
         style={{
           '--slider-accent': getSliderAccent()
         } as React.CSSProperties}
       />
-      <div className="flex justify-between text-xs text-white/60">
+      <div className="flex justify-between text-xs opacity-60">
         <span>15s</span>
-        <span>120m</span>
+        <span>2h</span>
       </div>
     </div>
   );

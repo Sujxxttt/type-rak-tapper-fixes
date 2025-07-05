@@ -6,7 +6,7 @@ interface IntroductionProps {
   onReplay?: () => void;
   clickCount?: number;
   onTitleClick?: () => void;
-  theme?: string;
+  currentTheme?: string;
   isFromTitleClick?: boolean;
 }
 
@@ -15,7 +15,7 @@ export const Introduction: React.FC<IntroductionProps> = ({
   onReplay, 
   clickCount = 0, 
   onTitleClick,
-  theme = 'cosmic-nebula',
+  currentTheme = 'cosmic-nebula',
   isFromTitleClick = false
 }) => {
   const [currentThemeIndex, setCurrentThemeIndex] = useState(0);
@@ -43,7 +43,7 @@ export const Introduction: React.FC<IntroductionProps> = ({
 
   // Find the current theme index
   const getCurrentThemeIndex = () => {
-    return themes.findIndex(t => t.id === theme);
+    return themes.findIndex(t => t.id === currentTheme);
   };
 
   useEffect(() => {
@@ -54,10 +54,10 @@ export const Introduction: React.FC<IntroductionProps> = ({
     // Start with cosmic nebula theme (index 0)
     setCurrentThemeIndex(0);
 
-    // Theme switching phase - 2 seconds per theme
+    // Theme switching phase - extended duration
     themeInterval = setInterval(() => {
       setCurrentThemeIndex(prev => (prev + 1) % themes.length);
-    }, 2000);
+    }, 2000); // Extended from 1500ms to 2000ms
 
     // After 3 theme cycles (6 seconds), switch to moving phase
     phaseTimeout = setTimeout(() => {
@@ -68,27 +68,26 @@ export const Introduction: React.FC<IntroductionProps> = ({
       // Set to the actual current theme for the final transition
       const actualThemeIndex = getCurrentThemeIndex();
       setCurrentThemeIndex(actualThemeIndex >= 0 ? actualThemeIndex : 0);
-    }, 6000);
+    }, 6000); // Extended from 4500ms to 6000ms
 
-    // Complete animation after title moves to top-left
+    // Complete animation after title moves to top-left - extended duration
     completeTimeout = setTimeout(() => {
       if (isFromTitleClick) {
         // If clicked from title, go to easter egg instead
         window.dispatchEvent(new CustomEvent('showEasterEgg'));
       } else if (onReplay && isReplay) {
         onReplay();
-        setIsReplay(false); // Reset replay state
       } else {
         onComplete();
       }
-    }, 8500);
+    }, 8500); // Extended from 6000ms to 8500ms
 
     return () => {
       clearInterval(themeInterval);
       clearTimeout(phaseTimeout);
       clearTimeout(completeTimeout);
     };
-  }, [isReplay]); // Only depend on isReplay to prevent infinite loops
+  }, [onComplete, onReplay, isReplay, currentTheme, isFromTitleClick]);
 
   const replayAnimation = () => {
     if (onTitleClick) {

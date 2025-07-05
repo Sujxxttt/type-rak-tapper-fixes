@@ -16,17 +16,9 @@ export const AchievementNotification: React.FC<AchievementNotificationProps> = (
 }) => {
   useEffect(() => {
     if (notification?.show) {
-      // Play achievement sound
-      const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+Dxv2EeUaNu');
-      audio.volume = 0.3;
-      audio.play().catch(() => {
-        // Fallback if audio fails to play
-        console.log('Achievement sound could not be played');
-      });
-
       const timer = setTimeout(() => {
         onDismiss();
-      }, 8000);
+      }, 8000); // Auto-dismiss after 8 seconds
 
       return () => clearTimeout(timer);
     }
@@ -48,9 +40,11 @@ export const AchievementNotification: React.FC<AchievementNotificationProps> = (
       animation: 'achievementSlideIn 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
     }}>
       <div style={{
-        background: 'rgba(255, 255, 255, 0.1)',
+        background: theme === 'cotton-candy-glow' 
+          ? 'rgba(255, 255, 255, 0.25)' 
+          : 'rgba(255, 255, 255, 0.15)',
         backdropFilter: 'blur(20px)',
-        border: '1px solid rgba(255, 255, 255, 0.2)',
+        border: '1px solid rgba(255, 255, 255, 0.3)',
         borderRadius: '20px',
         padding: '24px',
         boxShadow: '0 25px 50px rgba(0, 0, 0, 0.25)',
@@ -63,7 +57,7 @@ export const AchievementNotification: React.FC<AchievementNotificationProps> = (
             position: 'absolute',
             top: '12px',
             right: '12px',
-            background: 'rgba(255, 255, 255, 0.15)',
+            background: 'rgba(255, 255, 255, 0.2)',
             border: 'none',
             borderRadius: '50%',
             width: '32px',
@@ -76,11 +70,11 @@ export const AchievementNotification: React.FC<AchievementNotificationProps> = (
             transition: 'all 0.2s ease'
           }}
           onMouseEnter={e => {
-            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.25)';
+            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)';
             e.currentTarget.style.transform = 'scale(1.1)';
           }}
           onMouseLeave={e => {
-            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
+            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
             e.currentTarget.style.transform = 'scale(1)';
           }}
         >
@@ -128,7 +122,7 @@ export const AchievementNotification: React.FC<AchievementNotificationProps> = (
         <div style={{
           marginTop: '16px',
           padding: '8px 16px',
-          background: 'rgba(255, 255, 255, 0.05)',
+          background: 'rgba(255, 255, 255, 0.1)',
           borderRadius: '12px',
           fontSize: '0.9rem',
           color: 'rgba(255, 255, 255, 0.8)'

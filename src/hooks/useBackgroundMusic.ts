@@ -34,7 +34,7 @@ export const useBackgroundMusic = (enabled: boolean, volume: number) => {
     checkForMusic();
   }, []);
 
-  const playMusic = () => {
+  useEffect(() => {
     if (availableMusic.length > 0 && enabled) {
       if (!audioRef.current) {
         audioRef.current = new Audio(availableMusic[0]);
@@ -47,21 +47,9 @@ export const useBackgroundMusic = (enabled: boolean, volume: number) => {
       }).catch(error => {
         console.log('Could not play background music:', error);
       });
-    }
-  };
-
-  const stopMusic = () => {
-    if (audioRef.current) {
+    } else if (audioRef.current) {
       audioRef.current.pause();
       setIsPlaying(false);
-    }
-  };
-
-  useEffect(() => {
-    if (enabled && availableMusic.length > 0) {
-      playMusic();
-    } else {
-      stopMusic();
     }
 
     return () => {
@@ -78,5 +66,5 @@ export const useBackgroundMusic = (enabled: boolean, volume: number) => {
     }
   }, [volume]);
 
-  return { isPlaying, hasMusic: availableMusic.length > 0, playMusic, stopMusic };
+  return { isPlaying, hasMusic: availableMusic.length > 0 };
 };
