@@ -28,7 +28,6 @@ export default function Index() {
   const [soundEnabled, setSoundEnabled] = useLocalStorage('soundEnabled', true);
   const [backgroundMusicEnabled, setBackgroundMusicEnabled] = useLocalStorage('backgroundMusicEnabled', true);
   const [musicVolume, setMusicVolume] = useLocalStorage('musicVolume', 50);
-  const [hasMusic, setHasMusic] = useState(false);
   const navigate = useNavigate();
   const [testResults, setTestResults] = useLocalStorage<TestResult[]>(`testResults-${currentActiveUser}`, []);
   const { playMusic, stopMusic, isPlaying, hasMusic } = useBackgroundMusic(backgroundMusicEnabled, musicVolume);
@@ -45,15 +44,6 @@ export default function Index() {
 
     const storedActiveUser = localStorage.getItem('activeUser') || 'default';
     setCurrentActiveUser(storedActiveUser);
-
-    // Check if music file exists
-    fetch('./music/ambient-piano.mp3')
-      .then(response => {
-        setHasMusic(response.ok);
-      })
-      .catch(() => {
-        setHasMusic(false);
-      });
 
     // Event listener for navigating to create user
     const handleNavigateToCreateUser = () => {
