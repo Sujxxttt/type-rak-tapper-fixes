@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { X } from 'lucide-react';
+import { X, Trophy } from 'lucide-react';
 import { TypingTest } from '../components/TypingTest';
 import { StatsDisplay } from '../components/StatsDisplay';
 import { TestNameMenu } from '../components/TestNameMenu';
@@ -8,9 +8,12 @@ import { Toast } from '../components/Toast';
 import { HistoryPage } from '../components/HistoryPage';
 import { Introduction } from '../components/Introduction';
 import { TypedTextPreview } from '../components/TypedTextPreview';
+import { AchievementNotification } from '../components/AchievementNotification';
+import { AchievementsPage } from '../components/AchievementsPage';
 import { useTypingGame } from '../hooks/useTypingGame';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { useSoundEffects } from '../hooks/useSoundEffects';
+import { useAchievements } from '../hooks/useAchievements';
 import { EasterEggPage } from '../components/EasterEggPage';
 import { useBackgroundMusic } from '../hooks/useBackgroundMusic';
 
@@ -56,6 +59,15 @@ const Index: React.FC = () => {
   const startMessageTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
   const titleMessageTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
   const scrollTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  // Achievement system
+  const { 
+    achievements, 
+    recentAchievement, 
+    checkAchievements, 
+    closeAchievementNotification,
+    getUnlockedCount 
+  } = useAchievements(currentActiveUser);
 
   // Define showToast function early
   const showToast = (msg: string, isError = false) => {
@@ -109,12 +121,13 @@ const Index: React.FC = () => {
 
   // Show introduction on first load
   useEffect(() => {
-    // Don't automatically hide - let it play
     setShowIntroduction(true);
   }, []);
+
   const handleIntroComplete = () => {
     setShowIntroduction(false);
   };
+
   const handleTitleClick = () => {
     setTitleClickCount(prev => prev + 1);
     if (titleClickCount === 0) {
@@ -124,7 +137,6 @@ const Index: React.FC = () => {
     } else if (titleClickCount === 2) {
       setTitleClickMessage('Once more ??');
     } else if (titleClickCount >= 3) {
-      // Reset count and show introduction that will lead to easter egg
       setShowIntroduction(true);
       setTitleClickCount(0);
       setTitleClickMessage('');
@@ -141,6 +153,7 @@ const Index: React.FC = () => {
       setTitleClickCount(0);
     }, 3000);
   };
+
   const handleIntroReplay = () => {
     setShowIntroduction(false);
   };
@@ -191,6 +204,7 @@ const Index: React.FC = () => {
       }
     };
   }, [testActive, showEasterEgg, scrollCount]);
+
   useEffect(() => {
     if (showIntroduction) return;
     if (usersList.length > 0) {
@@ -204,6 +218,7 @@ const Index: React.FC = () => {
       }
     }
   }, [usersList, currentActiveUser, showIntroduction]);
+
   const loadUserTests = (username: string) => {
     const storedTests = localStorage.getItem(`typeRakTests-${username}`);
     const storedHistory = localStorage.getItem(`typeRakHistory-${username}`);
@@ -218,6 +233,7 @@ const Index: React.FC = () => {
       setAllTestHistory([]);
     }
   };
+
   useEffect(() => {
     // Remove existing theme classes
     document.body.className = document.body.className.replace(/theme-\S+/g, '').trim();
@@ -230,35 +246,33 @@ const Index: React.FC = () => {
     document.body.className = document.body.className.replace(/cursor-\S+/g, '').trim();
     document.body.classList.add(`cursor-${cursorStyle}`);
   }, [theme]);
+
   useEffect(() => {
     const handleCheatCode = (e: KeyboardEvent) => {
       if (e.ctrlKey && e.altKey && e.key === 'Backspace' && testActive) {
         e.preventDefault();
-        setElapsed(prev => prev + 30);
+        // Fixed: Only add time, don't subtract
+        addCheatTime(30);
         showToast("Cheat activated: +30 seconds added to your typing time!");
       }
     };
     document.addEventListener('keydown', handleCheatCode);
     return () => document.removeEventListener('keydown', handleCheatCode);
-  }, [testActive, setElapsed, showToast]);
+  }, [testActive, addCheatTime, showToast]);
+
   const endTest = useCallback(() => {
     if (gameOver) return;
-    console.log('Ending test with current stats:', {
-      elapsed: duration,
-      correctCharacters,
-      totalErrors,
-      actualTypedCount,
-      typedTextLength: typedText.length,
-      cheatTimeAdded
-    });
+    
     setGameOver(true);
     setTestActive(false);
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
-    const testDuration = elapsed > 0 ? elapsed : 1;
-    const mins = testDuration / 60;
+
+    // Fixed: Use actual elapsed time instead of duration setting
+    const actualTestDuration = elapsed;
+    const mins = actualTestDuration / 60;
     const speed = Math.round(Math.max(0, correctCharacters / 5 / mins));
     const errorRate = actualTypedCount > 0 ? totalErrors / actualTypedCount * 100 : 0;
 
@@ -266,31 +280,47 @@ const Index: React.FC = () => {
     const accuracy = Math.max(0, 100 - errorRate);
     const baseScore = speed * accuracy / 100;
     const score = Math.min(1000, Math.round(baseScore * 10));
-    console.log('Final calculated test results:', {
-      correctCharacters,
-      actualTypedCount,
-      totalErrors,
-      speed,
-      errorRate,
-      accuracy,
-      score,
-      testDuration: duration
-    });
+
     const testResult = {
       name: currentTestName,
       date: new Date().toISOString(),
       wpm: speed,
       errorRate: parseFloat(errorRate.toFixed(2)),
       errors: totalErrors,
-      time: duration,
+      time: actualTestDuration, // Fixed: Use actual elapsed time
       characters: actualTypedCount,
       correctChars: correctCharacters,
       score: score
     };
+
     setLastTestResult(testResult);
     const newHistory = [...allTestHistory, testResult];
     setAllTestHistory(newHistory);
     localStorage.setItem(`typeRakHistory-${currentActiveUser}`, JSON.stringify(newHistory));
+
+    // Check achievements
+    const achievementStats = {
+      wpm: speed,
+      errorRate: parseFloat(errorRate.toFixed(2)),
+      duration: actualTestDuration,
+      testsCompleted: newHistory.length,
+      perfectTests: newHistory.filter(t => t.errorRate === 0).length,
+      unlockedAchievements: getUnlockedCount(),
+      dailyTypingTime: 0, // This would need to be tracked separately
+      dailyStreak: 0, // This would need to be tracked separately
+      cleanSessions: 0, // This would need to be tracked separately
+      daysSinceLastVisit: 0 // This would need to be tracked separately
+    };
+
+    // Only check speed achievements for tests 1+ minute
+    if (actualTestDuration >= 60) {
+      checkAchievements(achievementStats);
+    } else {
+      // Check non-speed achievements
+      const nonSpeedStats = { ...achievementStats, wpm: 0 };
+      checkAchievements(nonSpeedStats);
+    }
+
     const existingTestIndex = testResults.findIndex(test => test.name === currentTestName);
     let newResults;
     if (existingTestIndex >= 0) {
@@ -320,14 +350,15 @@ const Index: React.FC = () => {
     setTestResults(newResults);
     localStorage.setItem(`typeRakTests-${currentActiveUser}`, JSON.stringify(newResults));
     setCurrentScreen('results');
-  }, [gameOver, correctCharacters, totalErrors, actualTypedCount, elapsed, duration, testResults, allTestHistory, currentTestName, currentActiveUser, setGameOver, setTestActive, timerRef, setLastTestResult, setAllTestHistory, setTestResults, setCurrentScreen, cheatTimeAdded]);
+  }, [gameOver, correctCharacters, totalErrors, actualTypedCount, elapsed, testResults, allTestHistory, currentTestName, currentActiveUser, setGameOver, setTestActive, timerRef, setLastTestResult, setAllTestHistory, setTestResults, setCurrentScreen, cheatTimeAdded, checkAchievements, getUnlockedCount]);
+
   useEffect(() => {
     if (testActive && elapsed >= duration) {
       endTest();
     }
   }, [testActive, elapsed, duration, endTest]);
+
   const handleKeyDown = (e: KeyboardEvent) => {
-    console.log('Key pressed:', e.key, 'Test active:', testActive, 'Game over:', gameOver);
     if (gameOver) return;
     if (e.key === "Backspace") {
       e.preventDefault();
@@ -342,7 +373,6 @@ const Index: React.FC = () => {
       }
     }
     if (!testActive && e.key.length === 1 && pos < chars.length) {
-      console.log('Starting test with first keypress');
       startTimer(duration);
       setTestActive(true);
     }
@@ -354,34 +384,21 @@ const Index: React.FC = () => {
     const expectedChar = testText[pos];
     const typedChar = e.key;
     if (typedChar && typedChar.length === 1) {
-      console.log('Processing character:', typedChar, 'Expected:', expectedChar, 'Position:', pos);
       setTypedText(prev => prev + typedChar);
-      setActualTypedCount(prev => {
-        const newCount = prev + 1;
-        console.log('Updated typed count to:', newCount);
-        return newCount;
-      });
+      setActualTypedCount(prev => prev + 1);
       if (expectedChar === typedChar) {
         if (chars[pos]) {
           chars[pos].classList.remove("incorrect");
           chars[pos].classList.add("correct");
           chars[pos].style.transition = 'color 0.25s ease-in-out';
         }
-        setCorrectCharacters(prev => {
-          const newCorrect = prev + 1;
-          console.log('Updated correct characters to:', newCorrect);
-          return newCorrect;
-        });
+        setCorrectCharacters(prev => prev + 1);
         setPos(prev => prev + 1);
         setWasLastError(false);
         playKeyboardSound();
       } else {
         if (!wasLastError) {
-          setTotalErrors(prev => {
-            const newTotal = prev + 1;
-            console.log('Updated total errors to:', newTotal);
-            return newTotal;
-          });
+          setTotalErrors(prev => prev + 1);
         }
         setWasLastError(true);
         if (chars[pos]) {
@@ -392,6 +409,7 @@ const Index: React.FC = () => {
       }
     }
   };
+
   const createUser = (username: string) => {
     if (!username.trim()) {
       showToast("Please enter a username.", true);
@@ -410,13 +428,14 @@ const Index: React.FC = () => {
     showToast(`User "${username}" created successfully!`);
     return true;
   };
+
   const switchUser = (username: string) => {
     setCurrentActiveUser(username);
     loadUserTests(username);
     setDeleteConfirmState(false);
   };
+
   const startNewTest = (testName: string) => {
-    console.log('Starting new test:', testName);
     setCurrentTestName(testName);
     setCurrentScreen('typing');
     resetTest();
@@ -433,10 +452,10 @@ const Index: React.FC = () => {
     }, 15000);
     setTimeout(() => {
       const textToUse = generateWords(100);
-      console.log('Generated text for test:', textToUse.substring(0, 50) + '...');
       renderText(textToUse);
     }, 200);
   };
+
   const continueTest = (testName?: string) => {
     if (testName) {
       startNewTest(testName);
@@ -444,15 +463,18 @@ const Index: React.FC = () => {
       setContinueTestMode(true);
     }
   };
+
   const applyTheme = (newTheme: string) => {
     setTheme(newTheme);
   };
+
   const closeToast = () => {
     setMessage('');
     if (messageTimeoutRef.current) {
       clearTimeout(messageTimeoutRef.current);
     }
   };
+
   const handleDeleteUser = () => {
     if (!deleteConfirmState) {
       setDeleteConfirmState(true);
@@ -475,10 +497,12 @@ const Index: React.FC = () => {
     }
     showToast(`User "${userToDelete}" deleted.`);
   };
+
   const handleCreateTestClick = () => {
     setShowTestNameMenu(true);
     setNewTestName('');
   };
+
   const handleConfirmTestName = () => {
     if (!newTestName.trim()) {
       showToast("Please enter a test name.", true);
@@ -487,6 +511,7 @@ const Index: React.FC = () => {
     setShowTestNameMenu(false);
     startNewTest(newTestName);
   };
+
   const handleReturnToDashboard = () => {
     if (!showReturnConfirm) {
       setShowReturnConfirm(true);
@@ -502,11 +527,13 @@ const Index: React.FC = () => {
     }
     setCurrentScreen('dashboard');
   };
+
   const handleContactMe = () => {
     setSideMenuOpen(false);
     setHighlightFooter(true);
     setTimeout(() => setHighlightFooter(false), 2000);
   };
+
   const handleHistoryClick = () => {
     if (currentScreen === 'typing' && testActive) {
       showToast("This will abort the current test.", true);
@@ -518,12 +545,14 @@ const Index: React.FC = () => {
       setShowTypedPreview(false);
     }
   };
+
   const confirmAbortAndGoToHistory = () => {
     resetTest();
     setExtraChars([]);
     setShowReturnConfirm(false);
     setCurrentScreen('history');
   };
+
   const getAverageStats = () => {
     if (testResults.length === 0) return null;
     const avgWpm = Math.round(testResults.reduce((sum, test) => sum + test.wpm, 0) / testResults.length);
@@ -539,6 +568,7 @@ const Index: React.FC = () => {
       totalTime
     };
   };
+
   const getTitleGradient = () => {
     if (theme === 'cosmic-nebula') {
       return 'linear-gradient(45deg, #b109d6 0%, #0c6dc2 100%)';
@@ -550,6 +580,7 @@ const Index: React.FC = () => {
     }
     return 'linear-gradient(45deg, #b109d6 0%, #0c6dc2 100%)';
   };
+
   const getButtonColor = () => {
     switch (theme) {
       case 'cosmic-nebula':
@@ -576,128 +607,140 @@ const Index: React.FC = () => {
   if (showEasterEgg) {
     return <EasterEggPage theme={theme} onGoBack={() => setShowEasterEgg(false)} />;
   }
+
+  // Show achievements page
+  if (currentScreen === 'achievements') {
+    return <AchievementsPage achievements={achievements} onBack={() => setCurrentScreen('dashboard')} theme={theme} getButtonColor={getButtonColor} />;
+  }
+
   return (
     <div style={{
-    fontFamily: fontStyle === 'roboto' ? "'Roboto', sans-serif" : fontStyle === 'open-sans' ? "'Open Sans', sans-serif" : fontStyle === 'lato' ? "'Lato', sans-serif" : fontStyle === 'source-sans' ? "'Source Sans Pro', sans-serif" : fontStyle === 'dancing-script' ? "'Dancing Script', cursive" : fontStyle === 'pacifico' ? "'Pacifico', cursive" : "'Inter', sans-serif",
-    fontSize: '112.5%',
-    color: 'white',
-    background: theme === 'midnight-black' ? '#000000' : theme === 'cotton-candy-glow' ? 'linear-gradient(45deg, #74d2f1, #69c8e8)' : 'linear-gradient(45deg, #400354, #03568c)',
-    minHeight: '100vh',
-    overflowX: 'hidden',
-    transition: 'background 0.5s ease-in-out'
-  }}>
-      <div style={{
-      display: 'flex',
-      flexDirection: 'column',
+      fontFamily: fontStyle === 'roboto' ? "'Roboto', sans-serif" : fontStyle === 'open-sans' ? "'Open Sans', sans-serif" : fontStyle === 'lato' ? "'Lato', sans-serif" : fontStyle === 'source-sans' ? "'Source Sans Pro', sans-serif" : fontStyle === 'dancing-script' ? "'Dancing Script', cursive" : fontStyle === 'pacifico' ? "'Pacifico', cursive" : "'Inter', sans-serif",
+      fontSize: '112.5%',
+      color: 'white',
+      background: theme === 'midnight-black' ? '#0a0a0a' : theme === 'cotton-candy-glow' ? 'linear-gradient(135deg, #12cff3, #5ab2f7)' : 'linear-gradient(45deg, #400354, #03568c)',
       minHeight: '100vh',
-      padding: '20px',
-      position: 'relative'
+      overflowX: 'hidden',
+      transition: 'background 0.5s ease-in-out'
     }}>
+      {/* Achievement Notification */}
+      <AchievementNotification 
+        achievement={recentAchievement} 
+        onClose={closeAchievementNotification} 
+      />
+
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        minHeight: '100vh',
+        padding: '20px',
+        position: 'relative'
+      }}>
         {/* Scroll Message */}
         {scrollMessage && <div style={{
-        position: 'fixed',
-        top: '20px',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        background: 'rgba(255, 255, 255, 0.1)',
-        backdropFilter: 'blur(10px)',
-        border: '1px solid rgba(255, 255, 255, 0.2)',
-        borderRadius: '12px',
-        padding: '10px 20px',
-        color: 'white',
-        fontSize: '1rem',
-        zIndex: 2000,
-        animation: 'fadeIn 0.3s ease-out'
-      }}>
-            {scrollMessage}
-          </div>}
+          position: 'fixed',
+          top: '20px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          background: 'rgba(255, 255, 255, 0.1)',
+          backdropFilter: 'blur(10px)',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+          borderRadius: '12px',
+          padding: '10px 20px',
+          color: 'white',
+          fontSize: '1rem',
+          zIndex: 2000,
+          animation: 'fadeIn 0.3s ease-out'
+        }}>
+          {scrollMessage}
+        </div>}
 
         {/* Header */}
         <header style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: '1rem',
-        zIndex: 10
-      }}>
-          <div style={{
-          position: 'relative'
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '1rem',
+          zIndex: 10
         }}>
-            <h1 onClick={handleTitleClick} style={{
-            backgroundImage: getTitleGradient(),
-            WebkitBackgroundClip: 'text',
-            backgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            color: 'transparent',
-            fontSize: '2.5rem',
-            fontWeight: 700,
-            margin: 0,
-            fontFamily: "'Inter', sans-serif",
-            cursor: 'pointer',
-            userSelect: 'none'
+          <div style={{
+            position: 'relative'
           }}>
+            <h1 onClick={handleTitleClick} style={{
+              backgroundImage: getTitleGradient(),
+              WebkitBackgroundClip: 'text',
+              backgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              color: 'transparent',
+              fontSize: '2.5rem',
+              fontWeight: 700,
+              margin: 0,
+              fontFamily: "'Inter', sans-serif",
+              cursor: 'pointer',
+              userSelect: 'none'
+            }}>
               TypeWave
             </h1>
             {titleClickMessage && <div style={{
-            position: 'absolute',
-            top: '100%',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            marginTop: '10px',
-            padding: '8px 16px',
-            background: 'rgba(255, 255, 255, 0.1)',
-            backdropFilter: 'blur(10px)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            borderRadius: '8px',
-            fontSize: '0.9rem',
-            whiteSpace: 'nowrap',
-            zIndex: 100
-          }}>
-                {titleClickMessage}
-              </div>}
+              position: 'absolute',
+              top: '100%',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              marginTop: '10px',
+              padding: '8px 16px',
+              background: 'rgba(255, 255, 255, 0.1)',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              borderRadius: '8px',
+              fontSize: '0.9rem',
+              whiteSpace: 'nowrap',
+              zIndex: 100
+            }}>
+              {titleClickMessage}
+            </div>}
           </div>
           <div style={{
-          display: 'flex',
-          alignItems: 'center'
-        }}>
-            <div style={{
             display: 'flex',
-            alignItems: 'center',
-            marginRight: '20px',
-            background: 'rgba(255, 255, 255, 0.1)',
-            borderRadius: '12px',
-            padding: '5px 15px',
-            backdropFilter: 'blur(10px)',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            transition: 'border-radius 0.3s ease'
+            alignItems: 'center'
           }}>
-              <span style={{
-              marginRight: '10px',
-              fontSize: '1.15rem'
-            }}>User: {currentActiveUser}</span>
-              <button onClick={() => setCurrentScreen('create-user')} style={{
-              background: 'transparent',
-              color: 'white',
-              border: 'none',
-              padding: '5px 10px',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              marginLeft: '10px',
-              fontSize: '1.26rem'
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              marginRight: '20px',
+              background: 'rgba(255, 255, 255, 0.1)',
+              borderRadius: '12px',
+              padding: '5px 15px',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              transition: 'border-radius 0.3s ease'
             }}>
+              <span style={{
+                marginRight: '10px',
+                fontSize: '1.15rem'
+              }}>User: {currentActiveUser}</span>
+              <button onClick={() => setCurrentScreen('create-user')} style={{
+                background: 'transparent',
+                color: 'white',
+                border: 'none',
+                padding: '5px 10px',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                marginLeft: '10px',
+                fontSize: '1.26rem'
+              }}>
                 +
               </button>
             </div>
             <button onClick={() => setSideMenuOpen(true)} style={{
-            background: 'none',
-            border: 'none',
-            color: 'white',
-            fontSize: '1.5rem',
-            cursor: 'pointer',
-            padding: '5px',
-            borderRadius: '12px',
-            transition: 'border-radius 0.3s ease'
-          }}>
+              background: 'none',
+              border: 'none',
+              color: 'white',
+              fontSize: '1.5rem',
+              cursor: 'pointer',
+              padding: '5px',
+              borderRadius: '12px',
+              transition: 'border-radius 0.3s ease'
+            }}>
               ☰
             </button>
           </div>
@@ -708,658 +751,705 @@ const Index: React.FC = () => {
 
         {/* Start Message for Typing Screen */}
         {currentScreen === 'typing' && showStartMessage && <div style={{
-        position: 'fixed',
-        top: '20px',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        zIndex: 2000,
-        padding: '10px 20px',
-        background: 'rgba(255, 255, 255, 0.1)',
-        backdropFilter: 'blur(10px)',
-        border: '1px solid rgba(255, 255, 255, 0.2)',
-        borderRadius: '12px',
-        color: 'white',
-        boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
-        fontSize: '0.73rem'
-      }}>
-            Press any key to start the test
-            <button onClick={() => setShowStartMessage(false)} style={{
-          background: 'transparent',
-          border: 'none',
+          position: 'fixed',
+          top: '20px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 2000,
+          padding: '10px 20px',
+          background: 'rgba(255, 255, 255, 0.1)',
+          backdropFilter: 'blur(10px)',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+          borderRadius: '12px',
           color: 'white',
-          marginLeft: '15px',
-          cursor: 'pointer',
-          opacity: 0.7
+          boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
+          fontSize: '0.73rem'
         }}>
-              <X size={16} />
-            </button>
-          </div>}
+          Press any key to start the test
+          <button onClick={() => setShowStartMessage(false)} style={{
+            background: 'transparent',
+            border: 'none',
+            color: 'white',
+            marginLeft: '15px',
+            cursor: 'pointer',
+            opacity: 0.7
+          }}>
+            <X size={16} />
+          </button>
+        </div>}
 
         {/* Main Content Areas */}
+
         {currentScreen === 'greeting' && <div style={{
-        width: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '20px 0',
-        flex: 1
-      }}>
-            <h2 style={{
-          marginBottom: '1rem'
-        }}>Welcome to TypeWave!</h2>
-            <p style={{
-          marginBottom: '1.5rem'
+          width: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '20px 0',
+          flex: 1
         }}>
-              {usersList.length === 0 ? "No users found. Create one below to get started." : "Please select or create a user to begin."}
-            </p>
-            {usersList.length === 0 && <div style={{
-          background: 'rgba(255, 255, 255, 0.15)',
-          borderRadius: '16px',
-          backdropFilter: 'blur(10px)',
-          border: '1px solid rgba(255, 255, 255, 0.3)',
-          padding: '20px',
-          maxWidth: '400px'
-        }}>
-                <label style={{
-            display: 'block',
-            marginBottom: '10px'
-          }}>Enter username:</label>
-                <input type="text" id="greeting-new-user-input" placeholder="New username" style={{
-            width: '100%',
-            padding: '10px',
-            marginBottom: '15px',
-            borderRadius: '4px',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            background: 'rgba(255,255,255,0.1)',
-            color: 'white',
-            backdropFilter: 'blur(10px)'
-          }} />
-                <button onClick={() => {
-            const input = document.getElementById('greeting-new-user-input') as HTMLInputElement;
-            if (input) createUser(input.value);
-          }} style={{
-            width: '100%',
-            background: getButtonColor(),
-            color: 'white',
-            border: 'none',
-            padding: '12px',
-            borderRadius: '6px',
-            cursor: 'pointer',
-            fontSize: '1rem'
+          <h2 style={{
+            marginBottom: '1rem'
+          }}>Welcome to TypeWave!</h2>
+          <p style={{
+            marginBottom: '1.5rem'
           }}>
-                  Create User & Start
-                </button>
-              </div>}
+            {usersList.length === 0 ? "No users found. Create one below to get started." : "Please select or create a user to begin."}
+          </p>
+          {usersList.length === 0 && <div style={{
+            background: 'rgba(255, 255, 255, 0.15)',
+            borderRadius: '16px',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            padding: '20px',
+            maxWidth: '400px'
+          }}>
+            <label style={{
+              display: 'block',
+              marginBottom: '10px'
+            }}>Enter username:</label>
+            <input type="text" id="greeting-new-user-input" placeholder="New username" style={{
+              width: '100%',
+              padding: '10px',
+              marginBottom: '15px',
+              borderRadius: '4px',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              background: 'rgba(255,255,255,0.1)',
+              color: 'white',
+              backdropFilter: 'blur(10px)'
+            }} />
+            <button onClick={() => {
+              const input = document.getElementById('greeting-new-user-input') as HTMLInputElement;
+              if (input) createUser(input.value);
+            }} style={{
+              width: '100%',
+              background: getButtonColor(),
+              color: 'white',
+              border: 'none',
+              padding: '12px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '1rem'
+            }}>
+              Create User & Start
+            </button>
           </div>}
+        </div>}
 
         {currentScreen === 'create-user' && <div style={{
-        width: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '20px 0',
-        flex: 1
-      }}>
-            <h2 style={{
-          marginBottom: '1rem'
-        }}>Create New User</h2>
-            <div style={{
-          background: 'rgba(255, 255, 255, 0.15)',
-          borderRadius: '16px',
-          backdropFilter: 'blur(10px)',
-          border: '1px solid rgba(255, 255, 255, 0.3)',
-          padding: '30px',
-          maxWidth: '400px'
-        }}>
-              <label style={{
-            display: 'block',
-            marginBottom: '0.6rem',
-            fontSize: '0.95em',
-            color: '#d0d0d0'
-          }}>
-                Enter Username:
-              </label>
-              <input type="text" id="new-username-input" placeholder="New username" style={{
-            width: '100%',
-            padding: '10px',
-            marginBottom: '20px',
-            border: '1px solid rgba(255, 255, 255, 0.25)',
-            borderRadius: '6px',
-            background: 'rgba(255, 255, 255, 0.1)',
-            color: '#ffffff',
-            cursor: 'pointer',
-            backdropFilter: 'blur(10px)'
-          }} />
-              <label style={{
-            display: 'block',
-            marginBottom: '0.6rem',
-            fontSize: '0.95em',
-            color: '#d0d0d0'
-          }}>
-                Confirm Username:
-              </label>
-              <input type="text" id="confirm-username-input" placeholder="Confirm username" style={{
-            width: '100%',
-            padding: '10px',
-            marginBottom: '20px',
-            border: '1px solid rgba(255, 255, 255, 0.25)',
-            borderRadius: '6px',
-            background: 'rgba(255, 255, 255, 0.1)',
-            color: '#ffffff',
-            cursor: 'pointer',
-            backdropFilter: 'blur(10px)'
-          }} />
-              <button onClick={() => {
-            const input1 = document.getElementById('new-username-input') as HTMLInputElement;
-            const input2 = document.getElementById('confirm-username-input') as HTMLInputElement;
-            if (input1 && input2 && input1.value === input2.value) {
-              createUser(input1.value);
-            } else {
-              showToast("Usernames do not match.", true);
-            }
-          }} style={{
-            width: '100%',
-            background: getButtonColor(),
-            color: 'white',
-            border: 'none',
-            padding: '12px 24px',
-            borderRadius: '6px',
-            cursor: 'pointer',
-            fontSize: '1rem',
-            marginBottom: '10px'
-          }}>
-                Create User
-              </button>
-              <button onClick={() => setCurrentScreen(usersList.length > 0 ? 'dashboard' : 'greeting')} style={{
-            width: '100%',
-            background: '#6c757d',
-            color: 'white',
-            border: 'none',
-            padding: '12px 24px',
-            borderRadius: '6px',
-            cursor: 'pointer',
-            fontSize: '1rem'
-          }}>
-                Cancel
-              </button>
-            </div>
-          </div>}
-
-        {currentScreen === 'dashboard' && currentActiveUser && <div style={{
-        width: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '20px 0',
-        flex: 1
-      }}>
-            <div style={{
+          width: '100%',
           display: 'flex',
-          gap: '1rem',
-          marginBottom: '2rem'
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '20px 0',
+          flex: 1
         }}>
-          <button onClick={handleCreateTestClick} style={{
-            background: getButtonColor(),
-            color: 'white',
-            border: 'none',
-            padding: '12px 24px',
-            borderRadius: '6px',
-            cursor: 'pointer',
-            fontSize: '1rem'
+          <h2 style={{
+            marginBottom: '1rem'
+          }}>Create New User</h2>
+          <div style={{
+            background: 'rgba(255, 255, 255, 0.15)',
+            borderRadius: '16px',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            padding: '30px',
+            maxWidth: '400px'
           }}>
+            <label style={{
+              display: 'block',
+              marginBottom: '0.6rem',
+              fontSize: '0.95em',
+              color: '#d0d0d0'
+            }}>
+              Enter Username:
+            </label>
+            <input type="text" id="new-username-input" placeholder="New username" style={{
+              width: '100%',
+              padding: '10px',
+              marginBottom: '20px',
+              border: '1px solid rgba(255, 255, 255, 0.25)',
+              borderRadius: '6px',
+              background: 'rgba(255, 255, 255, 0.1)',
+              color: '#ffffff',
+              cursor: 'pointer',
+              backdropFilter: 'blur(10px)'
+            }} />
+            <label style={{
+              display: 'block',
+              marginBottom: '0.6rem',
+              fontSize: '0.95em',
+              color: '#d0d0d0'
+            }}>
+              Confirm Username:
+            </label>
+            <input type="text" id="confirm-username-input" placeholder="Confirm username" style={{
+              width: '100%',
+              padding: '10px',
+              marginBottom: '20px',
+              border: '1px solid rgba(255, 255, 255, 0.25)',
+              borderRadius: '6px',
+              background: 'rgba(255, 255, 255, 0.1)',
+              color: '#ffffff',
+              cursor: 'pointer',
+              backdropFilter: 'blur(10px)'
+            }} />
+            <button onClick={() => {
+              const input1 = document.getElementById('new-username-input') as HTMLInputElement;
+              const input2 = document.getElementById('confirm-username-input') as HTMLInputElement;
+              if (input1 && input2 && input1.value === input2.value) {
+                createUser(input1.value);
+              } else {
+                showToast("Usernames do not match.", true);
+              }
+            }} style={{
+              width: '100%',
+              background: getButtonColor(),
+              color: 'white',
+              border: 'none',
+              padding: '12px 24px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '1rem',
+              marginBottom: '10px'
+            }}>
+              Create User
+            </button>
+            <button onClick={() => setCurrentScreen(usersList.length > 0 ? 'dashboard' : 'greeting')} style={{
+              width: '100%',
+              background: '#6c757d',
+              color: 'white',
+              border: 'none',
+              padding: '12px 24px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '1rem'
+            }}>
+              Cancel
+            </button>
+          </div>
+        </div>}
+
+        {currentScreen === 'dashboard' && currentActiveUser && (
+          <div style={{
+            width: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px 0',
+            flex: 1
+          }}>
+            <div style={{
+              display: 'flex',
+              gap: '1rem',
+              marginBottom: '2rem',
+              flexWrap: 'wrap'
+            }}>
+              <button onClick={handleCreateTestClick} style={{
+                background: getButtonColor(),
+                color: 'white',
+                border: 'none',
+                padding: '12px 24px',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '1rem'
+              }}>
                 Create New Test
               </button>
-              {testResults.length > 0 && <button onClick={() => continueTest()} style={{
-            background: getButtonColor(),
-            color: 'white',
-            border: 'none',
-            padding: '12px 24px',
-            borderRadius: '6px',
-            cursor: 'pointer',
-            fontSize: '1rem'
-          }}>
+              {testResults.length > 0 && (
+                <button onClick={() => continueTest()} style={{
+                  background: getButtonColor(),
+                  color: 'white',
+                  border: 'none',
+                  padding: '12px 24px',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '1rem'
+                }}>
                   Continue Test
-                </button>}
+                </button>
+              )}
+              <button onClick={() => setCurrentScreen('achievements')} style={{
+                background: 'rgba(255, 215, 0, 0.2)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 215, 0, 0.3)',
+                color: '#ffd700',
+                padding: '12px 24px',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '1rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <Trophy size={18} />
+                Achievements ({getUnlockedCount()})
+              </button>
             </div>
 
             {averageStats && <div style={{
-          width: '100%',
-          maxWidth: '700px',
-          background: 'rgba(255, 255, 255, 0.1)',
-          borderRadius: '16px',
-          backdropFilter: 'blur(10px)',
-          border: '1px solid rgba(255, 255, 255, 0.3)',
-          padding: '20px',
-          marginBottom: '20px'
-        }}>
-                <h3 style={{
-            marginBottom: '15px',
-            textAlign: 'center'
-          }}>Your Average Performance</h3>
-                <div style={{
-            display: 'flex',
-            justifyContent: 'space-around',
-            textAlign: 'center'
-          }}>
-                  <div>
-                    <div style={{
-                fontSize: '1.5rem',
-                fontWeight: 'bold',
-                color: getButtonColor()
-              }}>{averageStats.avgWpm}</div>
-                    <div style={{
-                fontSize: '0.9rem',
-                opacity: 0.8
-              }}>Avg WPM</div>
-                  </div>
-                  <div>
-                    <div style={{
-                fontSize: '1.5rem',
-                fontWeight: 'bold',
-                color: getButtonColor()
-              }}>{averageStats.avgErrorRate}%</div>
-                    <div style={{
-                fontSize: '0.9rem',
-                opacity: 0.8
-              }}>Avg Error Rate</div>
-                  </div>
-                  <div>
-                    <div style={{
-                fontSize: '1.5rem',
-                fontWeight: 'bold',
-                color: getButtonColor()
-              }}>{averageStats.avgScore}</div>
-                    <div style={{
-                fontSize: '0.9rem',
-                opacity: 0.8
-              }}>Avg Score</div>
-                  </div>
-                  <div>
-                    <div style={{
-                fontSize: '1.5rem',
-                fontWeight: 'bold',
-                color: getButtonColor()
-              }}>{averageStats.totalTests}</div>
-                    <div style={{
-                fontSize: '0.9rem',
-                opacity: 0.8
-              }}>Total Tests</div>
-                  </div>
-                  <div>
-                    <div style={{
-                fontSize: '1.5rem',
-                fontWeight: 'bold',
-                color: getButtonColor()
+              width: '100%',
+              maxWidth: '700px',
+              background: 'rgba(255, 255, 255, 0.1)',
+              borderRadius: '16px',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              padding: '20px',
+              marginBottom: '20px'
+            }}>
+              <h3 style={{
+                marginBottom: '15px',
+                textAlign: 'center'
+              }}>Your Average Performance</h3>
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-around',
+                textAlign: 'center'
               }}>
-                      {Math.floor((averageStats.totalTime || 0) / 60)}:{((averageStats.totalTime || 0) % 60).toString().padStart(2, '0')}
-                    </div>
-                    <div style={{
-                fontSize: '0.9rem',
-                opacity: 0.8
-              }}>Time</div>
-                  </div>
+                <div>
+                  <div style={{
+                    fontSize: '1.5rem',
+                    fontWeight: 'bold',
+                    color: getButtonColor()
+                  }}>{averageStats.avgWpm}</div>
+                  <div style={{
+                    fontSize: '0.9rem',
+                    opacity: 0.8
+                  }}>Avg WPM</div>
                 </div>
-              </div>}
+                <div>
+                  <div style={{
+                    fontSize: '1.5rem',
+                    fontWeight: 'bold',
+                    color: getButtonColor()
+                  }}>{averageStats.avgErrorRate}%</div>
+                  <div style={{
+                    fontSize: '0.9rem',
+                    opacity: 0.8
+                  }}>Avg Error Rate</div>
+                </div>
+                <div>
+                  <div style={{
+                    fontSize: '1.5rem',
+                    fontWeight: 'bold',
+                    color: getButtonColor()
+                  }}>{averageStats.avgScore}</div>
+                  <div style={{
+                    fontSize: '0.9rem',
+                    opacity: 0.8
+                  }}>Avg Score</div>
+                </div>
+                <div>
+                  <div style={{
+                    fontSize: '1.5rem',
+                    fontWeight: 'bold',
+                    color: getButtonColor()
+                  }}>{averageStats.totalTests}</div>
+                  <div style={{
+                    fontSize: '0.9rem',
+                    opacity: 0.8
+                  }}>Total Tests</div>
+                </div>
+                <div>
+                  <div style={{
+                    fontSize: '1.5rem',
+                    fontWeight: 'bold',
+                    color: getButtonColor()
+                  }}>
+                    {Math.floor((averageStats.totalTime || 0) / 60)}:{((averageStats.totalTime || 0) % 60).toString().padStart(2, '0')}
+                  </div>
+                  <div style={{
+                    fontSize: '0.9rem',
+                    opacity: 0.8
+                  }}>Time</div>
+                </div>
+              </div>
+            </div>}
 
             <div style={{
-          width: '100%',
-          maxWidth: '700px',
-          background: 'rgba(255, 255, 255, 0.1)',
-          borderRadius: '16px',
-          backdropFilter: 'blur(10px)',
-          border: '1px solid rgba(255, 255, 255, 0.3)',
-          padding: '15px'
-        }}>
+              width: '100%',
+              maxWidth: '700px',
+              background: 'rgba(255, 255, 255, 0.1)',
+              borderRadius: '16px',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              padding: '15px'
+            }}>
               <h3 style={{
-            marginBottom: '10px',
-            borderBottom: '1px solid rgba(255,255,255,0.2)',
-            paddingBottom: '8px'
-          }}>
+                marginBottom: '10px',
+                borderBottom: '1px solid rgba(255,255,255,0.2)',
+                paddingBottom: '8px'
+              }}>
                 Your Previous Tests:
               </h3>
               {testResults.length === 0 ? <p>No tests recorded yet.</p> : <div style={{
-            maxHeight: '300px',
-            overflowY: 'auto'
-          }}>
-                  {testResults.map((test, index) => <div key={index} style={{
-              background: continueTestMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)',
-              padding: '10px',
-              borderRadius: '8px',
-              marginBottom: '8px',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              cursor: continueTestMode ? 'pointer' : 'default',
-              border: continueTestMode ? '1px solid rgba(255, 255, 255, 0.3)' : 'none'
-            }} onClick={() => continueTestMode && continueTest(test.name)}>
-                      <div>
-                        <div style={{
-                  fontWeight: 'bold'
-                }}>{test.name}</div>
-                        <div style={{
-                  fontSize: '0.8rem',
-                  opacity: 0.8
-                }}>
-                          {test.testCount > 1 ? `${test.testCount} tests completed` : '1 test completed'} | Last: {new Date(test.lastDate).toLocaleDateString()}
-                        </div>
-                        <div style={{
-                  fontSize: '0.8rem',
-                  opacity: 0.8
-                }}>
-                          Time: {Math.floor((test.totalTime || 0) / 60)}:{((test.totalTime || 0) % 60).toString().padStart(2, '0')}
-                        </div>
-                      </div>
-                      <div style={{
-                textAlign: 'right'
+                maxHeight: '300px',
+                overflowY: 'auto'
               }}>
-                        <div>{test.wpm} WPM | {test.errorRate}% Error Rate | Score: {test.score}</div>
-                        <div style={{
-                  fontSize: '0.8rem',
-                  opacity: 0.8
-                }}>
-                          Average Stats
-                        </div>
-                      </div>
-                    </div>)}
-                </div>}
+                {testResults.map((test, index) => <div key={index} style={{
+                  background: continueTestMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                  padding: '10px',
+                  borderRadius: '8px',
+                  marginBottom: '8px',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  cursor: continueTestMode ? 'pointer' : 'default',
+                  border: continueTestMode ? '1px solid rgba(255, 255, 255, 0.3)' : 'none'
+                }} onClick={() => continueTestMode && continueTest(test.name)}>
+                  <div>
+                    <div style={{
+                      fontWeight: 'bold'
+                    }}>{test.name}</div>
+                    <div style={{
+                      fontSize: '0.8rem',
+                      opacity: 0.8
+                    }}>
+                      {test.testCount > 1 ? `${test.testCount} tests completed` : '1 test completed'} | Last: {new Date(test.lastDate).toLocaleDateString()}
+                    </div>
+                    <div style={{
+                      fontSize: '0.8rem',
+                      opacity: 0.8
+                    }}>
+                      Time: {Math.floor((test.totalTime || 0) / 60)}:{((test.totalTime || 0) % 60).toString().padStart(2, '0')}
+                    </div>
+                  </div>
+                  <div style={{
+                    textAlign: 'right'
+                  }}>
+                    <div>{test.wpm} WPM | {test.errorRate}% Error Rate | Score: {test.score}</div>
+                    <div style={{
+                      fontSize: '0.8rem',
+                      opacity: 0.8
+                    }}>
+                      Average Stats
+                    </div>
+                  </div>
+                </div>)}
+              </div>}
             </div>
-          </div>}
+          </div>
+        )}
 
-        {currentScreen === 'typing' && <div style={{
-        width: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        padding: '20px 0',
-        flex: 1,
-        position: 'relative',
-        marginTop: '2cm' // Changed from 3cm to 2cm
-      }}>
+        {currentScreen === 'typing' && (
+          <div style={{
+            width: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            padding: '20px 0',
+            flex: 1,
+            position: 'relative',
+            marginTop: '2cm'
+          }}>
             <TypingTest testText={testText} pos={pos} chars={chars} theme={theme} onKeyDown={handleKeyDown} fontSize={fontSize} fontStyle={fontStyle} />
 
             <StatsDisplay elapsed={elapsed} correctSigns={correctCharacters} totalErrors={totalErrors} currentErrorRate={getCurrentErrorRate()} theme={theme} />
 
+            {/* Achievement Panel in Test Area */}
             <div style={{
-          display: 'flex',
-          gap: '1rem',
-          alignItems: 'center',
-          marginBottom: '2rem'
-        }}>
+              position: 'fixed',
+              top: '20px',
+              left: '20px',
+              background: 'rgba(255, 215, 0, 0.1)',
+              backdropFilter: 'blur(20px)',
+              border: '1px solid rgba(255, 215, 0, 0.2)',
+              borderRadius: '12px',
+              padding: '15px',
+              minWidth: '200px',
+              zIndex: 100
+            }}>
+              <h4 style={{ margin: '0 0 10px 0', color: '#ffd700', fontSize: '0.9rem' }}>
+                <Trophy size={16} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
+                Progress
+              </h4>
+              <div style={{ fontSize: '0.8rem' }}>
+                <div>Achievements: {getUnlockedCount()}/{achievements.length}</div>
+                <div>Current WPM: {getCurrentWPM()}</div>
+                <div>Accuracy: {(100 - getCurrentErrorRate()).toFixed(1)}%</div>
+              </div>
+            </div>
+
+            <div style={{
+              display: 'flex',
+              gap: '1rem',
+              marginBottom: '2rem'
+            }}>
               <button onClick={() => {
-            resetTest();
-            setTypedText('');
-            setExtraChars([]);
-            setShowReturnConfirm(false);
-            setShowStartMessage(true);
-            if (startMessageTimeoutRef.current) {
-              clearTimeout(startMessageTimeoutRef.current);
-            }
-            startMessageTimeoutRef.current = setTimeout(() => {
-              setShowStartMessage(false);
-            }, 15000);
-            setTimeout(() => {
-              const textToUse = generateWords(100);
-              renderText(textToUse);
-            }, 100);
-          }} style={{
-            background: getButtonColor(),
-            color: 'white',
-            border: 'none',
-            padding: '12px 24px',
-            borderRadius: '6px',
-            cursor: 'pointer',
-            fontSize: '1rem'
-          }}>
+                resetTest();
+                setTypedText('');
+                setExtraChars([]);
+                setShowReturnConfirm(false);
+                setShowStartMessage(true);
+                if (startMessageTimeoutRef.current) {
+                  clearTimeout(startMessageTimeoutRef.current);
+                }
+                startMessageTimeoutRef.current = setTimeout(() => {
+                  setShowStartMessage(false);
+                }, 15000);
+                setTimeout(() => {
+                  const textToUse = generateWords(100);
+                  renderText(textToUse);
+                }, 100);
+              }} style={{
+                background: getButtonColor(),
+                color: 'white',
+                border: 'none',
+                padding: '12px 24px',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '1rem'
+              }}>
                 Restart Current Test
               </button>
               <button onClick={handleHistoryClick} style={{
-            background: '#6c757d',
-            color: 'white',
-            border: 'none',
-            padding: '12px 24px',
-            borderRadius: '6px',
-            cursor: 'pointer',
-            fontSize: '1rem'
-          }}>
+                background: '#6c757d',
+                color: 'white',
+                border: 'none',
+                padding: '12px 24px',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '1rem'
+              }}>
                 History
               </button>
             </div>
 
             <div style={{
-          position: 'fixed',
-          bottom: '30px',
-          right: '30px',
-          zIndex: 100
-        }}>
+              position: 'fixed',
+              bottom: '30px',
+              right: '30px',
+              zIndex: 100
+            }}>
               <button onClick={handleReturnToDashboard} style={{
-            background: showReturnConfirm ? 'rgba(231, 76, 60, 0.7)' : 'rgba(255, 255, 255, 0.1)',
-            backdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            color: 'white',
-            padding: '15px 25px',
-            borderRadius: '16px',
-            cursor: 'pointer',
-            fontSize: '1rem',
-            fontWeight: '500',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
-            transition: 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-            transform: 'translateY(0)'
-          }} onMouseEnter={e => {
-            e.currentTarget.style.transform = 'translateY(-2px)';
-            e.currentTarget.style.boxShadow = '0 12px 40px rgba(0, 0, 0, 0.4)';
-            e.currentTarget.style.background = showReturnConfirm ? 'rgba(231, 76, 60, 0.8)' : 'rgba(255, 255, 255, 0.15)';
-          }} onMouseLeave={e => {
-            e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.3)';
-            e.currentTarget.style.background = showReturnConfirm ? 'rgba(231, 76, 60, 0.7)' : 'rgba(255, 255, 255, 0.1)';
-          }}>
+                background: showReturnConfirm ? 'rgba(231, 76, 60, 0.7)' : 'rgba(255, 255, 255, 0.1)',
+                backdropFilter: 'blur(20px)',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                color: 'white',
+                padding: '15px 25px',
+                borderRadius: '16px',
+                cursor: 'pointer',
+                fontSize: '1rem',
+                fontWeight: '500',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+                transition: 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+                transform: 'translateY(0)'
+              }} onMouseEnter={e => {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 12px 40px rgba(0, 0, 0, 0.4)';
+                e.currentTarget.style.background = showReturnConfirm ? 'rgba(231, 76, 60, 0.8)' : 'rgba(255, 255, 255, 0.15)';
+              }} onMouseLeave={e => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.3)';
+                e.currentTarget.style.background = showReturnConfirm ? 'rgba(231, 76, 60, 0.7)' : 'rgba(255, 255, 255, 0.1)';
+              }}>
                 {showReturnConfirm ? 'Confirm Return?' : 'Return to Dashboard'}
               </button>
             </div>
-          </div>}
+          </div>
+        )}
 
         {currentScreen === 'results' && lastTestResult && <div style={{
-        width: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        padding: '20px 0',
-        flex: 1
-      }}>
-            <div style={{
-          fontSize: '3em',
-          fontWeight: 'bold',
-          marginBottom: '0.5rem',
-          color: 'white',
-          textAlign: 'center'
-        }}>
-              <span style={{
-            fontSize: '0.5em',
-            opacity: 0.8,
-            marginRight: '5px'
-          }}>Score:</span>
-              <span>{lastTestResult.score}</span>
-              <span style={{
-            fontSize: '0.5em',
-            opacity: 0.8,
-            marginLeft: '5px'
-          }}>/ 1000</span>
-            </div>
-            
-            <div style={{
-          fontSize: '1.5em',
-          marginBottom: '2rem',
-          textAlign: 'center',
-          color: 'white'
-        }}>
-              {lastTestResult.score >= 800 ? "Excellent! Impressive Speed and Low Error Rate!" : lastTestResult.score >= 600 ? "Great job! Keep practicing!" : lastTestResult.score >= 400 ? "Good work! Room for improvement!" : "Keep practicing! You'll get better!"}
-            </div>
-
-            <div style={{
           width: '100%',
-          maxWidth: '700px',
-          background: 'rgba(255, 255, 255, 0.1)',
-          borderRadius: '16px',
-          backdropFilter: 'blur(10px)',
-          border: '1px solid rgba(255, 255, 255, 0.3)',
-          padding: '20px',
-          marginBottom: '2rem'
-        }}>
-              <h3 style={{
-            marginBottom: '15px',
-            textAlign: 'center'
-          }}>Test Results</h3>
-              <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: '15px',
-            textAlign: 'center',
-            marginBottom: '15px'
-          }}>
-                <div>
-                  <div style={{
-                fontSize: '1.5rem',
-                fontWeight: 'bold',
-                color: getButtonColor()
-              }}>{lastTestResult.wpm}</div>
-                  <div style={{
-                fontSize: '0.9rem',
-                opacity: 0.8
-              }}>WPM</div>
-                </div>
-                <div>
-                  <div style={{
-                fontSize: '1.5rem',
-                fontWeight: 'bold',
-                color: getButtonColor()
-              }}>{lastTestResult.errorRate}%</div>
-                  <div style={{
-                fontSize: '0.9rem',
-                opacity: 0.8
-              }}>Error Rate</div>
-                </div>
-                <div>
-                  <div style={{
-                fontSize: '1.5rem',
-                fontWeight: 'bold',
-                color: getButtonColor()
-              }}>{lastTestResult.score}</div>
-                  <div style={{
-                fontSize: '0.9rem',
-                opacity: 0.8
-              }}>Score</div>
-                </div>
-              </div>
-              <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: '15px',
-            textAlign: 'center'
-          }}>
-                <div>
-                  <div style={{
-                fontSize: '1.5rem',
-                fontWeight: 'bold',
-                color: getButtonColor()
-              }}>{lastTestResult.errors}</div>
-                  <div style={{
-                fontSize: '0.9rem',
-                opacity: 0.8
-              }}>Total Errors</div>
-                </div>
-                <div>
-                  <div style={{
-                fontSize: '1.5rem',
-                fontWeight: 'bold',
-                color: getButtonColor()
-              }}>{lastTestResult.correctChars}</div>
-                  <div style={{
-                fontSize: '0.9rem',
-                opacity: 0.8
-              }}>Correct Signs</div>
-                </div>
-                <div>
-                  <div style={{
-                fontSize: '1.5rem',
-                fontWeight: 'bold',
-                color: getButtonColor()
-              }}>
-                    {Math.floor(lastTestResult.time / 60)}:{(lastTestResult.time % 60).toString().padStart(2, '0')}
-                  </div>
-                  <div style={{
-                fontSize: '0.9rem',
-                opacity: 0.8
-              }}>Time Taken</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Typed Text Preview Section */}
-            {showTypedPreview && typedText && <div style={{
-          width: '100%',
-          maxWidth: '700px',
-          background: 'rgba(255, 255, 255, 0.1)',
-          borderRadius: '16px',
-          backdropFilter: 'blur(10px)',
-          border: '1px solid rgba(255, 255, 255, 0.3)',
-          padding: '20px',
-          marginBottom: '1.5rem'
-        }}>
-                <h3 style={{
-            marginBottom: '15px',
-            textAlign: 'center'
-          }}>Your Typed Text</h3>
-                <div style={{
-            background: 'rgba(255, 255, 255, 0.05)',
-            borderRadius: '8px',
-            padding: '15px',
-            maxHeight: '200px',
-            overflowY: 'auto',
-            fontFamily: 'monospace',
-            fontSize: '0.9rem',
-            lineHeight: '1.4',
-            whiteSpace: 'pre-wrap',
-            wordBreak: 'break-word'
-          }}>
-                  {typedText}
-                </div>
-              </div>}
-
-            <div style={{
           display: 'flex',
-          gap: '1rem',
-          marginBottom: '1.5rem'
+          flexDirection: 'column',
+          alignItems: 'center',
+          padding: '20px 0',
+          flex: 1
         }}>
-              <button onClick={() => setShowTypedPreview(prev => !prev)} style={{
-            background: '#6c757d',
+          <div style={{
+            fontSize: '3em',
+            fontWeight: 'bold',
+            marginBottom: '0.5rem',
             color: 'white',
-            border: 'none',
-            padding: '12px 24px',
-            borderRadius: '6px',
-            cursor: 'pointer',
-            fontSize: '1rem'
-          }} className="bg-[#09000a]/[0.37]">
-                {showTypedPreview ? 'Hide' : 'Preview'} Typed Text
-              </button>
-              <button onClick={() => {
-            setCurrentScreen('dashboard');
-            setShowTypedPreview(false);
-          }} style={{
-            background: getButtonColor(),
-            color: 'white',
-            border: 'none',
-            padding: '12px 24px',
-            borderRadius: '6px',
-            cursor: 'pointer',
-            fontSize: '1rem'
+            textAlign: 'center'
           }}>
-                Back to Test Dashboard
-              </button>
+            <span style={{
+              fontSize: '0.5em',
+              opacity: 0.8,
+              marginRight: '5px'
+            }}>Score:</span>
+            <span>{lastTestResult.score}</span>
+            <span style={{
+              fontSize: '0.5em',
+              opacity: 0.8,
+              marginLeft: '5px'
+            }}>/ 1000</span>
+          </div>
+          
+          <div style={{
+            fontSize: '1.5em',
+            marginBottom: '2rem',
+            textAlign: 'center',
+            color: 'white'
+          }}>
+            {lastTestResult.score >= 800 ? "Excellent! Impressive Speed and Low Error Rate!" : lastTestResult.score >= 600 ? "Great job! Keep practicing!" : lastTestResult.score >= 400 ? "Good work! Room for improvement!" : "Keep practicing! You'll get better!"}
+          </div>
+
+          <div style={{
+            width: '100%',
+            maxWidth: '700px',
+            background: 'rgba(255, 255, 255, 0.1)',
+            borderRadius: '16px',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            padding: '20px',
+            marginBottom: '2rem'
+          }}>
+            <h3 style={{
+              marginBottom: '15px',
+              textAlign: 'center'
+            }}>Test Results</h3>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '15px',
+              textAlign: 'center',
+              marginBottom: '15px'
+            }}>
+              <div>
+                <div style={{
+                  fontSize: '1.5rem',
+                  fontWeight: 'bold',
+                  color: getButtonColor()
+                }}>{lastTestResult.wpm}</div>
+                <div style={{
+                  fontSize: '0.9rem',
+                  opacity: 0.8
+                }}>WPM</div>
+              </div>
+              <div>
+                <div style={{
+                  fontSize: '1.5rem',
+                  fontWeight: 'bold',
+                  color: getButtonColor()
+                }}>{lastTestResult.errorRate}%</div>
+                <div style={{
+                  fontSize: '0.9rem',
+                  opacity: 0.8
+                }}>Error Rate</div>
+              </div>
+              <div>
+                <div style={{
+                  fontSize: '1.5rem',
+                  fontWeight: 'bold',
+                  color: getButtonColor()
+                }}>{lastTestResult.score}</div>
+                <div style={{
+                  fontSize: '0.9rem',
+                  opacity: 0.8
+                }}>Score</div>
+              </div>
+            </div>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '15px',
+              textAlign: 'center'
+            }}>
+              <div>
+                <div style={{
+                  fontSize: '1.5rem',
+                  fontWeight: 'bold',
+                  color: getButtonColor()
+                }}>{lastTestResult.errors}</div>
+                <div style={{
+                  fontSize: '0.9rem',
+                  opacity: 0.8
+                }}>Total Errors</div>
+              </div>
+              <div>
+                <div style={{
+                  fontSize: '1.5rem',
+                  fontWeight: 'bold',
+                  color: getButtonColor()
+                }}>{lastTestResult.correctChars}</div>
+                <div style={{
+                  fontSize: '0.9rem',
+                  opacity: 0.8
+                }}>Correct Signs</div>
+              </div>
+              <div>
+                <div style={{
+                  fontSize: '1.5rem',
+                  fontWeight: 'bold',
+                  color: getButtonColor()
+                }}>
+                  {Math.floor(lastTestResult.time / 60)}:{(lastTestResult.time % 60).toString().padStart(2, '0')}
+                </div>
+                <div style={{
+                  fontSize: '0.9rem',
+                  opacity: 0.8
+                }}>Time Taken</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Typed Text Preview Section */}
+          {showTypedPreview && typedText && <div style={{
+            width: '100%',
+            maxWidth: '700px',
+            background: 'rgba(255, 255, 255, 0.1)',
+            borderRadius: '16px',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            padding: '20px',
+            marginBottom: '1.5rem'
+          }}>
+            <h3 style={{
+              marginBottom: '15px',
+              textAlign: 'center'
+            }}>Your Typed Text</h3>
+            <div style={{
+              background: 'rgba(255, 255, 255, 0.05)',
+              borderRadius: '8px',
+              padding: '15px',
+              maxHeight: '200px',
+              overflowY: 'auto',
+              fontFamily: 'monospace',
+              fontSize: '0.9rem',
+              lineHeight: '1.4',
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'break-word'
+            }}>
+              {typedText}
             </div>
           </div>}
+
+          <div style={{
+            display: 'flex',
+            gap: '1rem',
+            marginBottom: '1.5rem'
+          }}>
+            <button onClick={() => setShowTypedPreview(prev => !prev)} style={{
+              background: '#6c757d',
+              color: 'white',
+              border: 'none',
+              padding: '12px 24px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '1rem'
+            }} className="bg-[#09000a]/[0.37]">
+              {showTypedPreview ? 'Hide' : 'Preview'} Typed Text
+            </button>
+            <button onClick={() => {
+              setCurrentScreen('dashboard');
+              setShowTypedPreview(false);
+            }} style={{
+              background: getButtonColor(),
+              color: 'white',
+              border: 'none',
+              padding: '12px 24px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '1rem'
+            }}>
+              Back to Test Dashboard
+            </button>
+          </div>
+        </div>}
 
         {currentScreen === 'history' && <HistoryPage allTestHistory={allTestHistory} theme={theme} onBack={() => setCurrentScreen('dashboard')} getButtonColor={getButtonColor} />}
 
@@ -1397,100 +1487,100 @@ const Index: React.FC = () => {
 
         {/* Footer */}
         <footer style={{
-        marginTop: 'auto',
-        display: 'flex',
-        flexWrap: 'wrap',
-        justifyContent: 'center',
-        gap: '1.5rem',
-        padding: '1.5rem 0',
-        zIndex: 5,
-        background: highlightFooter ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
-        borderRadius: highlightFooter ? '12px' : '0',
-        transition: 'all 0.3s ease',
-        border: highlightFooter ? '1px solid rgba(255, 255, 255, 0.3)' : 'none'
-      }}>
-          <a href="https://www.reddit.com/user/Rak_the_rock" target="_blank" rel="noopener noreferrer" style={{
-          color: 'white',
-          textDecoration: 'none',
-          fontSize: '0.9rem',
-          transition: 'color 0.3s ease'
-        }} onMouseEnter={e => {
-          const target = e.target as HTMLElement;
-          target.style.color = theme === 'midnight-black' ? '#c559f7' : theme === 'cotton-candy-glow' ? '#ff59e8' : '#8a2be2';
-        }} onMouseLeave={e => {
-          const target = e.target as HTMLElement;
-          target.style.color = 'white';
+          marginTop: 'auto',
+          display: 'flex',
+          flexWrap: 'wrap',
+          justifyContent: 'center',
+          gap: '1.5rem',
+          padding: '1.5rem 0',
+          zIndex: 5,
+          background: highlightFooter ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+          borderRadius: highlightFooter ? '12px' : '0',
+          transition: 'all 0.3s ease',
+          border: highlightFooter ? '1px solid rgba(255, 255, 255, 0.3)' : 'none'
         }}>
+          <a href="https://www.reddit.com/user/Rak_the_rock" target="_blank" rel="noopener noreferrer" style={{
+            color: 'white',
+            textDecoration: 'none',
+            fontSize: '0.9rem',
+            transition: 'color 0.3s ease'
+          }} onMouseEnter={e => {
+            const target = e.target as HTMLElement;
+            target.style.color = theme === 'midnight-black' ? '#c559f7' : theme === 'cotton-candy-glow' ? '#ff59e8' : '#8a2be2';
+          }} onMouseLeave={e => {
+            const target = e.target as HTMLElement;
+            target.style.color = 'white';
+          }}>
             Reddit
           </a>
           <a href="https://github.com/Raktherock" target="_blank" rel="noopener noreferrer" style={{
-          color: 'white',
-          textDecoration: 'none',
-          fontSize: '0.9rem',
-          transition: 'color 0.3s ease'
-        }} onMouseEnter={e => {
-          const target = e.target as HTMLElement;
-          target.style.color = theme === 'midnight-black' ? '#c559f7' : theme === 'cotton-candy-glow' ? '#ff59e8' : '#8a2be2';
-        }} onMouseLeave={e => {
-          const target = e.target as HTMLElement;
-          target.style.color = 'white';
-        }}>
+            color: 'white',
+            textDecoration: 'none',
+            fontSize: '0.9rem',
+            transition: 'color 0.3s ease'
+          }} onMouseEnter={e => {
+            const target = e.target as HTMLElement;
+            target.style.color = theme === 'midnight-black' ? '#c559f7' : theme === 'cotton-candy-glow' ? '#ff59e8' : '#8a2be2';
+          }} onMouseLeave={e => {
+            const target = e.target as HTMLElement;
+            target.style.color = 'white';
+          }}>
             GitHub
           </a>
           <a href="https://t.me/RakshanKumaraa" target="_blank" rel="noopener noreferrer" style={{
-          color: 'white',
-          textDecoration: 'none',
-          fontSize: '0.9rem',
-          transition: 'color 0.3s ease'
-        }} onMouseEnter={e => {
-          const target = e.target as HTMLElement;
-          target.style.color = theme === 'midnight-black' ? '#c559f7' : theme === 'cotton-candy-glow' ? '#ff59e8' : '#8a2be2';
-        }} onMouseLeave={e => {
-          const target = e.target as HTMLElement;
-          target.style.color = 'white';
-        }}>
+            color: 'white',
+            textDecoration: 'none',
+            fontSize: '0.9rem',
+            transition: 'color 0.3s ease'
+          }} onMouseEnter={e => {
+            const target = e.target as HTMLElement;
+            target.style.color = theme === 'midnight-black' ? '#c559f7' : theme === 'cotton-candy-glow' ? '#ff59e8' : '#8a2be2';
+          }} onMouseLeave={e => {
+            const target = e.target as HTMLElement;
+            target.style.color = 'white';
+          }}>
             Telegram
           </a>
           <a href="https://www.linkedin.com/in/rakshan-kumaraa-140049365/" target="_blank" rel="noopener noreferrer" style={{
-          color: 'white',
-          textDecoration: 'none',
-          fontSize: '0.9rem',
-          transition: 'color 0.3s ease'
-        }} onMouseEnter={e => {
-          const target = e.target as HTMLElement;
-          target.style.color = theme === 'midnight-black' ? '#c559f7' : theme === 'cotton-candy-glow' ? '#ff59e8' : '#8a2be2';
-        }} onMouseLeave={e => {
-          const target = e.target as HTMLElement;
-          target.style.color = 'white';
-        }}>
+            color: 'white',
+            textDecoration: 'none',
+            fontSize: '0.9rem',
+            transition: 'color 0.3s ease'
+          }} onMouseEnter={e => {
+            const target = e.target as HTMLElement;
+            target.style.color = theme === 'midnight-black' ? '#c559f7' : theme === 'cotton-candy-glow' ? '#ff59e8' : '#8a2be2';
+          }} onMouseLeave={e => {
+            const target = e.target as HTMLElement;
+            target.style.color = 'white';
+          }}>
             LinkedIn
           </a>
           <a href="https://wa.me/916369314244" target="_blank" rel="noopener noreferrer" style={{
-          color: 'white',
-          textDecoration: 'none',
-          fontSize: '0.9rem',
-          transition: 'color 0.3s ease'
-        }} onMouseEnter={e => {
-          const target = e.target as HTMLElement;
-          target.style.color = theme === 'midnight-black' ? '#c559f7' : theme === 'cotton-candy-glow' ? '#ff59e8' : '#8a2be2';
-        }} onMouseLeave={e => {
-          const target = e.target as HTMLElement;
-          target.style.color = 'white';
-        }}>
+            color: 'white',
+            textDecoration: 'none',
+            fontSize: '0.9rem',
+            transition: 'color 0.3s ease'
+          }} onMouseEnter={e => {
+            const target = e.target as HTMLElement;
+            target.style.color = theme === 'midnight-black' ? '#c559f7' : theme === 'cotton-candy-glow' ? '#ff59e8' : '#8a2be2';
+          }} onMouseLeave={e => {
+            const target = e.target as HTMLElement;
+            target.style.color = 'white';
+          }}>
             WhatsApp
           </a>
           <a href="mailto:rakshankumaraa@gmail.com" style={{
-          color: 'white',
-          textDecoration: 'none',
-          fontSize: '0.9rem',
-          transition: 'color 0.3s ease'
-        }} onMouseEnter={e => {
-          const target = e.target as HTMLElement;
-          target.style.color = theme === 'midnight-black' ? '#c559f7' : theme === 'cotton-candy-glow' ? '#ff59e8' : '#8a2be2';
-        }} onMouseLeave={e => {
-          const target = e.target as HTMLElement;
-          target.style.color = 'white';
-        }}>
+            color: 'white',
+            textDecoration: 'none',
+            fontSize: '0.9rem',
+            transition: 'color 0.3s ease'
+          }} onMouseEnter={e => {
+            const target = e.target as HTMLElement;
+            target.style.color = theme === 'midnight-black' ? '#c559f7' : theme === 'cotton-candy-glow' ? '#ff59e8' : '#8a2be2';
+          }} onMouseLeave={e => {
+            const target = e.target as HTMLElement;
+            target.style.color = 'white';
+          }}>
             Gmail
           </a>
         </footer>

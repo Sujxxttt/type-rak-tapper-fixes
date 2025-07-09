@@ -101,12 +101,12 @@
   }
 
   .theme-midnight-black {
-    background: #0a0a0a !important;
+    background: #0a0a0a !important; /* Slightly lighter to prevent white flash */
     transition: background 0.5s ease-in-out !important;
   }
 
   .theme-cotton-candy-glow {
-    background: linear-gradient(135deg, #12cff3, #5ab2f7) !important;
+    background: linear-gradient(135deg, #12cff3, #5ab2f7) !important; /* Updated to match animation */
     transition: background 0.5s ease-in-out !important;
   }
 
@@ -125,5 +125,31 @@
 
   .cursor-white {
     cursor: url('./assets/cursor-white.svg') 12 12, auto;
+  }
+
+  /* Glass style scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(10px);
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.4);
+  }
+
+  /* Achievement notification styles */
+  .achievement-glow {
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
   }
 }

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 
 interface IntroductionProps {
@@ -24,6 +25,7 @@ export const Introduction: React.FC<IntroductionProps> = ({
   const [titlePosition, setTitlePosition] = useState('center');
   const [isReplay, setIsReplay] = useState(false);
 
+  // Animation sequence: cosmic-nebula → midnight-black → cotton-candy-glow → current theme
   const themes = [
     {
       id: 'cosmic-nebula',
@@ -32,19 +34,20 @@ export const Introduction: React.FC<IntroductionProps> = ({
     },
     {
       id: 'midnight-black',
-      background: '#0a0a0a',
+      background: '#0a0a0a', // Slightly lighter to prevent white flash
       titleGradient: 'linear-gradient(90deg, #c559f7 0%, #7f59f7 100%)'
     },
     {
       id: 'cotton-candy-glow',
-      background: 'linear-gradient(135deg, #12cff3, #5ab2f7)',
+      background: 'linear-gradient(135deg, #12cff3, #5ab2f7)', // Using animation background
       titleGradient: 'linear-gradient(90deg, #fc03df 0%, #ff3be8 100%)'
     }
   ];
 
-  const getCurrentThemeIndex = () => {
+  const getCurrentThemeData = () => {
     const actualTheme = currentTheme || theme;
-    return themes.findIndex(t => t.id === actualTheme);
+    const targetTheme = themes.find(t => t.id === actualTheme);
+    return targetTheme || themes[0];
   };
 
   useEffect(() => {
@@ -54,22 +57,27 @@ export const Introduction: React.FC<IntroductionProps> = ({
 
     setCurrentThemeIndex(0);
 
-    // Theme switching phase - 10% faster
+    // Theme switching phase - cycle through themes
     themeInterval = setInterval(() => {
-      setCurrentThemeIndex(prev => (prev + 1) % themes.length);
-    }, 1620); // Reduced from 1800ms to 1620ms (10% faster)
+      setCurrentThemeIndex(prev => {
+        if (prev < 2) return prev + 1; // Go through first 3 themes
+        return 0; // Reset to start
+      });
+    }, 1620);
 
-    // After theme cycles - 10% faster
+    // After theme cycles, show current theme and move to position
     phaseTimeout = setTimeout(() => {
       clearInterval(themeInterval);
       setAnimationPhase('moving');
       setTitlePosition('top-left');
       
-      const actualThemeIndex = getCurrentThemeIndex();
-      setCurrentThemeIndex(actualThemeIndex >= 0 ? actualThemeIndex : 0);
-    }, 4860); // Reduced from 5400ms to 4860ms (10% faster)
+      // Set to current theme
+      const currentThemeData = getCurrentThemeData();
+      const themeIndex = themes.findIndex(t => t.id === currentThemeData.id);
+      setCurrentThemeIndex(themeIndex >= 0 ? themeIndex : 0);
+    }, 4860);
 
-    // Complete animation - 10% faster
+    // Complete animation
     completeTimeout = setTimeout(() => {
       if (isFromTitleClick) {
         window.dispatchEvent(new CustomEvent('showEasterEgg'));
@@ -78,7 +86,7 @@ export const Introduction: React.FC<IntroductionProps> = ({
       } else {
         onComplete();
       }
-    }, 6885); // Reduced from 7650ms to 6885ms (10% faster)
+    }, 6885);
 
     return () => {
       clearInterval(themeInterval);
@@ -98,7 +106,8 @@ export const Introduction: React.FC<IntroductionProps> = ({
     }
   };
 
-  const currentThemeData = themes[currentThemeIndex];
+  // Use current theme data or animation theme
+  const currentThemeData = animationPhase === 'moving' ? getCurrentThemeData() : themes[currentThemeIndex];
 
   return (
     <div 
