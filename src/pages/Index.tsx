@@ -623,11 +623,13 @@ const Index: React.FC = () => {
       overflowX: 'hidden',
       transition: 'background 0.5s ease-in-out'
     }}>
-      {/* Achievement Notification */}
-      <AchievementNotification 
-        achievement={recentAchievement} 
-        onClose={closeAchievementNotification} 
-      />
+      {/* Achievement Notification - Only show when not typing */}
+      {currentScreen !== 'typing' && (
+        <AchievementNotification 
+          achievement={recentAchievement} 
+          onClose={closeAchievementNotification} 
+        />
+      )}
 
       <div style={{
         display: 'flex',
@@ -1148,24 +1150,25 @@ const Index: React.FC = () => {
 
             <StatsDisplay elapsed={elapsed} correctSigns={correctCharacters} totalErrors={totalErrors} currentErrorRate={getCurrentErrorRate()} theme={theme} />
 
-            {/* Achievement Panel in Test Area */}
+            {/* Achievement Panel in Test Area - Smaller and less intrusive */}
             <div style={{
               position: 'fixed',
               top: '20px',
               left: '20px',
-              background: 'rgba(255, 215, 0, 0.1)',
+              background: 'rgba(255, 215, 0, 0.05)',
               backdropFilter: 'blur(20px)',
-              border: '1px solid rgba(255, 215, 0, 0.2)',
+              border: '1px solid rgba(255, 215, 0, 0.1)',
               borderRadius: '12px',
-              padding: '15px',
-              minWidth: '200px',
-              zIndex: 100
+              padding: '12px',
+              minWidth: '180px',
+              zIndex: 100,
+              opacity: 0.8
             }}>
-              <h4 style={{ margin: '0 0 10px 0', color: '#ffd700', fontSize: '0.9rem' }}>
-                <Trophy size={16} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
+              <h4 style={{ margin: '0 0 8px 0', color: '#ffd700', fontSize: '0.8rem' }}>
+                <Trophy size={14} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
                 Progress
               </h4>
-              <div style={{ fontSize: '0.8rem' }}>
+              <div style={{ fontSize: '0.75rem' }}>
                 <div>Achievements: {getUnlockedCount()}/{achievements.length}</div>
                 <div>Current WPM: {getCurrentWPM()}</div>
                 <div>Accuracy: {(100 - getCurrentErrorRate()).toFixed(1)}%</div>
