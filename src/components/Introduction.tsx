@@ -6,7 +6,7 @@ interface IntroductionProps {
   onReplay?: () => void;
   clickCount?: number;
   onTitleClick?: () => void;
-  currentTheme?: string;
+  theme?: string;
   isFromTitleClick?: boolean;
 }
 
@@ -15,7 +15,7 @@ export const Introduction: React.FC<IntroductionProps> = ({
   onReplay, 
   clickCount = 0, 
   onTitleClick,
-  currentTheme = 'cosmic-nebula',
+  theme = 'cosmic-nebula',
   isFromTitleClick = false
 }) => {
   const [currentThemeIndex, setCurrentThemeIndex] = useState(0);
@@ -31,7 +31,7 @@ export const Introduction: React.FC<IntroductionProps> = ({
     },
     {
       id: 'midnight-black',
-      background: '#171717',
+      background: '#0a0a0a',
       titleGradient: 'linear-gradient(90deg, #c559f7 0%, #7f59f7 100%)'
     },
     {
@@ -41,9 +41,8 @@ export const Introduction: React.FC<IntroductionProps> = ({
     }
   ];
 
-  // Find the current theme index
   const getCurrentThemeIndex = () => {
-    return themes.findIndex(t => t.id === currentTheme);
+    return themes.findIndex(t => t.id === theme);
   };
 
   useEffect(() => {
@@ -51,43 +50,40 @@ export const Introduction: React.FC<IntroductionProps> = ({
     let phaseTimeout: NodeJS.Timeout;
     let completeTimeout: NodeJS.Timeout;
 
-    // Start with cosmic nebula theme (index 0)
     setCurrentThemeIndex(0);
 
-    // Theme switching phase - extended duration
+    // Theme switching phase - 10% faster
     themeInterval = setInterval(() => {
       setCurrentThemeIndex(prev => (prev + 1) % themes.length);
-    }, 2000); // Extended from 1500ms to 2000ms
+    }, 1800); // Reduced from 2000ms to 1800ms
 
-    // After 3 theme cycles (6 seconds), switch to moving phase
+    // After theme cycles - 10% faster
     phaseTimeout = setTimeout(() => {
       clearInterval(themeInterval);
       setAnimationPhase('moving');
       setTitlePosition('top-left');
       
-      // Set to the actual current theme for the final transition
       const actualThemeIndex = getCurrentThemeIndex();
       setCurrentThemeIndex(actualThemeIndex >= 0 ? actualThemeIndex : 0);
-    }, 6000); // Extended from 4500ms to 6000ms
+    }, 5400); // Reduced from 6000ms to 5400ms
 
-    // Complete animation after title moves to top-left - extended duration
+    // Complete animation - 10% faster
     completeTimeout = setTimeout(() => {
       if (isFromTitleClick) {
-        // If clicked from title, go to easter egg instead
         window.dispatchEvent(new CustomEvent('showEasterEgg'));
       } else if (onReplay && isReplay) {
         onReplay();
       } else {
         onComplete();
       }
-    }, 8500); // Extended from 6000ms to 8500ms
+    }, 7650); // Reduced from 8500ms to 7650ms
 
     return () => {
       clearInterval(themeInterval);
       clearTimeout(phaseTimeout);
       clearTimeout(completeTimeout);
     };
-  }, [onComplete, onReplay, isReplay, currentTheme, isFromTitleClick]);
+  }, [onComplete, onReplay, isReplay, theme, isFromTitleClick]);
 
   const replayAnimation = () => {
     if (onTitleClick) {
@@ -111,7 +107,7 @@ export const Introduction: React.FC<IntroductionProps> = ({
         right: 0,
         bottom: 0,
         background: currentThemeData.background,
-        transition: animationPhase === 'themes' ? 'background 2s ease-in-out' : 'background 2.5s ease-in-out',
+        transition: animationPhase === 'themes' ? 'background 1.8s ease-in-out' : 'background 2.25s ease-in-out',
         display: 'flex',
         alignItems: titlePosition === 'center' ? 'center' : 'flex-start',
         justifyContent: titlePosition === 'center' ? 'center' : 'flex-start',
@@ -132,10 +128,10 @@ export const Introduction: React.FC<IntroductionProps> = ({
           fontWeight: 700,
           margin: 0,
           transition: animationPhase === 'themes' ? 
-            'background-image 2s ease-in-out' : 
-            'all 2.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), background-image 2.5s ease-in-out',
+            'background-image 1.8s ease-in-out' : 
+            'all 2.25s cubic-bezier(0.25, 0.46, 0.45, 0.94), background-image 2.25s ease-in-out',
           textAlign: 'center',
-          animation: animationPhase === 'themes' ? 'heartbeat 3s ease-in-out infinite' : 'none',
+          animation: animationPhase === 'themes' ? 'heartbeat 2.7s ease-in-out infinite' : 'none',
           cursor: titlePosition === 'top-left' ? 'pointer' : 'default'
         }}
       >
