@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 
 interface IntroductionProps {
@@ -7,6 +6,7 @@ interface IntroductionProps {
   clickCount?: number;
   onTitleClick?: () => void;
   theme?: string;
+  currentTheme?: string;
   isFromTitleClick?: boolean;
 }
 
@@ -16,6 +16,7 @@ export const Introduction: React.FC<IntroductionProps> = ({
   clickCount = 0, 
   onTitleClick,
   theme = 'cosmic-nebula',
+  currentTheme,
   isFromTitleClick = false
 }) => {
   const [currentThemeIndex, setCurrentThemeIndex] = useState(0);
@@ -42,7 +43,8 @@ export const Introduction: React.FC<IntroductionProps> = ({
   ];
 
   const getCurrentThemeIndex = () => {
-    return themes.findIndex(t => t.id === theme);
+    const actualTheme = currentTheme || theme;
+    return themes.findIndex(t => t.id === actualTheme);
   };
 
   useEffect(() => {
@@ -55,7 +57,7 @@ export const Introduction: React.FC<IntroductionProps> = ({
     // Theme switching phase - 10% faster
     themeInterval = setInterval(() => {
       setCurrentThemeIndex(prev => (prev + 1) % themes.length);
-    }, 1800); // Reduced from 2000ms to 1800ms
+    }, 1620); // Reduced from 1800ms to 1620ms (10% faster)
 
     // After theme cycles - 10% faster
     phaseTimeout = setTimeout(() => {
@@ -65,7 +67,7 @@ export const Introduction: React.FC<IntroductionProps> = ({
       
       const actualThemeIndex = getCurrentThemeIndex();
       setCurrentThemeIndex(actualThemeIndex >= 0 ? actualThemeIndex : 0);
-    }, 5400); // Reduced from 6000ms to 5400ms
+    }, 4860); // Reduced from 5400ms to 4860ms (10% faster)
 
     // Complete animation - 10% faster
     completeTimeout = setTimeout(() => {
@@ -76,14 +78,14 @@ export const Introduction: React.FC<IntroductionProps> = ({
       } else {
         onComplete();
       }
-    }, 7650); // Reduced from 8500ms to 7650ms
+    }, 6885); // Reduced from 7650ms to 6885ms (10% faster)
 
     return () => {
       clearInterval(themeInterval);
       clearTimeout(phaseTimeout);
       clearTimeout(completeTimeout);
     };
-  }, [onComplete, onReplay, isReplay, theme, isFromTitleClick]);
+  }, [onComplete, onReplay, isReplay, theme, currentTheme, isFromTitleClick]);
 
   const replayAnimation = () => {
     if (onTitleClick) {
@@ -107,7 +109,7 @@ export const Introduction: React.FC<IntroductionProps> = ({
         right: 0,
         bottom: 0,
         background: currentThemeData.background,
-        transition: animationPhase === 'themes' ? 'background 1.8s ease-in-out' : 'background 2.25s ease-in-out',
+        transition: animationPhase === 'themes' ? 'background 1.62s ease-in-out' : 'background 2.025s ease-in-out',
         display: 'flex',
         alignItems: titlePosition === 'center' ? 'center' : 'flex-start',
         justifyContent: titlePosition === 'center' ? 'center' : 'flex-start',
@@ -128,10 +130,10 @@ export const Introduction: React.FC<IntroductionProps> = ({
           fontWeight: 700,
           margin: 0,
           transition: animationPhase === 'themes' ? 
-            'background-image 1.8s ease-in-out' : 
-            'all 2.25s cubic-bezier(0.25, 0.46, 0.45, 0.94), background-image 2.25s ease-in-out',
+            'background-image 1.62s ease-in-out' : 
+            'all 2.025s cubic-bezier(0.25, 0.46, 0.45, 0.94), background-image 2.025s ease-in-out',
           textAlign: 'center',
-          animation: animationPhase === 'themes' ? 'heartbeat 2.7s ease-in-out infinite' : 'none',
+          animation: animationPhase === 'themes' ? 'heartbeat 2.43s ease-in-out infinite' : 'none',
           cursor: titlePosition === 'top-left' ? 'pointer' : 'default'
         }}
       >
