@@ -30,17 +30,17 @@ export const Introduction: React.FC<IntroductionProps> = ({
     {
       id: 'cosmic-nebula',
       background: 'linear-gradient(45deg, #400354, #03568c)',
-      titleGradient: 'linear-gradient(45deg, #c471f2 0%, #f76cc6 100%)'
+      titleGradient: 'linear-gradient(45deg, #b109d6 0%, #0c6dc2 100%)'
     },
     {
       id: 'midnight-black',
       background: '#0a0a0a', // Slightly lighter to prevent white flash
-      titleGradient: 'linear-gradient(90deg, #c471f2 0%, #f76cc6 100%)'
+      titleGradient: 'linear-gradient(90deg, #c559f7 0%, #7f59f7 100%)'
     },
     {
       id: 'cotton-candy-glow',
       background: 'linear-gradient(135deg, #12cff3, #5ab2f7)', // Using animation background
-      titleGradient: 'linear-gradient(90deg, #c471f2 0%, #f76cc6 100%)'
+      titleGradient: 'linear-gradient(90deg, #fc03df 0%, #ff3be8 100%)'
     }
   ];
 
