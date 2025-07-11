@@ -34,12 +34,12 @@ export const Introduction: React.FC<IntroductionProps> = ({
     },
     {
       id: 'midnight-black',
-      background: '#0a0a0a', // Slightly lighter to prevent white flash
+      background: '#1a1a1a', // Dark gray instead of pure black to prevent white flash
       titleGradient: 'linear-gradient(90deg, #c559f7 0%, #7f59f7 100%)'
     },
     {
       id: 'cotton-candy-glow',
-      background: 'linear-gradient(135deg, #12cff3, #5ab2f7)', // Using animation background
+      background: 'linear-gradient(135deg, #12cff3, #5ab2f7)',
       titleGradient: 'linear-gradient(90deg, #fc03df 0%, #ff3be8 100%)'
     }
   ];
@@ -60,8 +60,8 @@ export const Introduction: React.FC<IntroductionProps> = ({
     // Theme switching phase - cycle through themes
     themeInterval = setInterval(() => {
       setCurrentThemeIndex(prev => {
-        if (prev < 2) return prev + 1; // Go through first 3 themes
-        return 0; // Reset to start
+        if (prev < 2) return prev + 1;
+        return 0;
       });
     }, 1620);
 

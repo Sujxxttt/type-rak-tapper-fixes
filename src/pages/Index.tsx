@@ -1,355 +1,391 @@
+
 import React, { useState, useEffect, useRef } from 'react';
-import { Settings, Trophy } from 'lucide-react';
-import { useBackgroundMusic } from '../hooks/useBackgroundMusic';
-import { TypingTest } from '../components/TypingTest';
+import { useTimer } from 'react-timer-hook';
+import { useQuery } from '@tanstack/react-query';
+import { fetchLeaderboard, fetchHistory } from '../api';
+import { formatTime, getRandomText } from '../utils';
+import { useTheme } from '../hooks/useTheme';
+import { useUsername } from '../hooks/useUsername';
+import { useAchievements } from '../hooks/useAchievements';
+
+import { TypingText } from '../components/TypingText';
+import { HistoryTable } from '../components/HistoryTable';
+import { Introduction } from '../components/Introduction';
 import { StatsDisplay } from '../components/StatsDisplay';
 import { SideMenu } from '../components/SideMenu';
-import { HistoryPage } from '../components/HistoryPage';
-import { AchievementsPage } from '../components/AchievementsPage';
-import { EasterEggPage } from '../components/EasterEggPage';
 import { TestNameMenu } from '../components/TestNameMenu';
 import { CustomDurationSlider } from '../components/CustomDurationSlider';
+import { HistoryPage } from '../components/HistoryPage';
+import { EasterEggPage } from '../components/EasterEggPage';
+import { AchievementsPage } from '../components/AchievementsPage';
 import { AchievementNotification } from '../components/AchievementNotification';
-import { useAchievements } from '../hooks/useAchievements';
-import { useSoundEffects } from '../hooks/useSoundEffects';
-import { useTypingGame } from '../hooks/useTypingGame';
-import { Toast } from '../components/Toast';
+import { TypedTextPreview } from '../components/TypedTextPreview';
+import { EasterEggConfirmation } from '../components/EasterEggConfirmation';
+import { AchievementBox } from '../components/AchievementBox';
+
+interface HistoryEntry {
+  wpm: number;
+  errorRate: number;
+  date: string;
+}
+
+interface LeaderboardEntry {
+  username: string;
+  wpm: number;
+}
+
+const initialText = getRandomText('short');
+const testNames = ['short', 'medium', 'long'];
 
 const Index = () => {
-  const [currentView, setCurrentView] = useState('main');
+  const [testDuration, setTestDuration] = useState<number>(1);
+  const [selectedTest, setSelectedTest] = useState<string>('short');
+  const [currentText, setCurrentText] = useState<string>(initialText);
+  const [typedText, setTypedText] = useState<string>('');
+  const [testActive, setTestActive] = useState<boolean>(false);
+  const [showResults, setShowResults] = useState<boolean>(false);
+  const [wpm, setWpm] = useState<number>(0);
+  const [errorRate, setErrorRate] = useState<number>(0);
+  const [showTypedTextPreview, setShowTypedTextPreview] = useState(false);
+  const [showIntroduction, setShowIntroduction] = useState(true);
+  const [showEasterEggConfirmation, setShowEasterEggConfirmation] = useState(false);
+  const [currentPage, setCurrentPage] = useState('typing');
   const [sideMenuOpen, setSideMenuOpen] = useState(false);
-  const [theme, setTheme] = useState(localStorage.getItem('typeRakTheme') || 'cosmic-nebula');
-  const [username, setUsername] = useState(localStorage.getItem('typeRakUsername') || '');
-  const [duration, setDuration] = useState(Number(localStorage.getItem('typeRakDuration')) || 60);
-  const [selectedTest, setSelectedTest] = useState('random');
-  const [fontSize, setFontSize] = useState(Number(localStorage.getItem('typeRakFontSize')) || 100);
-  const [fontStyle, setFontStyle] = useState(localStorage.getItem('typeRakFontStyle') || 'inter');
-  const [soundEnabled, setSoundEnabled] = useState(localStorage.getItem('typeRakSound') === 'true');
-  const [backgroundMusicEnabled, setBackgroundMusicEnabled] = useState(localStorage.getItem('typeRakBackgroundMusic') === 'true');
-  const [musicVolume, setMusicVolume] = useState(Number(localStorage.getItem('typeRakMusicVolume')) || 50);
   const [deleteConfirmState, setDeleteConfirmState] = useState(false);
-  const [usersList, setUsersList] = useState(() => {
-    const saved = localStorage.getItem('typeRakUsers');
-    return saved ? JSON.parse(saved) : [];
-  });
-  const [showToast, setShowToast] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
-
-  const { isPlaying: musicPlaying, hasMusic } = useBackgroundMusic(backgroundMusicEnabled, musicVolume);
+  const [fontSize, setFontSize] = useState(100);
+  const [fontStyle, setFontStyle] = useState('inter');
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [backgroundMusicEnabled, setBackgroundMusicEnabled] = useState(false);
+  const [musicVolume, setMusicVolume] = useState(50);
+  
+  const { theme, toggleTheme } = useTheme();
+  const { username, setUsername } = useUsername();
   const { achievements, recentAchievement, checkAchievements, closeAchievementNotification, getUnlockedCount } = useAchievements(username);
-  const { playSound } = useSoundEffects(soundEnabled);
 
-  const {
-    gameState,
-    currentText,
-    userInput,
-    timeLeft,
-    wpm,
-    errorRate,
-    correctChars,
-    incorrectChars,
-    totalChars,
-    isActive,
-    startGame,
-    resetGame,
-    handleInput,
-    gameHistory
-  } = useTypingGame(duration, selectedTest, playSound, checkAchievements, username);
+  const { data: leaderboardData } = useQuery({
+    queryKey: ['leaderboard'],
+    queryFn: fetchLeaderboard,
+  });
+  
+  const { data: historyData } = useQuery({
+    queryKey: ['history', username],
+    queryFn: () => fetchHistory(username),
+  });
 
+  const timerExpiry = new Date();
+  timerExpiry.setSeconds(timerExpiry.getSeconds() + (testDuration * 60));
+  const { seconds, minutes, isRunning, start, pause, resume, restart } = useTimer({
+    expiryTimestamp: timerExpiry,
+    onExpire: () => handleTestComplete()
+  });
+
+  // Scroll detection for easter egg
   useEffect(() => {
-    const savedUsers = localStorage.getItem('typeRakUsers');
-    if (savedUsers) {
-      setUsersList(JSON.parse(savedUsers));
-    }
-  }, []);
-
-  useEffect(() => {
-    if (usersList.length > 0) {
-      localStorage.setItem('typeRakUsers', JSON.stringify(usersList));
-    }
-  }, [usersList]);
-
-  useEffect(() => {
-    localStorage.setItem('typeRakTheme', theme);
-    applyTheme(theme);
-  }, [theme]);
-
-  useEffect(() => {
-    localStorage.setItem('typeRakDuration', String(duration));
-  }, [duration]);
-
-  useEffect(() => {
-    localStorage.setItem('typeRakFontSize', String(fontSize));
-  }, [fontSize]);
-
-  useEffect(() => {
-    localStorage.setItem('typeRakFontStyle', fontStyle);
-  }, [fontStyle]);
-
-  useEffect(() => {
-    localStorage.setItem('typeRakSound', String(soundEnabled));
-  }, [soundEnabled]);
-
-  useEffect(() => {
-    localStorage.setItem('typeRakBackgroundMusic', String(backgroundMusicEnabled));
-  }, [backgroundMusicEnabled]);
-
-  useEffect(() => {
-    localStorage.setItem('typeRakMusicVolume', String(musicVolume));
-  }, [musicVolume]);
-
-  const applyTheme = (themeName: string) => {
-    const themes = {
-      'cosmic-nebula': {
-        '--primary': '267 84% 81%',
-        '--secondary': '267 84% 71%',
-        '--accent': '267 84% 61%',
-        '--background': '267 20% 10%',
-        '--card': '267 20% 15%',
-        '--muted': '267 20% 20%',
-        '--border': '267 30% 25%'
-      },
-      'midnight-black': {
-        '--primary': '280 100% 70%',
-        '--secondary': '280 100% 60%',
-        '--accent': '280 100% 50%',
-        '--background': '0 0% 5%',
-        '--card': '0 0% 10%',
-        '--muted': '0 0% 15%',
-        '--border': '0 0% 20%'
-      },
-      'cotton-candy-glow': {
-        '--primary': '320 100% 70%',
-        '--secondary': '320 100% 60%',
-        '--accent': '320 100% 50%',
-        '--background': '320 20% 10%',
-        '--card': '320 20% 15%',
-        '--muted': '320 20% 20%',
-        '--border': '320 30% 25%'
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY + window.innerHeight;
+      const documentHeight = document.documentElement.scrollHeight;
+      
+      if (scrollPosition >= documentHeight - 10 && currentPage === 'typing' && !showEasterEggConfirmation) {
+        setShowEasterEggConfirmation(true);
       }
     };
 
-    const themeColors = themes[themeName as keyof typeof themes];
-    if (themeColors) {
-      Object.keys(themeColors).forEach(key => {
-        document.documentElement.style.setProperty(key, themeColors[key as keyof typeof themeColors]);
-      });
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [currentPage, showEasterEggConfirmation]);
+
+  useEffect(() => {
+    setCurrentText(getRandomText(selectedTest));
+  }, [selectedTest]);
+
+  useEffect(() => {
+    if (minutes === 0 && seconds === 0 && testActive) {
+      handleTestComplete();
+    }
+  }, [minutes, seconds, testActive]);
+
+  const handleTestComplete = () => {
+    if (testActive) {
+      setTestActive(false);
+      pause();
+      
+      const elapsedTimeInMinutes = (testDuration * 60 - (minutes * 60 + seconds)) / 60;
+      const wordsTyped = typedText.split(' ').length;
+      const calculatedWpm = Math.round(wordsTyped / elapsedTimeInMinutes);
+      const errors = Array.from(typedText).reduce((acc, char, index) => {
+        return acc + (char !== currentText[index] ? 1 : 0);
+      }, 0);
+      const calculatedErrorRate = ((errors / typedText.length) * 100) || 0;
+
+      setWpm(calculatedWpm);
+      setErrorRate(calculatedErrorRate);
+      setShowResults(true);
+
+      // Check achievements
+      const stats = {
+        wpm: calculatedWpm,
+        errorRate: calculatedErrorRate,
+        duration: elapsedTimeInMinutes,
+        testsCompleted: (Array.isArray(historyData) ? historyData.length : 0) + 1,
+        perfectTests: calculatedErrorRate === 0 ? 1 : 0,
+        unlockedAchievements: getUnlockedCount(),
+        dailyTypingTime: elapsedTimeInMinutes,
+        dailyStreak: 1,
+        cleanSessions: 1,
+        daysSinceLastVisit: 0
+      };
+      
+      checkAchievements(stats);
+    }
+  };
+
+  const getBackgroundStyle = () => {
+    switch (theme) {
+      case 'midnight-black':
+        return {
+          background: '#0a0a0a',
+          color: 'white'
+        };
+      case 'cotton-candy-glow':
+        return {
+          background: 'linear-gradient(135deg, #12cff3, #5ab2f7)',
+          color: 'white'
+        };
+      case 'cosmic-nebula':
+      default:
+        return {
+          background: 'linear-gradient(45deg, #400354, #03568c)',
+          color: 'white'
+        };
     }
   };
 
   const getButtonColor = () => {
     switch (theme) {
-      case 'midnight-black': return '#c559f7';
-      case 'cotton-candy-glow': return '#ff59e8';
+      case 'midnight-black':
+        return '#c559f7';
+      case 'cotton-candy-glow':
+        return '#ff59e8';
       case 'cosmic-nebula':
-      default: return '#b109d6';
+      default:
+        return '#b109d6';
+    }
+  };
+
+  const handleDeleteUser = () => {
+    if (deleteConfirmState) {
+      // Actual delete logic would go here
+      setDeleteConfirmState(false);
+    } else {
+      setDeleteConfirmState(true);
     }
   };
 
   const switchUser = (newUsername: string) => {
     setUsername(newUsername);
-    localStorage.setItem('typeRakUsername', newUsername);
-    resetGame();
-  };
-
-  const handleDeleteUser = () => {
-    if (!deleteConfirmState) {
-      setDeleteConfirmState(true);
-      return;
-    }
-
-    const updatedUsers = usersList.filter(user => user !== username);
-    setUsersList(updatedUsers);
-    
-    if (updatedUsers.length > 0) {
-      switchUser(updatedUsers[0]);
-    } else {
-      setUsername('');
-      localStorage.removeItem('typeRakUsername');
-    }
-    
-    localStorage.removeItem(`typeRakHistory-${username}`);
-    localStorage.removeItem(`typeRakAchievements-${username}`);
-    
-    setDeleteConfirmState(false);
-    setToastMessage(`User "${username}" deleted successfully!`);
-    setShowToast(true);
-  };
-
-  const handleUsernameChange = (newUsername: string) => {
-    if (newUsername && !usersList.includes(newUsername)) {
-      const updatedUsers = [...usersList, newUsername];
-      setUsersList(updatedUsers);
-      switchUser(newUsername);
-      setToastMessage(`Welcome, ${newUsername}!`);
-      setShowToast(true);
-    }
   };
 
   const handleHistoryClick = () => {
-    setCurrentView('history');
-    setSideMenuOpen(false);
-  };
-
-  const handleAchievementsClick = () => {
-    setCurrentView('achievements');
+    setCurrentPage('history');
     setSideMenuOpen(false);
   };
 
   const handleContactMe = () => {
-    window.open('mailto:rakthakur906@gmail.com', '_blank');
+    // Contact logic here
     setSideMenuOpen(false);
   };
 
-  const navigateToEasterEgg = () => {
-    setCurrentView('easter-egg');
-  };
+  if (showIntroduction) {
+    return (
+      <Introduction
+        onComplete={() => setShowIntroduction(false)}
+        theme={theme}
+        currentTheme={theme}
+      />
+    );
+  }
 
-  const getUserStats = () => {
-    if (!gameHistory || gameHistory.length === 0) {
-      return { bestWpm: 0, testsCompleted: 0, avgErrorRate: 0 };
-    }
-
-    const bestWpm = Math.max(...gameHistory.map(g => g.wpm));
-    const testsCompleted = gameHistory.length;
-    const avgErrorRate = gameHistory.reduce((sum, g) => sum + g.errorRate, 0) / testsCompleted;
-
-    return { bestWpm, testsCompleted, avgErrorRate };
-  };
-
-  const stats = getUserStats();
-
-  if (currentView === 'history') {
+  if (currentPage === 'history') {
     return (
       <HistoryPage
-        gameHistory={gameHistory || []}
-        onBack={() => setCurrentView('main')}
+        allTestHistory={Array.isArray(historyData) ? historyData.slice(-10) : []}
+        onBack={() => setCurrentPage('typing')}
         theme={theme}
         getButtonColor={getButtonColor}
       />
     );
   }
 
-  if (currentView === 'achievements') {
+  if (currentPage === 'easter-egg') {
+    return (
+      <EasterEggPage
+        onGoBack={() => setCurrentPage('typing')}
+        theme={theme}
+      />
+    );
+  }
+
+  if (currentPage === 'achievements') {
     return (
       <AchievementsPage
         achievements={achievements}
-        onBack={() => setCurrentView('main')}
+        onBack={() => setCurrentPage('typing')}
         theme={theme}
         getButtonColor={getButtonColor}
       />
-    );
-  }
-
-  if (currentView === 'easter-egg') {
-    return (
-      <EasterEggPage onGoBack={() => setCurrentView('main')} theme={theme} />
     );
   }
 
   return (
     <div style={{
+      ...getBackgroundStyle(),
       minHeight: '100vh',
-      display: 'flex',
-      flexDirection: 'column',
-      fontFamily: `'${fontStyle}', sans-serif`,
-      fontSize: `${fontSize}%`,
-      position: 'relative',
-      overflow: 'hidden'
+      padding: '20px'
     }}>
-      <header style={{
+      {/* Header */}
+      <div style={{
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        padding: '1rem 2rem',
-        position: 'relative',
-        zIndex: 100
+        marginBottom: '30px'
       }}>
-        <h1 onClick={navigateToEasterEgg} style={{
-          fontSize: '2rem',
-          fontWeight: 'bold',
-          margin: 0,
-          cursor: 'pointer',
-          userSelect: 'none',
-          color: 'white',
-          textShadow: '0 0 20px rgba(255, 255, 255, 0.5)'
-        }}>
-          TypeRak
+        <h1
+          onClick={() => setShowIntroduction(true)}
+          style={{
+            backgroundImage: theme === 'midnight-black' ? 
+              'linear-gradient(90deg, #c559f7 0%, #7f59f7 100%)' :
+              theme === 'cotton-candy-glow' ?
+              'linear-gradient(90deg, #fc03df 0%, #ff3be8 100%)' :
+              'linear-gradient(45deg, #b109d6 0%, #0c6dc2 100%)',
+            WebkitBackgroundClip: 'text',
+            backgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            fontSize: '2.5rem',
+            fontWeight: 700,
+            margin: 0,
+            cursor: 'pointer'
+          }}
+        >
+          TypeWave
         </h1>
+        <button
+          onClick={() => setSideMenuOpen(true)}
+          style={{
+            background: getButtonColor(),
+            color: 'white',
+            border: 'none',
+            padding: '10px 20px',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            fontSize: '1rem'
+          }}
+        >
+          Settings
+        </button>
+      </div>
 
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-          <button
-            onClick={handleAchievementsClick}
-            style={{
-              background: 'rgba(255, 255, 255, 0.1)',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              borderRadius: '50%',
-              color: 'white',
-              width: '50px',
-              height: '50px',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              backdropFilter: 'blur(10px)',
-              position: 'relative'
-            }}
-          >
-            <Trophy size={24} />
-            {getUnlockedCount() > 0 && (
-              <span style={{
-                position: 'absolute',
-                top: '-5px',
-                right: '-5px',
-                background: getButtonColor(),
-                color: 'white',
-                borderRadius: '50%',
-                width: '20px',
-                height: '20px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '0.7rem',
-                fontWeight: 'bold'
-              }}>
-                {getUnlockedCount()}
-              </span>
-            )}
-          </button>
-          
-          <button
-            onClick={() => setSideMenuOpen(true)}
-            style={{
-              background: 'rgba(255, 255, 255, 0.1)',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              borderRadius: '50%',
-              color: 'white',
-              width: '50px',
-              height: '50px',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              backdropFilter: 'blur(10px)'
-            }}
-          >
-            <Settings size={24} />
-          </button>
+      {/* Dashboard Grid */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+        gap: '20px',
+        marginBottom: '30px'
+      }}>
+        <StatsDisplay
+          elapsed={0}
+          correctSigns={0}
+          totalErrors={0}
+          currentErrorRate={0}
+          theme={theme}
+        />
+        
+        <AchievementBox
+          unlockedCount={getUnlockedCount()}
+          totalCount={achievements.length}
+          onClick={() => setCurrentPage('achievements')}
+          theme={theme}
+        />
+      </div>
+
+      {/* Test Configuration */}
+      <div style={{
+        display: 'flex',
+        gap: '20px',
+        marginBottom: '30px',
+        flexWrap: 'wrap'
+      }}>
+        <TestNameMenu
+          showTestNameMenu={false}
+          newTestName={selectedTest}
+          setNewTestName={setSelectedTest}
+          onConfirm={() => {}}
+          onCancel={() => {}}
+          getButtonColor={getButtonColor}
+        />
+        <CustomDurationSlider
+          value={testDuration}
+          onChange={setTestDuration}
+          theme={theme}
+        />
+      </div>
+
+      {/* Typing Area */}
+      <TypingText
+        text={currentText}
+        typedText={typedText}
+        onTypedTextChange={setTypedText}
+        onTestStart={() => {
+          setTestActive(true);
+          start();
+        }}
+        theme={theme}
+        testActive={testActive}
+        showResults={showResults}
+        wpm={wpm}
+        errorRate={errorRate}
+        timeLeft={minutes * 60 + seconds}
+        onRestart={() => {
+          setTestActive(false);
+          setShowResults(false);
+          setTypedText('');
+          setCurrentText(getRandomText(selectedTest));
+          const newExpiry = new Date();
+          newExpiry.setSeconds(newExpiry.getSeconds() + (testDuration * 60));
+          restart(newExpiry);
+        }}
+        onShowTypedText={() => setShowTypedTextPreview(true)}
+      />
+
+      {/* Recent History */}
+      {Array.isArray(historyData) && historyData.length > 0 && (
+        <div style={{ marginTop: '40px' }}>
+          <h3 style={{ 
+            fontSize: '1.5rem', 
+            marginBottom: '20px',
+            color: 'white'
+          }}>
+            Recent Tests
+          </h3>
+          <HistoryTable 
+            history={historyData.slice(-5)}
+            theme={theme}
+          />
         </div>
-      </header>
+      )}
 
+      {/* Side Menu */}
       <SideMenu
         sideMenuOpen={sideMenuOpen}
         setSideMenuOpen={setSideMenuOpen}
-        usersList={usersList}
+        usersList={[username].filter(Boolean)}
         currentActiveUser={username}
         switchUser={switchUser}
         handleDeleteUser={handleDeleteUser}
         deleteConfirmState={deleteConfirmState}
-        duration={duration}
-        setDuration={setDuration}
+        duration={testDuration}
+        setDuration={setTestDuration}
         theme={theme}
-        applyTheme={setTheme}
+        applyTheme={toggleTheme}
         handleHistoryClick={handleHistoryClick}
         handleContactMe={handleContactMe}
         getButtonColor={getButtonColor}
@@ -363,69 +399,35 @@ const Index = () => {
         setBackgroundMusicEnabled={setBackgroundMusicEnabled}
         musicVolume={musicVolume}
         setMusicVolume={setMusicVolume}
-        hasMusic={hasMusic}
+        hasMusic={false}
       />
 
-      <main style={{ flex: 1, padding: '2rem', position: 'relative', zIndex: 1 }}>
-        <StatsDisplay
-          bestWpm={stats.bestWpm}
-          testsCompleted={stats.testsCompleted}
-          avgErrorRate={stats.avgErrorRate}
+      {/* Modals and Notifications */}
+      {showTypedTextPreview && (
+        <TypedTextPreview
+          typedText={typedText}
+          originalText={currentText}
+          theme={theme}
+          onClose={() => setShowTypedTextPreview(false)}
+        />
+      )}
+
+      {showEasterEggConfirmation && (
+        <EasterEggConfirmation
+          isOpen={showEasterEggConfirmation}
+          onConfirm={() => {
+            setShowEasterEggConfirmation(false);
+            setCurrentPage('easter-egg');
+          }}
+          onClose={() => setShowEasterEggConfirmation(false)}
           theme={theme}
         />
-
-        <div style={{
-          display: 'flex',
-          justifyContent: 'center',
-          gap: '2rem',
-          marginBottom: '2rem',
-          flexWrap: 'wrap'
-        }}>
-          <TestNameMenu
-            selectedTest={selectedTest}
-            onTestChange={setSelectedTest}
-            theme={theme}
-          />
-          <CustomDurationSlider
-            value={duration}
-            onChange={setDuration}
-            theme={theme}
-          />
-        </div>
-
-        <TypingTest
-          gameState={gameState}
-          currentText={currentText}
-          userInput={userInput}
-          timeLeft={timeLeft}
-          wpm={wpm}
-          errorRate={errorRate}
-          correctChars={correctChars}
-          incorrectChars={incorrectChars}
-          totalChars={totalChars}
-          isActive={isActive}
-          onStart={startGame}
-          onReset={resetGame}
-          onInput={handleInput}
-          theme={theme}
-          username={username}
-          onUsernameChange={handleUsernameChange}
-          getButtonColor={getButtonColor}
-        />
-      </main>
+      )}
 
       {recentAchievement && (
         <AchievementNotification
           achievement={recentAchievement}
           onClose={closeAchievementNotification}
-        />
-      )}
-
-      {showToast && (
-        <Toast
-          message={toastMessage}
-          onClose={() => setShowToast(false)}
-          theme={theme}
         />
       )}
     </div>

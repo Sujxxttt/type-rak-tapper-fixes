@@ -83,11 +83,32 @@ export const AchievementsPage: React.FC<AchievementsPageProps> = ({
     };
   };
 
+  const getBackgroundStyle = () => {
+    switch (theme) {
+      case 'midnight-black':
+        return {
+          background: '#0a0a0a',
+          color: 'white'
+        };
+      case 'cotton-candy-glow':
+        return {
+          background: 'linear-gradient(135deg, #12cff3, #5ab2f7)',
+          color: 'white'
+        };
+      case 'cosmic-nebula':
+      default:
+        return {
+          background: 'linear-gradient(45deg, #400354, #03568c)',
+          color: 'white'
+        };
+    }
+  };
+
   return (
     <div style={{
+      ...getBackgroundStyle(),
       minHeight: '100vh',
-      padding: '20px',
-      color: 'white'
+      padding: '20px'
     }}>
       {/* Header */}
       <div style={{

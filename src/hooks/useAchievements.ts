@@ -32,7 +32,7 @@ export const useAchievements = (username: string) => {
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [recentAchievement, setRecentAchievement] = useState<{ name: string; subtitle: string; wpm: number } | null>(null);
 
-  // Define all achievements with proper conditions
+  // Define all achievements
   const allAchievements: Achievement[] = [
     {
       id: 'new-recruit',
@@ -102,7 +102,7 @@ export const useAchievements = (username: string) => {
       category: 'speed',
       wpm: 99,
       unlocked: false,
-      condition: (stats) => Math.floor(stats.wpm) === 99
+      condition: (stats) => stats.wpm === 99
     },
     {
       id: 'hundred-club',
@@ -142,7 +142,7 @@ export const useAchievements = (username: string) => {
       category: 'accuracy',
       wpm: 0,
       unlocked: false,
-      condition: (stats) => stats.errorRate === 0 && stats.testsCompleted > 0
+      condition: (stats) => stats.errorRate === 0
     },
     {
       id: 'precision-power',
@@ -152,7 +152,7 @@ export const useAchievements = (username: string) => {
       category: 'accuracy',
       wpm: 0,
       unlocked: false,
-      condition: (stats) => stats.errorRate < 1 && stats.errorRate >= 0 && stats.testsCompleted > 0
+      condition: (stats) => stats.errorRate < 1
     },
     {
       id: 'hit-everything',
@@ -288,33 +288,23 @@ export const useAchievements = (username: string) => {
 
   // Load achievements from localStorage
   useEffect(() => {
-    if (!username) return;
-    
     const savedAchievements = localStorage.getItem(`typeRakAchievements-${username}`);
     if (savedAchievements) {
-      try {
-        const parsed = JSON.parse(savedAchievements);
-        const updatedAchievements = allAchievements.map(achievement => {
-          const saved = parsed.find((a: Achievement) => a.id === achievement.id);
-          return saved ? { ...achievement, unlocked: saved.unlocked, unlockedAt: saved.unlockedAt } : achievement;
-        });
-        setAchievements(updatedAchievements);
-      } catch (error) {
-        console.error('Error loading achievements:', error);
-        setAchievements(allAchievements);
-      }
+      const parsed = JSON.parse(savedAchievements);
+      const updatedAchievements = allAchievements.map(achievement => {
+        const saved = parsed.find((a: Achievement) => a.id === achievement.id);
+        return saved ? { ...achievement, unlocked: saved.unlocked, unlockedAt: saved.unlockedAt } : achievement;
+      });
+      setAchievements(updatedAchievements);
     } else {
       setAchievements(allAchievements);
     }
   }, [username]);
 
   const checkAchievements = (stats: AchievementStats) => {
-    if (!username || achievements.length === 0) return;
-
     const updatedAchievements = achievements.map(achievement => {
       if (!achievement.unlocked && achievement.condition(stats)) {
         // Achievement unlocked!
-        console.log(`Achievement unlocked: ${achievement.name}`);
         setRecentAchievement({
           name: achievement.name,
           subtitle: achievement.subtitle,
@@ -325,15 +315,8 @@ export const useAchievements = (username: string) => {
       return achievement;
     });
 
-    // Only update if there are changes
-    const hasChanges = updatedAchievements.some((achievement, index) => 
-      achievement.unlocked !== achievements[index].unlocked
-    );
-
-    if (hasChanges) {
-      setAchievements(updatedAchievements);
-      localStorage.setItem(`typeRakAchievements-${username}`, JSON.stringify(updatedAchievements));
-    }
+    setAchievements(updatedAchievements);
+    localStorage.setItem(`typeRakAchievements-${username}`, JSON.stringify(updatedAchievements));
   };
 
   const closeAchievementNotification = () => {
