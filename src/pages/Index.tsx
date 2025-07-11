@@ -50,6 +50,13 @@ const Index = () => {
   const [showIntroduction, setShowIntroduction] = useState(true);
   const [showEasterEggConfirmation, setShowEasterEggConfirmation] = useState(false);
   const [currentPage, setCurrentPage] = useState('typing');
+  const [sideMenuOpen, setSideMenuOpen] = useState(false);
+  const [deleteConfirmState, setDeleteConfirmState] = useState(false);
+  const [fontSize, setFontSize] = useState(100);
+  const [fontStyle, setFontStyle] = useState('inter');
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [backgroundMusicEnabled, setBackgroundMusicEnabled] = useState(false);
+  const [musicVolume, setMusicVolume] = useState(50);
   
   const { theme, toggleTheme } = useTheme();
   const { username, setUsername } = useUsername();
@@ -165,6 +172,29 @@ const Index = () => {
     }
   };
 
+  const handleDeleteUser = () => {
+    if (deleteConfirmState) {
+      // Actual delete logic would go here
+      setDeleteConfirmState(false);
+    } else {
+      setDeleteConfirmState(true);
+    }
+  };
+
+  const switchUser = (newUsername: string) => {
+    setUsername(newUsername);
+  };
+
+  const handleHistoryClick = () => {
+    setCurrentPage('history');
+    setSideMenuOpen(false);
+  };
+
+  const handleContactMe = () => {
+    // Contact logic here
+    setSideMenuOpen(false);
+  };
+
   if (showIntroduction) {
     return (
       <Introduction
@@ -238,13 +268,20 @@ const Index = () => {
         >
           TypeWave
         </h1>
-        <SideMenu
-          theme={theme}
-          toggleTheme={toggleTheme}
-          onShowHistory={() => setCurrentPage('history')}
-          username={username}
-          onUsernameChange={setUsername}
-        />
+        <button
+          onClick={() => setSideMenuOpen(true)}
+          style={{
+            background: getButtonColor(),
+            color: 'white',
+            border: 'none',
+            padding: '10px 20px',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            fontSize: '1rem'
+          }}
+        >
+          Settings
+        </button>
       </div>
 
       {/* Dashboard Grid */}
@@ -255,9 +292,10 @@ const Index = () => {
         marginBottom: '30px'
       }}>
         <StatsDisplay
-          bestWpm={Array.isArray(historyData) && historyData.length > 0 ? Math.max(...historyData.map((h: any) => h.wpm)) : 0}
-          testsCompleted={Array.isArray(historyData) ? historyData.length : 0}
-          avgErrorRate={Array.isArray(historyData) && historyData.length > 0 ? historyData.reduce((acc: number, h: any) => acc + h.errorRate, 0) / historyData.length : 0}
+          elapsed={0}
+          correctSigns={0}
+          totalErrors={0}
+          currentErrorRate={0}
           theme={theme}
         />
         
@@ -334,6 +372,35 @@ const Index = () => {
           />
         </div>
       )}
+
+      {/* Side Menu */}
+      <SideMenu
+        sideMenuOpen={sideMenuOpen}
+        setSideMenuOpen={setSideMenuOpen}
+        usersList={[username].filter(Boolean)}
+        currentActiveUser={username}
+        switchUser={switchUser}
+        handleDeleteUser={handleDeleteUser}
+        deleteConfirmState={deleteConfirmState}
+        duration={testDuration}
+        setDuration={setTestDuration}
+        theme={theme}
+        applyTheme={toggleTheme}
+        handleHistoryClick={handleHistoryClick}
+        handleContactMe={handleContactMe}
+        getButtonColor={getButtonColor}
+        fontSize={fontSize}
+        setFontSize={setFontSize}
+        fontStyle={fontStyle}
+        setFontStyle={setFontStyle}
+        soundEnabled={soundEnabled}
+        setSoundEnabled={setSoundEnabled}
+        backgroundMusicEnabled={backgroundMusicEnabled}
+        setBackgroundMusicEnabled={setBackgroundMusicEnabled}
+        musicVolume={musicVolume}
+        setMusicVolume={setMusicVolume}
+        hasMusic={false}
+      />
 
       {/* Modals and Notifications */}
       {showTypedTextPreview && (
