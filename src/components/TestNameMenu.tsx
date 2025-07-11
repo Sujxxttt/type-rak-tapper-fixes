@@ -18,45 +18,7 @@ export const TestNameMenu: React.FC<TestNameMenuProps> = ({
   onCancel,
   getButtonColor
 }) => {
-  if (!showTestNameMenu) {
-    // Show test selection buttons instead
-    const tests = ['short', 'medium', 'long'];
-    
-    return (
-      <div style={{
-        padding: '16px',
-        background: 'rgba(255, 255, 255, 0.08)',
-        backdropFilter: 'blur(15px)',
-        border: '1px solid rgba(255, 255, 255, 0.15)',
-        borderRadius: '15px',
-        color: 'white'
-      }}>
-        <div style={{ marginBottom: '12px', fontSize: '0.9rem', opacity: 0.8 }}>
-          Test Type:
-        </div>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          {tests.map((test) => (
-            <button
-              key={test}
-              onClick={() => setNewTestName(test)}
-              style={{
-                padding: '8px 16px',
-                background: newTestName === test ? getButtonColor() : 'rgba(255, 255, 255, 0.1)',
-                border: 'none',
-                borderRadius: '8px',
-                color: 'white',
-                cursor: 'pointer',
-                textTransform: 'capitalize',
-                fontSize: '0.9rem'
-              }}
-            >
-              {test}
-            </button>
-          ))}
-        </div>
-      </div>
-    );
-  }
+  if (!showTestNameMenu) return null;
 
   return (
     <>
