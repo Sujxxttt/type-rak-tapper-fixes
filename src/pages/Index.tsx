@@ -571,14 +571,13 @@ const Index: React.FC = () => {
 
   const getTitleGradient = () => {
     if (theme === 'cosmic-nebula') {
-      return 'linear-gradient(45deg, #b109d6 0%, #0c6dc2 100%)';
+      return 'linear-gradient(45deg, #c471f2 0%, #f76cc6 100%)';
     } else if (theme === 'midnight-black') {
-      return 'linear-gradient(90deg, #c559f7 0%, #7f59f7 100%)';
+      return 'linear-gradient(90deg, #c471f2 0%, #f76cc6 100%)';
     } else if (theme === 'cotton-candy-glow') {
-      // Made 15% brighter
-      return 'linear-gradient(90deg, #ff66ec 0%, #ff5bb0 100%)';
+      return 'linear-gradient(90deg, #c471f2 0%, #f76cc6 100%)';
     }
-    return 'linear-gradient(45deg, #b109d6 0%, #0c6dc2 100%)';
+    return 'linear-gradient(45deg, #c471f2 0%, #f76cc6 100%)';
   };
 
   const getButtonColor = () => {
