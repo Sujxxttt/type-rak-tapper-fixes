@@ -59,6 +59,22 @@ const CircularProgress = ({ progress, maxProgress, size = 60 }: { progress: numb
   );
 };
 
+const getThemeBackground = (theme: string) => {
+  switch (theme) {
+    case 'midnight-black':
+      return 'linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%)';
+    case 'cotton-candy-glow':
+      return 'linear-gradient(135deg, #ffeef8 0%, #f8d7da 50%, #e8c5e5 100%)';
+    case 'cosmic-nebula':
+    default:
+      return 'linear-gradient(135deg, #0f0f0f 0%, #1a1a2e 50%, #16213e 100%)';
+  }
+};
+
+const getTextColor = (theme: string) => {
+  return theme === 'cotton-candy-glow' ? '#333' : 'white';
+};
+
 export const AchievementsPage: React.FC<AchievementsPageProps> = ({
   achievements,
   onBack,
@@ -86,8 +102,9 @@ export const AchievementsPage: React.FC<AchievementsPageProps> = ({
   return (
     <div style={{
       minHeight: '100vh',
+      background: getThemeBackground(theme),
       padding: '20px',
-      color: 'white'
+      color: getTextColor(theme)
     }}>
       {/* Header */}
       <div style={{
@@ -255,29 +272,12 @@ export const AchievementsPage: React.FC<AchievementsPageProps> = ({
                     <Trophy size={24} />
                   </div>
 
-                  {/* Progress Circle for incomplete achievements */}
-                  {!achievement.unlocked && achievement.maxProgress && (
-                    <div style={{
-                      position: 'absolute',
-                      top: '15px',
-                      left: '15px'
-                    }}>
-                      <CircularProgress 
-                        progress={achievement.progress || 0} 
-                        maxProgress={achievement.maxProgress} 
-                        size={40} 
-                      />
-                    </div>
-                  )}
-
-                  <div style={{ 
-                    marginTop: achievement.maxProgress && !achievement.unlocked ? '50px' : '0'
-                  }}>
+                  <div>
                     <h3 style={{
                       margin: '0 0 8px 0',
                       fontSize: '1.2rem',
                       fontWeight: 'bold',
-                      color: achievement.unlocked ? '#ffd700' : 'white'
+                      color: achievement.unlocked ? '#ffd700' : getTextColor(theme)
                     }}>
                       {achievement.name}
                     </h3>
@@ -298,17 +298,6 @@ export const AchievementsPage: React.FC<AchievementsPageProps> = ({
                     }}>
                       {achievement.description}
                     </p>
-
-                    {/* Progress text for incomplete achievements */}
-                    {!achievement.unlocked && achievement.maxProgress && (
-                      <p style={{
-                        margin: '10px 0 0 0',
-                        fontSize: '0.8rem',
-                        opacity: 0.6
-                      }}>
-                        Progress: {achievement.progress || 0} / {achievement.maxProgress}
-                      </p>
-                    )}
 
                     {/* Unlock date for completed achievements */}
                     {achievement.unlocked && achievement.unlockedAt && (
