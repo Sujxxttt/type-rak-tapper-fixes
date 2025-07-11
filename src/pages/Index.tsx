@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useTimer } from 'react-timer-hook';
 import { useQuery } from '@tanstack/react-query';
@@ -36,7 +37,7 @@ interface LeaderboardEntry {
 const initialText = getRandomText('short');
 const testNames = ['short', 'medium', 'long'];
 
-export const Index = () => {
+const Index = () => {
   const [testDuration, setTestDuration] = useState<number>(1);
   const [selectedTest, setSelectedTest] = useState<string>('short');
   const [currentText, setCurrentText] = useState<string>(initialText);
@@ -118,7 +119,7 @@ export const Index = () => {
         wpm: calculatedWpm,
         errorRate: calculatedErrorRate,
         duration: elapsedTimeInMinutes,
-        testsCompleted: (historyData as any[])?.length + 1 || 1,
+        testsCompleted: (Array.isArray(historyData) ? historyData.length : 0) + 1,
         perfectTests: calculatedErrorRate === 0 ? 1 : 0,
         unlockedAchievements: getUnlockedCount(),
         dailyTypingTime: elapsedTimeInMinutes,
@@ -177,7 +178,7 @@ export const Index = () => {
   if (currentPage === 'history') {
     return (
       <HistoryPage
-        history={Array.isArray(historyData) ? historyData.slice(-10) : []}
+        allTestHistory={Array.isArray(historyData) ? historyData.slice(-10) : []}
         onBack={() => setCurrentPage('typing')}
         theme={theme}
         getButtonColor={getButtonColor}
@@ -188,7 +189,7 @@ export const Index = () => {
   if (currentPage === 'easter-egg') {
     return (
       <EasterEggPage
-        onBack={() => setCurrentPage('typing')}
+        onGoBack={() => setCurrentPage('typing')}
         theme={theme}
       />
     );
@@ -239,7 +240,7 @@ export const Index = () => {
         </h1>
         <SideMenu
           theme={theme}
-          onToggleTheme={toggleTheme}
+          toggleTheme={toggleTheme}
           onShowHistory={() => setCurrentPage('history')}
           username={username}
           onUsernameChange={setUsername}
@@ -254,7 +255,7 @@ export const Index = () => {
         marginBottom: '30px'
       }}>
         <StatsDisplay
-          wpm={Array.isArray(historyData) && historyData.length > 0 ? Math.max(...historyData.map((h: any) => h.wpm)) : 0}
+          bestWpm={Array.isArray(historyData) && historyData.length > 0 ? Math.max(...historyData.map((h: any) => h.wpm)) : 0}
           testsCompleted={Array.isArray(historyData) ? historyData.length : 0}
           avgErrorRate={Array.isArray(historyData) && historyData.length > 0 ? historyData.reduce((acc: number, h: any) => acc + h.errorRate, 0) / historyData.length : 0}
           theme={theme}
@@ -276,13 +277,16 @@ export const Index = () => {
         flexWrap: 'wrap'
       }}>
         <TestNameMenu
-          selectedTest={selectedTest}
-          onTestChange={setSelectedTest}
-          theme={theme}
+          showTestNameMenu={false}
+          newTestName={selectedTest}
+          setNewTestName={setSelectedTest}
+          onConfirm={() => {}}
+          onCancel={() => {}}
+          getButtonColor={getButtonColor}
         />
         <CustomDurationSlider
-          duration={testDuration}
-          onDurationChange={setTestDuration}
+          value={testDuration}
+          onChange={setTestDuration}
           theme={theme}
         />
       </div>
@@ -357,9 +361,10 @@ export const Index = () => {
         <AchievementNotification
           achievement={recentAchievement}
           onClose={closeAchievementNotification}
-          theme={theme}
         />
       )}
     </div>
   );
 };
+
+export default Index;
