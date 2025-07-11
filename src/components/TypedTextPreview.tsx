@@ -28,28 +28,7 @@ export const TypedTextPreview: React.FC<TypedTextPreviewProps> = ({
   };
 
   const getErrorColor = () => {
-    return '#ff1c14';
-  };
-
-  const getBackgroundStyle = () => {
-    switch (theme) {
-      case 'midnight-black':
-        return {
-          background: 'rgba(10, 10, 10, 0.95)',
-          color: 'white'
-        };
-      case 'cotton-candy-glow':
-        return {
-          background: 'rgba(18, 207, 243, 0.1)',
-          color: 'white'
-        };
-      case 'cosmic-nebula':
-      default:
-        return {
-          background: 'rgba(64, 3, 84, 0.1)',
-          color: 'white'
-        };
-    }
+    return '#ff1c14'; // Red for all themes
   };
 
   const renderTypedText = () => {
@@ -97,11 +76,12 @@ export const TypedTextPreview: React.FC<TypedTextPreviewProps> = ({
         width: '100%',
         maxWidth: '1040px',
         margin: '0 auto',
-        ...getBackgroundStyle(),
+        background: 'rgba(255, 255, 255, 0.1)',
         borderRadius: '12px',
         backdropFilter: 'blur(10px)',
         border: '1px solid rgba(255, 255, 255, 0.2)',
-        padding: '20px'
+        padding: '20px',
+        color: theme === 'cotton-candy-glow' ? '#333' : 'white'
       }}>
         <button 
           onClick={onClose}
@@ -111,14 +91,14 @@ export const TypedTextPreview: React.FC<TypedTextPreviewProps> = ({
             right: '15px',
             background: 'none',
             border: 'none',
-            color: 'white',
+            color: theme === 'cotton-candy-glow' ? '#333' : 'white',
             cursor: 'pointer'
           }}
         >
           <X size={24} />
         </button>
 
-        <h3 style={{ margin: '0 0 20px 0', color: 'white' }}>Typed Text Preview</h3>
+        <h3 style={{ margin: '0 0 20px 0' }}>Typed Text Preview</h3>
         
         <div style={{
           background: 'rgba(0, 0, 0, 0.2)',
@@ -138,7 +118,7 @@ export const TypedTextPreview: React.FC<TypedTextPreviewProps> = ({
         <div style={{
           marginTop: '15px',
           fontSize: '0.9rem',
-          color: 'rgba(255, 255, 255, 0.7)'
+          color: theme === 'cotton-candy-glow' ? 'rgba(51, 51, 51, 0.7)' : 'rgba(255, 255, 255, 0.7)'
         }}>
           <div style={{ marginBottom: '5px' }}>
             <span style={{ color: getCorrectColor() }}>■</span> Correctly typed

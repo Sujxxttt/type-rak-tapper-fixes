@@ -91,7 +91,7 @@ export const StatsDisplay: React.FC<StatsDisplayProps> = ({
       }}>
         <span style={{ display: 'block', fontSize: '0.9rem', opacity: 0.8, marginBottom: '0.25rem' }}>Error Rate:</span>
         <span style={{ fontWeight: 'bold', fontSize: '1.2em' }}>
-          {(currentErrorRate !== undefined && currentErrorRate !== null) ? currentErrorRate.toFixed(2) : '0.00'}%
+          {currentErrorRate.toFixed(2)}%
         </span>
       </div>
       <div style={{
