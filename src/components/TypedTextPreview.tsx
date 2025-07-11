@@ -18,28 +18,28 @@ export const TypedTextPreview: React.FC<TypedTextPreviewProps> = ({
   const getCorrectColor = () => {
     switch (theme) {
       case 'midnight-black':
-        return '#ae1ee3';
+        return '#c559f7';
       case 'cotton-candy-glow':
-        return '#ff1fbc';
+        return '#fc03df';
       case 'cosmic-nebula':
       default:
-        return '#21b1ff';
+        return '#b109d6';
     }
   };
 
   const getErrorColor = () => {
-    return '#ff1c14'; // Red for all themes
+    return '#ff1c14';
   };
 
   const getBackgroundColor = () => {
     switch (theme) {
       case 'midnight-black':
-        return 'linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%)';
+        return 'linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%)';
       case 'cotton-candy-glow':
         return 'linear-gradient(135deg, #ffeef8 0%, #f8d7da 50%, #e8c5e5 100%)';
       case 'cosmic-nebula':
       default:
-        return 'linear-gradient(135deg, #0f0f0f 0%, #1a1a2e 50%, #16213e 100%)';
+        return 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
     }
   };
 

@@ -11,7 +11,7 @@ export const useTheme = () => {
       case 'cosmic-nebula':
         return 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
       case 'midnight-black':
-        return 'linear-gradient(135deg, #2c3e50 0%, #000000 100%)';
+        return 'linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%)'; // Prevented white flash by using darker colors
       case 'cotton-candy-glow':
         return 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)';
       default:

@@ -27,8 +27,8 @@ const CircularProgress = ({ progress, maxProgress, size = 60 }: { progress: numb
   const strokeDashoffset = circumference - (percentage / 100) * circumference;
 
   return (
-    <div className="relative" style={{ width: size, height: size }}>
-      <svg width={size} height={size} className="transform -rotate-90">
+    <div style={{ position: 'relative', width: size, height: size }}>
+      <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
         <circle
           cx={size / 2}
           cy={size / 2}
@@ -50,8 +50,17 @@ const CircularProgress = ({ progress, maxProgress, size = 60 }: { progress: numb
           style={{ transition: 'stroke-dashoffset 0.5s ease-in-out' }}
         />
       </svg>
-      <div className="absolute inset-0 flex items-center justify-center">
-        <span className="text-xs font-bold text-white">
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        <span style={{ fontSize: '12px', fontWeight: 'bold', color: 'white' }}>
           {Math.round(percentage)}%
         </span>
       </div>
@@ -62,12 +71,12 @@ const CircularProgress = ({ progress, maxProgress, size = 60 }: { progress: numb
 const getThemeBackground = (theme: string) => {
   switch (theme) {
     case 'midnight-black':
-      return 'linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%)';
+      return 'linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%)';
     case 'cotton-candy-glow':
       return 'linear-gradient(135deg, #ffeef8 0%, #f8d7da 50%, #e8c5e5 100%)';
     case 'cosmic-nebula':
     default:
-      return 'linear-gradient(135deg, #0f0f0f 0%, #1a1a2e 50%, #16213e 100%)';
+      return 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
   }
 };
 
@@ -173,49 +182,6 @@ export const AchievementsPage: React.FC<AchievementsPageProps> = ({
         <p style={{ margin: 0, fontSize: '1.1rem', opacity: 0.8 }}>
           {totalUnlocked} of {totalAchievements} achievements unlocked
         </p>
-      </div>
-
-      {/* Category Overview */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-        gap: '20px',
-        marginBottom: '40px'
-      }}>
-        {categories.map(category => {
-          const progress = getCategoryProgress(category);
-          return (
-            <div key={category} style={{
-              background: 'rgba(255, 255, 255, 0.1)',
-              backdropFilter: 'blur(20px)',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              borderRadius: '12px',
-              padding: '20px',
-              textAlign: 'center'
-            }}>
-              <div style={{ 
-                display: 'flex', 
-                justifyContent: 'center', 
-                marginBottom: '10px',
-                color: '#ffd700'
-              }}>
-                <CategoryIcon category={category} />
-              </div>
-              <h3 style={{ 
-                margin: '0 0 10px 0', 
-                textTransform: 'capitalize',
-                fontSize: '1.1rem'
-              }}>
-                {category}
-              </h3>
-              <CircularProgress 
-                progress={progress.unlocked} 
-                maxProgress={progress.total} 
-                size={50} 
-              />
-            </div>
-          );
-        })}
       </div>
 
       {/* Achievement Categories */}

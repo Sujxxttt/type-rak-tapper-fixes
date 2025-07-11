@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useStopwatch } from 'react-timer-hook';
 import { useQuery } from '@tanstack/react-query';
@@ -77,16 +76,13 @@ const Index = () => {
         today.getMonth() === lastVisitDate.getMonth() &&
         today.getDate() === lastVisitDate.getDate()
       ) {
-        // Same day
         setDailyTypingTime(parseInt(localStorage.getItem('dailyTypingTime') || '0', 10));
         setDailyStreak(parseInt(localStorage.getItem('dailyStreak') || '0', 10));
       } else if (diffInDays === 1) {
-        // Consecutive day
         setDailyStreak(parseInt(localStorage.getItem('dailyStreak') || '0', 10) + 1);
         localStorage.setItem('dailyStreak', (parseInt(localStorage.getItem('dailyStreak') || '0', 10) + 1).toString());
         setDailyTypingTime(0);
       } else {
-        // New streak
         setDailyStreak(0);
         localStorage.setItem('dailyStreak', '0');
         setDailyTypingTime(0);
@@ -102,18 +98,19 @@ const Index = () => {
 
   useEffect(() => {
     if (initialWPM) {
-      setWpm(initialWPM.wpm);
-      setTestsCompleted(initialWPM.testsCompleted);
-      setErrorRate(initialWPM.errorRate);
-      setPerfectTests(initialWPM.perfectTests);
-      setCleanSessions(initialWPM.cleanSessions);
+      setWpm(initialWPM.wmp || 0);
+      setTestsCompleted(initialWPM.testsCompleted || 0);
+      setErrorRate(initialWPM.errorRate || 0);
+      setPerfectTests(initialWPM.perfectTests || 0);
+      setCleanSessions(initialWPM.cleanSessions || 0);
     }
   }, [initialWPM]);
 
   useEffect(() => {
     fetch('https://api.quotable.io/random')
       .then(response => response.json())
-      .then(data => setOriginalText(data.content));
+      .then(data => setOriginalText(data.content))
+      .catch(() => setOriginalText('The quick brown fox jumps over the lazy dog.'));
   }, []);
 
   const startTyping = () => {
@@ -153,12 +150,10 @@ const Index = () => {
 
     setTestsCompleted(prev => prev + 1);
 
-    // Update daily typing time
     const newDailyTypingTime = dailyTypingTime + Math.round(duration / 60);
     setDailyTypingTime(newDailyTypingTime);
     localStorage.setItem('dailyTypingTime', newDailyTypingTime.toString());
 
-    // Achievement checks
     checkAchievements({
       wpm: newWPM,
       errorRate: newErrorRate,
@@ -172,7 +167,6 @@ const Index = () => {
       daysSinceLastVisit: daysSinceLastVisit
     });
 
-    // Save to history
     saveResult(newWPM, newErrorRate, duration);
   };
 
@@ -185,7 +179,7 @@ const Index = () => {
         },
         body: JSON.stringify({
           username: username,
-          wmp: wpm,
+          wmp: wmp,
           errorRate: errorRate,
           duration: duration,
         }),
@@ -200,7 +194,8 @@ const Index = () => {
     reset();
     fetch('https://api.quotable.io/random')
       .then(response => response.json())
-      .then(data => setOriginalText(data.content));
+      .then(data => setOriginalText(data.content))
+      .catch(() => setOriginalText('The quick brown fox jumps over the lazy dog.'));
   };
 
   const showHistory = () => {

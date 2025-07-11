@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 
 interface IntroductionProps {
@@ -25,7 +24,7 @@ export const Introduction: React.FC<IntroductionProps> = ({
   const [titlePosition, setTitlePosition] = useState('center');
   const [isReplay, setIsReplay] = useState(false);
 
-  // Animation sequence: cosmic-nebula → midnight-black → cotton-candy-glow → current theme
+  // Fixed themes to prevent white flash
   const themes = [
     {
       id: 'cosmic-nebula',
@@ -34,12 +33,12 @@ export const Introduction: React.FC<IntroductionProps> = ({
     },
     {
       id: 'midnight-black',
-      background: '#0a0a0a', // Slightly lighter to prevent white flash
+      background: 'linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%)', // Darker gradient to prevent flash
       titleGradient: 'linear-gradient(90deg, #c559f7 0%, #7f59f7 100%)'
     },
     {
       id: 'cotton-candy-glow',
-      background: 'linear-gradient(135deg, #12cff3, #5ab2f7)', // Using animation background
+      background: 'linear-gradient(135deg, #12cff3, #5ab2f7)',
       titleGradient: 'linear-gradient(90deg, #fc03df 0%, #ff3be8 100%)'
     }
   ];
@@ -57,27 +56,23 @@ export const Introduction: React.FC<IntroductionProps> = ({
 
     setCurrentThemeIndex(0);
 
-    // Theme switching phase - cycle through themes
     themeInterval = setInterval(() => {
       setCurrentThemeIndex(prev => {
-        if (prev < 2) return prev + 1; // Go through first 3 themes
-        return 0; // Reset to start
+        if (prev < 2) return prev + 1;
+        return 0;
       });
     }, 1620);
 
-    // After theme cycles, show current theme and move to position
     phaseTimeout = setTimeout(() => {
       clearInterval(themeInterval);
       setAnimationPhase('moving');
       setTitlePosition('top-left');
       
-      // Set to current theme
       const currentThemeData = getCurrentThemeData();
       const themeIndex = themes.findIndex(t => t.id === currentThemeData.id);
       setCurrentThemeIndex(themeIndex >= 0 ? themeIndex : 0);
     }, 4860);
 
-    // Complete animation
     completeTimeout = setTimeout(() => {
       if (isFromTitleClick) {
         window.dispatchEvent(new CustomEvent('showEasterEgg'));
@@ -106,7 +101,6 @@ export const Introduction: React.FC<IntroductionProps> = ({
     }
   };
 
-  // Use current theme data or animation theme
   const currentThemeData = animationPhase === 'moving' ? getCurrentThemeData() : themes[currentThemeIndex];
 
   return (

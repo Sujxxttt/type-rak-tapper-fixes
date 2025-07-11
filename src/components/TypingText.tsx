@@ -26,17 +26,28 @@ export const TypingText: React.FC<TypingTextProps> = ({
     onTextChange(e.target.value);
   };
 
+  const getTextColor = () => {
+    return theme === 'cotton-candy-glow' ? '#333' : 'white';
+  };
+
   const renderText = () => {
     return originalText.split('').map((char, index) => {
       let className = '';
+      let style: React.CSSProperties = {};
+      
       if (index < typedText.length) {
-        className = typedText[index] === char ? 'text-green-500' : 'text-red-500 bg-red-200';
+        if (typedText[index] === char) {
+          style.color = '#22c55e'; // Green for correct
+        } else {
+          style.color = '#ef4444'; // Red for incorrect
+          style.backgroundColor = 'rgba(239, 68, 68, 0.2)';
+        }
       } else if (index === typedText.length) {
-        className = 'bg-blue-500';
+        style.backgroundColor = '#3b82f6'; // Blue cursor
       }
       
       return (
-        <span key={index} className={className}>
+        <span key={index} style={style}>
           {char}
         </span>
       );
@@ -56,7 +67,8 @@ export const TypingText: React.FC<TypingTextProps> = ({
         marginBottom: '20px',
         fontSize: '1.2rem',
         lineHeight: '1.6',
-        fontFamily: 'monospace'
+        fontFamily: 'monospace',
+        color: getTextColor()
       }}>
         {renderText()}
       </div>
@@ -71,7 +83,7 @@ export const TypingText: React.FC<TypingTextProps> = ({
           border: '1px solid rgba(255, 255, 255, 0.2)',
           borderRadius: '8px',
           padding: '15px',
-          color: 'white',
+          color: getTextColor(),
           fontSize: '1rem',
           resize: 'vertical'
         }}
