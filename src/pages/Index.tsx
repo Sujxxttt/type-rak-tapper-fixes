@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useStopwatch } from 'react-timer-hook';
 import { useQuery } from '@tanstack/react-query';
@@ -43,8 +44,15 @@ const Index = () => {
     reset,
   } = useStopwatch({ autoStart: false });
 
-  const { data: initialWPM } = useQuery(['wpm', username], () => fetchWPM(username));
-  const { data: history } = useQuery(['history', username], () => fetchHistory(username));
+  const { data: initialWPM } = useQuery({
+    queryKey: ['wpm', username],
+    queryFn: () => fetchWPM(username)
+  });
+
+  const { data: history } = useQuery({
+    queryKey: ['history', username],
+    queryFn: () => fetchHistory(username)
+  });
 
   const [correctCharacters, setCorrectCharacters] = useState(0);
   const [totalErrors, setTotalErrors] = useState(0);
@@ -177,7 +185,7 @@ const Index = () => {
         },
         body: JSON.stringify({
           username: username,
-          wpm: wpm,
+          wmp: wpm,
           errorRate: errorRate,
           duration: duration,
         }),
@@ -311,7 +319,7 @@ const Index = () => {
             </div>
           </header>
 
-          {/* Achievement Stats Box */}
+          {/* Stats Grid */}
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
@@ -373,7 +381,7 @@ const Index = () => {
               </p>
             </div>
 
-            {/* New Achievement Box */}
+            {/* Achievement Box */}
             <div 
               onClick={() => setCurrentScreen('achievements')}
               style={{
@@ -433,7 +441,7 @@ const Index = () => {
             </button>
           </div>
 
-          {history && history.length > 0 ? (
+          {history && Array.isArray(history) && history.length > 0 ? (
             <HistoryTable history={history.slice(0, 5)} />
           ) : (
             <p style={{
@@ -558,7 +566,7 @@ const Index = () => {
           }}>
             Typing History
           </h2>
-          {history && history.length > 0 ? (
+          {history && Array.isArray(history) && history.length > 0 ? (
             <HistoryTable history={history} />
           ) : (
             <p style={{
