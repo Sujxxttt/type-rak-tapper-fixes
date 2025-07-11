@@ -18,33 +18,17 @@ export const TypedTextPreview: React.FC<TypedTextPreviewProps> = ({
   const getCorrectColor = () => {
     switch (theme) {
       case 'midnight-black':
-        return '#c559f7';
+        return '#ae1ee3';
       case 'cotton-candy-glow':
-        return '#fc03df';
+        return '#ff1fbc';
       case 'cosmic-nebula':
       default:
-        return '#b109d6';
+        return '#21b1ff';
     }
   };
 
   const getErrorColor = () => {
-    return '#ff1c14';
-  };
-
-  const getBackgroundColor = () => {
-    switch (theme) {
-      case 'midnight-black':
-        return 'linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%)';
-      case 'cotton-candy-glow':
-        return 'linear-gradient(135deg, #ffeef8 0%, #f8d7da 50%, #e8c5e5 100%)';
-      case 'cosmic-nebula':
-      default:
-        return 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-    }
-  };
-
-  const getTextColor = () => {
-    return theme === 'cotton-candy-glow' ? '#333' : 'white';
+    return '#ff1c14'; // Red for all themes
   };
 
   const renderTypedText = () => {
@@ -92,12 +76,12 @@ export const TypedTextPreview: React.FC<TypedTextPreviewProps> = ({
         width: '100%',
         maxWidth: '1040px',
         margin: '0 auto',
-        background: getBackgroundColor(),
+        background: 'rgba(255, 255, 255, 0.1)',
         borderRadius: '12px',
         backdropFilter: 'blur(10px)',
         border: '1px solid rgba(255, 255, 255, 0.2)',
         padding: '20px',
-        color: getTextColor()
+        color: theme === 'cotton-candy-glow' ? '#333' : 'white'
       }}>
         <button 
           onClick={onClose}
@@ -107,7 +91,7 @@ export const TypedTextPreview: React.FC<TypedTextPreviewProps> = ({
             right: '15px',
             background: 'none',
             border: 'none',
-            color: getTextColor(),
+            color: theme === 'cotton-candy-glow' ? '#333' : 'white',
             cursor: 'pointer'
           }}
         >
