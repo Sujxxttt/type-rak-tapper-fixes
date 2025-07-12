@@ -89,25 +89,37 @@
     @apply border-border;
   }
 
-  body {
-    @apply bg-background text-foreground;
-    transition: all 0.5s ease-in-out !important;
+  html, body {
+    background: #0a0a0a;
+    transition: none !important;
   }
 
-  /* Theme backgrounds with no flash - Fixed colors */
+  body {
+    @apply text-foreground;
+    min-height: 100vh;
+  }
+
+  /* Theme backgrounds - Fixed colors to prevent white flash */
   .theme-cosmic-nebula {
     background: linear-gradient(135deg, #400354, #03568c) !important;
-    transition: background 0.5s ease-in-out !important;
+    transition: background 0.3s ease-in-out !important;
   }
 
   .theme-midnight-black {
-    background: #0a0a0a !important; /* Slightly lighter to prevent white flash */
-    transition: background 0.5s ease-in-out !important;
+    background: #0a0a0a !important;
+    transition: background 0.3s ease-in-out !important;
   }
 
   .theme-cotton-candy-glow {
-    background: linear-gradient(135deg, #12cff3, #5ab2f7) !important; /* Updated to match animation */
-    transition: background 0.5s ease-in-out !important;
+    background: linear-gradient(135deg, #12cff3, #5ab2f7) !important;
+    transition: background 0.3s ease-in-out !important;
+  }
+
+  /* Button transparency - 30% more transparent for main buttons */
+  .main-button {
+    background: rgba(255, 255, 255, 0.07) !important;
+    backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
   }
 
   /* Custom cursor styles */
@@ -148,8 +160,26 @@
     background: rgba(255, 255, 255, 0.4);
   }
 
-  /* Achievement notification styles */
+  /* Achievement notification styles with new colors */
   .achievement-glow {
-    box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+    background: linear-gradient(135deg, #f7ba2c, #f8a902) !important;
+    box-shadow: 0 0 20px rgba(247, 186, 44, 0.3);
+  }
+
+  /* Glass style button for easter egg */
+  .glass-button {
+    background: rgba(255, 255, 255, 0.08) !important;
+    backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-radius: 12px !important;
+    padding: 8px 16px !important;
+    color: white !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+  }
+
+  .glass-button:hover {
+    background: rgba(255, 255, 255, 0.12) !important;
+    transform: translateY(-2px) !important;
   }
 }

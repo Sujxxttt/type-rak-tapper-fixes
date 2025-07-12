@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { X } from 'lucide-react';
 import {
@@ -13,6 +12,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Switch } from '@/components/ui/switch';
 import { CustomDurationSlider } from './CustomDurationSlider';
+import { MusicPlayer } from './MusicPlayer';
 
 interface SideMenuProps {
   sideMenuOpen: boolean;
@@ -40,6 +40,7 @@ interface SideMenuProps {
   musicVolume: number;
   setMusicVolume: (volume: number) => void;
   hasMusic: boolean;
+  onMusicUploadClick: () => void;
 }
 
 export const SideMenu: React.FC<SideMenuProps> = ({
@@ -67,11 +68,13 @@ export const SideMenu: React.FC<SideMenuProps> = ({
   setBackgroundMusicEnabled,
   musicVolume,
   setMusicVolume,
-  hasMusic
+  hasMusic,
+  onMusicUploadClick
 }) => {
   const sideMenuRef = useRef<HTMLDivElement>(null);
   const [showCustomDuration, setShowCustomDuration] = useState(false);
   const [cursorStyle, setCursorStyle] = useState(localStorage.getItem('typeRakCursor') || 'blue');
+  const [musicEnabled, setMusicEnabled] = useState(localStorage.getItem('typeRakMusicEnabled') === 'true');
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -95,6 +98,12 @@ export const SideMenu: React.FC<SideMenuProps> = ({
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [sideMenuOpen, setSideMenuOpen]);
+
+  // Apply cursor style on mount
+  useEffect(() => {
+    document.body.className = document.body.className.replace(/cursor-\S+/g, '').trim();
+    document.body.classList.add(`cursor-${cursorStyle}`);
+  }, []);
 
   if (!sideMenuOpen) return null;
 
@@ -139,6 +148,11 @@ export const SideMenu: React.FC<SideMenuProps> = ({
     
     document.body.className = document.body.className.replace(/cursor-\S+/g, '').trim();
     document.body.classList.add(`cursor-${cursor}`);
+  };
+
+  const handleMusicToggle = (enabled: boolean) => {
+    setMusicEnabled(enabled);
+    localStorage.setItem('typeRakMusicEnabled', enabled.toString());
   };
 
   const dropdownContentStyle: React.CSSProperties = {
@@ -413,6 +427,39 @@ export const SideMenu: React.FC<SideMenuProps> = ({
               className="data-[state=checked]:bg-[--switch-checked-color]"
             />
           </div>
+        </div>
+
+        {/* Music Player Section */}
+        <div style={{ marginBottom: '1.5rem' }}>
+          <div style={{ 
+            '--switch-checked-color': getButtonColor(),
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'space-between', 
+            background: 'rgba(255, 255, 255, 0.08)', 
+            padding: '12px 16px', 
+            borderRadius: '15px',
+            fontSize: '0.9rem',
+            marginBottom: '12px',
+            backdropFilter: 'blur(15px)',
+            border: '1px solid rgba(255, 255, 255, 0.15)'
+          } as React.CSSProperties}>
+            <span>Music Player</span>
+            <Switch 
+              checked={musicEnabled} 
+              onCheckedChange={handleMusicToggle}
+              className="data-[state=checked]:bg-[--switch-checked-color]"
+            />
+          </div>
+          
+          {musicEnabled && (
+            <MusicPlayer
+              enabled={musicEnabled}
+              volume={musicVolume}
+              onVolumeChange={setMusicVolume}
+              onUploadClick={onMusicUploadClick}
+            />
+          )}
         </div>
 
         {hasMusic && (
