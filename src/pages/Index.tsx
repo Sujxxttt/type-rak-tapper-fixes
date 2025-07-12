@@ -259,7 +259,7 @@ const Index = () => {
   }, [startTest]);
 
   if (currentPage === 'history') {
-    return <HistoryPage onGoBack={() => setCurrentPage('main')} />;
+    return <HistoryPage onBack={() => setCurrentPage('main')} />;
   }
 
   if (currentPage === 'achievements') {
@@ -274,7 +274,7 @@ const Index = () => {
   }
 
   if (currentPage === 'easter-egg') {
-    return <EasterEggPage onGoBack={() => setCurrentPage('main')} />;
+    return <EasterEggPage theme={theme} onGoBack={() => setCurrentPage('main')} />;
   }
 
   if (currentPage === 'music-upload') {
