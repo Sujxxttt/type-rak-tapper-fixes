@@ -1,86 +1,44 @@
 
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto:wght@400;500;700&family=Open+Sans:wght@400;600;700&family=Lato:wght@400;700&family=Source+Sans+Pro:wght@400;600;700&family=Dancing+Script:wght@400;700&family=Pacifico:wght@400&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-
-    --radius: 0.5rem;
-
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-
-  .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
-
     --card: 222.2 84% 4.9%;
     --card-foreground: 210 40% 98%;
-
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-
     --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
+    --primary-foreground: 222.2 84% 4.9%;
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
-
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
-
     --accent: 217.2 32.6% 17.5%;
     --accent-foreground: 210 40% 98%;
-
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
-
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+    --sidebar-background: 222.2 84% 4.9%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 210 40% 98%;
+    --sidebar-primary-foreground: 222.2 84% 4.9%;
+    --sidebar-accent: 217.2 32.6% 17.5%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217.2 32.6% 17.5%;
+    --sidebar-ring: 212.7 26.8% 83.9%;
   }
 }
 
@@ -88,68 +46,99 @@
   * {
     @apply border-border;
   }
-
+  
   body {
     @apply bg-background text-foreground;
-    transition: all 0.5s ease-in-out !important;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    background-color: hsl(var(--background)) !important;
+    color: hsl(var(--foreground)) !important;
+    transition: none !important;
   }
+  
+  html {
+    color-scheme: dark !important;
+  }
+  
+  /* Force dark backgrounds */
+  .achievements-page,
+  .achievements-container,
+  [data-achievements="true"] {
+    background-color: hsl(var(--background)) !important;
+    color: hsl(var(--foreground)) !important;
+  }
+  
+  /* Prevent white flashes during transitions */
+  * {
+    transition: background-color 0s !important;
+  }
+}
 
-  /* Theme backgrounds with no flash - Fixed colors */
-  .theme-cosmic-nebula {
-    background: linear-gradient(135deg, #400354, #03568c) !important;
-    transition: background 0.5s ease-in-out !important;
-  }
+/* Custom cursor styles */
+.cursor-blue {
+  cursor: url('/src/assets/cursor-blue.svg'), auto !important;
+}
 
-  .theme-midnight-black {
-    background: #0a0a0a !important; /* Slightly lighter to prevent white flash */
-    transition: background 0.5s ease-in-out !important;
-  }
+.cursor-black {
+  cursor: url('/src/assets/cursor-black.svg'), auto !important;
+}
 
-  .theme-cotton-candy-glow {
-    background: linear-gradient(135deg, #12cff3, #5ab2f7) !important; /* Updated to match animation */
-    transition: background 0.5s ease-in-out !important;
-  }
+.cursor-pink {
+  cursor: url('/src/assets/cursor-pink.svg'), auto !important;
+}
 
-  /* Custom cursor styles */
-  .cursor-blue {
-    cursor: url('./assets/cursor-blue.svg') 12 12, auto;
-  }
+.cursor-white {
+  cursor: url('/src/assets/cursor-white.svg'), auto !important;
+}
 
-  .cursor-black {
-    cursor: url('./assets/cursor-black.svg') 12 12, auto;
-  }
+.cursor-blue * {
+  cursor: url('/src/assets/cursor-blue.svg'), auto !important;
+}
 
-  .cursor-pink {
-    cursor: url('./assets/cursor-pink.svg') 12 12, auto;
-  }
+.cursor-black * {
+  cursor: url('/src/assets/cursor-black.svg'), auto !important;
+}
 
-  .cursor-white {
-    cursor: url('./assets/cursor-white.svg') 12 12, auto;
-  }
+.cursor-pink * {
+  cursor: url('/src/assets/cursor-pink.svg'), auto !important;
+}
 
-  /* Glass style scrollbar */
-  ::-webkit-scrollbar {
-    width: 8px;
-  }
+.cursor-white * {
+  cursor: url('/src/assets/cursor-white.svg'), auto !important;
+}
 
-  ::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    border-radius: 4px;
-  }
+/* Typing animation */
+@keyframes typing {
+  from { width: 0; }
+  to { width: 100%; }
+}
 
-  ::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.3);
-    backdrop-filter: blur(10px);
-    border-radius: 4px;
-  }
+@keyframes blink-caret {
+  from, to { border-color: transparent; }
+  50% { border-color: orange; }
+}
 
-  ::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.4);
-  }
+.typing-animation {
+  overflow: hidden;
+  border-right: 3px solid orange;
+  white-space: nowrap;
+  margin: 0 auto;
+  animation: typing 1.5s steps(30, end), blink-caret 0.75s step-end infinite;
+}
 
-  /* Achievement notification styles */
-  .achievement-glow {
-    box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
-  }
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground));
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--foreground));
 }
