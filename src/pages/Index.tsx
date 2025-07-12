@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Settings, Trophy, History, Volume2 } from 'lucide-react';
 import { useTypingGame } from '../hooks/useTypingGame';
@@ -39,7 +40,7 @@ const Index = () => {
 
   const { achievements, recentAchievement, checkAchievements, closeAchievementNotification, getUnlockedCount } = useAchievements(currentActiveUser);
   const { hasMusic } = useBackgroundMusic(backgroundMusicEnabled, musicVolume);
-  const { playKeySound, playErrorSound } = useSoundEffects(soundEnabled);
+  const { playKeyboardSound, playErrorSound } = useSoundEffects(soundEnabled);
 
   const {
     text,
@@ -258,7 +259,7 @@ const Index = () => {
   }, [startTest]);
 
   if (currentPage === 'history') {
-    return <HistoryPage onClose={() => setCurrentPage('main')} />;
+    return <HistoryPage onGoBack={() => setCurrentPage('main')} />;
   }
 
   if (currentPage === 'achievements') {
@@ -273,7 +274,7 @@ const Index = () => {
   }
 
   if (currentPage === 'easter-egg') {
-    return <EasterEggPage onBack={() => setCurrentPage('main')} />;
+    return <EasterEggPage onGoBack={() => setCurrentPage('main')} />;
   }
 
   if (currentPage === 'music-upload') {
@@ -372,34 +373,25 @@ const Index = () => {
 
         {!gameStarted ? (
           <Introduction
-            gameOver={gameOver}
-            testActive={testActive}
-            resetTest={resetTest}
-            getUnlockedCount={getUnlockedCount}
-            handleAchievementsClick={handleAchievementsClick}
             onComplete={onComplete}
           />
         ) : (
           <>
             <TypingTest
-              text={text}
-              userInput={userInput}
-              currentIndex={currentIndex}
-              onInputChange={handleInputChange}
-              onKeyPress={handleKeyPress}
-              gameStarted={gameStarted}
-              gameOver={gameOver}
+              testText={text}
+              pos={currentIndex}
+              chars={[]}
+              theme={theme}
+              onKeyDown={handleKeyPress}
               fontSize={fontSize}
-              currentWordIndex={currentWordIndex}
-              errorPositions={errorPositions}
+              fontStyle={fontStyle}
             />
             
             <StatsDisplay
-              wpm={wpm}
-              accuracy={accuracy}
-              timeLeft={timeLeft}
-              gameOver={gameOver}
-              onRestart={resetTest}
+              elapsed={duration - timeLeft}
+              correctSigns={currentIndex}
+              totalErrors={errorPositions.size}
+              currentErrorRate={((errorPositions.size / Math.max(currentIndex, 1)) * 100)}
               theme={theme}
             />
           </>
@@ -455,19 +447,15 @@ const Index = () => {
 
       {recentAchievement && (
         <AchievementNotification
-          title={recentAchievement.name}
-          description={recentAchievement.subtitle}
+          achievement={recentAchievement}
           onClose={closeAchievementNotification}
-          theme={theme}
         />
       )}
 
       {toast && (
         <Toast
           message={toast.message}
-          type={toast.type}
           onClose={closeToast}
-          show={toast.show}
         />
       )}
     </div>

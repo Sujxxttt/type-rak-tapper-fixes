@@ -1,23 +1,28 @@
-import { useState, useRef, useCallback } from 'react';
 
-export const useTypingGame = () => {
+import { useState, useRef, useCallback, useEffect } from 'react';
+
+interface UseTypingGameProps {
+  duration: number;
+  onComplete: () => void;
+}
+
+export const useTypingGame = ({ duration, onComplete }: UseTypingGameProps) => {
+  const [text, setText] = useState<string>('');
+  const [userInput, setUserInput] = useState<string>('');
+  const [currentIndex, setCurrentIndex] = useState<number>(0);
+  const [wpm, setWpm] = useState<number>(0);
+  const [accuracy, setAccuracy] = useState<number>(100);
+  const [timeLeft, setTimeLeft] = useState<number>(duration);
+  const [gameStarted, setGameStarted] = useState<boolean>(false);
   const [gameOver, setGameOver] = useState<boolean>(false);
   const [testActive, setTestActive] = useState<boolean>(false);
-  const [elapsed, setElapsed] = useState<number>(0);
-  const [pos, setPos] = useState<number>(0);
-  const [chars, setChars] = useState<HTMLElement[]>([]);
-  const [testText, setTestText] = useState<string>('');
-  const [correctCharacters, setCorrectCharacters] = useState<number>(0);
-  const [totalErrors, setTotalErrors] = useState<number>(0);
-  const [actualTypedCount, setActualTypedCount] = useState<number>(0);
-  const [wasLastError, setWasLastError] = useState<boolean>(false);
-  const [cheatTimeAdded, setCheatTimeAdded] = useState<number>(0);
-
+  const [currentWordIndex, setCurrentWordIndex] = useState<number>(0);
+  const [errorPositions, setErrorPositions] = useState<Set<number>>(new Set());
+  
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const textFlowRef = useRef<HTMLDivElement>(null);
-  const usedWordsRef = useRef<string[]>([]);
-  const generatedTextRef = useRef<string>('');
-  const wordListUsedRef = useRef<boolean>(false);
+  const startTimeRef = useRef<number>(0);
+  const correctCharsRef = useRef<number>(0);
+  const totalErrorsRef = useRef<number>(0);
 
   const wordList = [
     "the", "quick", "brown", "fox", "jumps", "over", "lazy", "dog", "and", "runs",
@@ -26,162 +31,157 @@ export const useTypingGame = () => {
     "smart", "fast", "escape", "from", "danger", "using", "its", "natural", "instincts",
     "survival", "skills", "that", "have", "been", "developed", "over", "many", "years",
     "evolution", "making", "one", "most", "cunning", "animals", "in", "animal", "kingdom",
-    "able", "outsmart", "even", "most", "experienced", "hunters", "with", "ease", "grace",
-    "amazing", "wonderful", "beautiful", "fantastic", "incredible", "awesome", "brilliant",
-    "excellent", "perfect", "outstanding", "remarkable", "stunning", "magnificent", "spectacular",
-    "powerful", "strong", "mighty", "fierce", "brave", "bold", "confident", "determined",
-    "focused", "dedicated", "passionate", "creative", "innovative", "intelligent", "wise",
-    "clever", "skilled", "talented", "gifted", "capable", "efficient", "effective", "successful"
+    "able", "outsmart", "even", "most", "experienced", "hunters", "with", "ease", "grace"
   ];
 
-  const generateWords = (count: number): string => {
-    let generatedText = "";
-    let availableWords = [...wordList];
-    
-    if (wordListUsedRef.current) {
-      availableWords = [...wordList];
-      usedWordsRef.current = [];
-      wordListUsedRef.current = false;
+  const generateText = useCallback(() => {
+    const words = [];
+    for (let i = 0; i < 100; i++) {
+      words.push(wordList[Math.floor(Math.random() * wordList.length)]);
     }
-    
-    for (let i = 0; i < count; i++) {
-      if (availableWords.length === 0) {
-        wordListUsedRef.current = true;
-        availableWords = [...wordList];
-        usedWordsRef.current = [];
-      }
-      
-      const randomIndex = Math.floor(Math.random() * availableWords.length);
-      const selectedWord = availableWords[randomIndex];
-      availableWords.splice(randomIndex, 1);
-      usedWordsRef.current.push(selectedWord);
-      
-      generatedText += selectedWord;
-      if (i < count - 1) {
-        generatedText += " ";
-      }
-    }
-    
-    generatedTextRef.current = generatedText;
-    return generatedText;
-  };
-
-  const extendText = () => {
-    const additionalWords = generateWords(50);
-    generatedTextRef.current += " " + additionalWords;
-    return generatedTextRef.current;
-  };
-
-  const renderText = useCallback((text: string) => {
-    console.log('Rendering text with length:', text.length);
-    
-    const textFlowElement = document.getElementById('text-flow');
-    if (!textFlowElement) {
-      console.log('Text flow element not found');
-      return;
-    }
-    
-    setTestText(text);
-    textFlowElement.innerHTML = "";
-    const newChars: HTMLElement[] = [];
-    const frag = document.createDocumentFragment();
-    
-    for (let i = 0; i < text.length; i++) {
-      const char = text[i];
-      const span = document.createElement("span");
-      span.className = "char";
-      span.textContent = char === " " ? "\u00A0" : char;
-      frag.appendChild(span);
-      newChars.push(span);
-    }
-    
-    textFlowElement.appendChild(frag);
-    setChars(newChars);
-    console.log('Text successfully rendered with', newChars.length, 'characters');
+    return words.join(' ');
   }, []);
 
-  const startTimer = useCallback((duration: number) => {
-    console.log('Starting timer for', duration, 'seconds');
+  const startTest = useCallback(() => {
+    const generatedText = generateText();
+    setText(generatedText);
+    setUserInput('');
+    setCurrentIndex(0);
+    setWpm(0);
+    setAccuracy(100);
+    setTimeLeft(duration);
+    setGameStarted(true);
+    setGameOver(false);
+    setTestActive(true);
+    setCurrentWordIndex(0);
+    setErrorPositions(new Set());
+    correctCharsRef.current = 0;
+    totalErrorsRef.current = 0;
+    startTimeRef.current = Date.now();
+
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+
+    timerRef.current = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          endTest();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  }, [duration]);
+
+  const endTest = useCallback(() => {
+    setTestActive(false);
+    setGameOver(true);
     if (timerRef.current) {
       clearInterval(timerRef.current);
     }
     
-    const startTime = Date.now();
-    timerRef.current = setInterval(() => {
-      const now = Date.now();
-      const newElapsed = Math.floor((now - startTime) / 1000);
-      setElapsed(newElapsed);
-    }, 100);
-  }, []);
+    const elapsedMinutes = (Date.now() - startTimeRef.current) / 60000;
+    const calculatedWpm = Math.round((correctCharsRef.current / 5) / Math.max(elapsedMinutes, 1/60));
+    const calculatedAccuracy = Math.round(((correctCharsRef.current) / Math.max(userInput.length, 1)) * 100);
+    
+    setWpm(calculatedWpm);
+    setAccuracy(calculatedAccuracy);
+    onComplete();
+  }, [onComplete, userInput.length]);
 
-  const resetTest = () => {
-    console.log('Resetting test');
+  const resetTest = useCallback(() => {
+    setGameStarted(false);
     setGameOver(false);
     setTestActive(false);
-    setElapsed(0);
-    setPos(0);
-    setTotalErrors(0);
-    setCorrectCharacters(0);
-    setActualTypedCount(0);
-    setWasLastError(false);
-    setCheatTimeAdded(0);
-    usedWordsRef.current = [];
-    generatedTextRef.current = '';
-    wordListUsedRef.current = false;
+    setUserInput('');
+    setCurrentIndex(0);
+    setWpm(0);
+    setAccuracy(100);
+    setTimeLeft(duration);
+    setCurrentWordIndex(0);
+    setErrorPositions(new Set());
+    setText('');
+    correctCharsRef.current = 0;
+    totalErrorsRef.current = 0;
     
     if (timerRef.current) {
       clearInterval(timerRef.current);
-      timerRef.current = null;
+    }
+  }, [duration]);
+
+  const handleInputChange = useCallback((value: string) => {
+    if (!testActive) return;
+    
+    setUserInput(value);
+    setCurrentIndex(value.length);
+    
+    let correct = 0;
+    let errors = 0;
+    const newErrorPositions = new Set<number>();
+    
+    for (let i = 0; i < value.length; i++) {
+      if (i < text.length && value[i] === text[i]) {
+        correct++;
+      } else {
+        errors++;
+        newErrorPositions.add(i);
+      }
     }
     
-    const allChars = document.querySelectorAll('.char');
-    allChars.forEach(char => {
-      char.classList.remove('correct', 'incorrect', 'extra');
-    });
-  };
+    correctCharsRef.current = correct;
+    totalErrorsRef.current = errors;
+    setErrorPositions(newErrorPositions);
+    
+    // Update WPM in real-time
+    const elapsedMinutes = (Date.now() - startTimeRef.current) / 60000;
+    if (elapsedMinutes > 0) {
+      const currentWpm = Math.round((correct / 5) / elapsedMinutes);
+      setWpm(currentWpm);
+    }
+    
+    // Update accuracy
+    const currentAccuracy = value.length > 0 ? Math.round((correct / value.length) * 100) : 100;
+    setAccuracy(currentAccuracy);
+    
+    // Update word index
+    const wordsTyped = value.split(' ').length - 1;
+    setCurrentWordIndex(wordsTyped);
+  }, [testActive, text]);
 
-  const getCurrentWPM = () => {
-    if (elapsed === 0) return 0;
-    return Math.round((correctCharacters / 5) / (elapsed / 60));
-  };
+  const handleKeyPress = useCallback((e: KeyboardEvent) => {
+    if (!testActive) return;
+    
+    // Handle backspace, space, and regular characters
+    if (e.key.length === 1 || e.key === 'Backspace' || e.key === ' ') {
+      // Key press handled by input change
+    }
+  }, [testActive]);
 
-  const getCurrentErrorRate = () => {
-    if (actualTypedCount === 0) return 0;
-    return (totalErrors / actualTypedCount) * 100;
-  };
-
-  const addCheatTime = () => {
-    setCheatTimeAdded(prev => prev + 30);
-  };
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, []);
 
   return {
+    text,
+    userInput,
+    currentIndex,
+    wpm,
+    accuracy,
+    timeLeft,
+    gameStarted,
     gameOver,
-    setGameOver,
     testActive,
-    setTestActive,
-    elapsed,
-    setElapsed,
-    pos,
-    setPos,
-    chars,
-    testText,
-    correctCharacters,
-    setCorrectCharacters,
-    totalErrors,
-    setTotalErrors,
-    actualTypedCount,
-    setActualTypedCount,
-    wasLastError,
-    setWasLastError,
-    cheatTimeAdded,
-    timerRef,
-    generateWords,
-    renderText,
-    startTimer,
     resetTest,
-    extendText,
-    getCurrentWPM,
-    getCurrentErrorRate,
-    addCheatTime
+    handleKeyPress,
+    handleInputChange,
+    startTest,
+    endTest,
+    currentWordIndex,
+    errorPositions
   };
 };
