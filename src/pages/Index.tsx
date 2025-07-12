@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Introduction } from '../components/Introduction';
 import { TypingTest } from '../components/TypingTest';
@@ -122,6 +121,11 @@ const Index = () => {
   useEffect(() => {
     localStorage.setItem('typeRakMusicVolume', String(musicVolume));
   }, [musicVolume]);
+
+  const handleIntroductionComplete = () => {
+    // Introduction completion logic if needed
+    console.log('Introduction completed');
+  };
 
   const switchUser = (username: string) => {
     setCurrentActiveUser(username);
@@ -260,6 +264,7 @@ const Index = () => {
       <main className="container mx-auto p-4 flex flex-col md:flex-row gap-4">
         <div className="md:w-3/4">
           <Introduction 
+            onComplete={handleIntroductionComplete}
             gameOver={typingGame.gameOver}
             testActive={typingGame.testActive}
             resetTest={typingGame.resetTest}
