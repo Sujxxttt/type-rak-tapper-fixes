@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { ArrowLeft, Trophy, Target, Zap, Star, Gamepad, Heart } from 'lucide-react';
 
@@ -10,6 +11,9 @@ interface Achievement {
   wpm: number;
   unlocked: boolean;
   unlockedAt?: string;
+  progress?: number;
+  maxProgress?: number;
+  getProgress?: (stats: any) => { current: number; max: number };
 }
 
 interface AchievementsPageProps {
@@ -52,6 +56,30 @@ export const AchievementsPage: React.FC<AchievementsPageProps> = ({
       case 'fun': return '#ec4899';
       default: return getButtonColor();
     }
+  };
+
+  const getAchievementGradient = () => {
+    return 'linear-gradient(135deg, #f7ba2c 0%, #f8a902 100%)';
+  };
+
+  const getProgress = (achievement: Achievement) => {
+    if (!achievement.getProgress) return null;
+    
+    // Mock stats for progress calculation - in real app this would come from props
+    const mockStats = {
+      testsCompleted: Number(localStorage.getItem('typeRakTestsCompleted') || 0),
+      maxWpmEver: Number(localStorage.getItem('typeRakMaxWpm') || 0),
+      dailyTypingTime: Number(localStorage.getItem('typeRakDailyTypingTime') || 0),
+      dailyStreak: Number(localStorage.getItem('typeRakDailyStreak') || 0),
+      totalVisitedDays: Number(localStorage.getItem('typeRakTotalVisitedDays') || 0),
+      daysSinceFirstLogin: Number(localStorage.getItem('typeRakDaysSinceFirstLogin') || 0),
+      cheatCodeUsed: Number(localStorage.getItem('typeRakCheatCodeUsed') || 0),
+      foundEasterEgg: localStorage.getItem('typeRakFoundEasterEgg') === 'true',
+      perfectTests: Number(localStorage.getItem('typeRakPerfectTests') || 0),
+      unlockedAchievements: achievements.filter(a => a.unlocked).length
+    };
+    
+    return achievement.getProgress(mockStats);
   };
 
   const unlockedAchievements = achievements.filter(a => a.unlocked);
@@ -101,7 +129,7 @@ export const AchievementsPage: React.FC<AchievementsPageProps> = ({
               className="h-full rounded-full transition-all duration-500"
               style={{ 
                 width: `${(unlockedAchievements.length / achievements.length) * 100}%`,
-                backgroundColor: getButtonColor()
+                background: getAchievementGradient()
               }}
             />
           </div>
@@ -114,7 +142,7 @@ export const AchievementsPage: React.FC<AchievementsPageProps> = ({
         {unlockedAchievements.length > 0 && (
           <div className="mb-12">
             <h2 className="text-2xl font-semibold mb-6 flex items-center gap-2" style={{ color: 'hsl(var(--foreground))' }}>
-              <Trophy size={24} style={{ color: getButtonColor() }} />
+              <Trophy size={24} style={{ color: '#f7ba2c' }} />
               Unlocked ({unlockedAchievements.length})
             </h2>
             
@@ -124,18 +152,18 @@ export const AchievementsPage: React.FC<AchievementsPageProps> = ({
                   key={achievement.id}
                   className="p-6 rounded-xl border transition-all duration-200 hover:scale-105"
                   style={{
-                    background: 'rgba(255, 255, 255, 0.08)',
-                    backdropFilter: 'blur(25px)',
-                    border: `1px solid ${getCategoryColor(achievement.category)}`,
-                    boxShadow: `0 4px 20px ${getCategoryColor(achievement.category)}20`
+                    background: getAchievementGradient(),
+                    border: `1px solid #f8a902`,
+                    boxShadow: `0 4px 20px rgba(247, 186, 44, 0.3)`,
+                    color: '#000'
                   }}
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div 
                       className="p-3 rounded-lg"
-                      style={{ backgroundColor: `${getCategoryColor(achievement.category)}20` }}
+                      style={{ backgroundColor: 'rgba(0, 0, 0, 0.1)' }}
                     >
-                      <div style={{ color: getCategoryColor(achievement.category) }}>
+                      <div style={{ color: '#000' }}>
                         {getCategoryIcon(achievement.category)}
                       </div>
                     </div>
@@ -143,8 +171,8 @@ export const AchievementsPage: React.FC<AchievementsPageProps> = ({
                       <div 
                         className="px-2 py-1 rounded-full text-xs font-semibold"
                         style={{ 
-                          backgroundColor: getButtonColor(),
-                          color: 'black'
+                          backgroundColor: 'rgba(0, 0, 0, 0.2)',
+                          color: '#000'
                         }}
                       >
                         {achievement.wpm} WPM
@@ -152,19 +180,19 @@ export const AchievementsPage: React.FC<AchievementsPageProps> = ({
                     )}
                   </div>
                   
-                  <h3 className="font-bold text-lg mb-2" style={{ color: 'hsl(var(--foreground))' }}>
+                  <h3 className="font-bold text-lg mb-2" style={{ color: '#000' }}>
                     {achievement.name}
                   </h3>
-                  <p className="text-sm mb-3 opacity-80" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                  <p className="text-sm mb-3 opacity-80" style={{ color: '#000' }}>
                     {achievement.subtitle}
                   </p>
-                  <p className="text-xs opacity-60" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                  <p className="text-xs opacity-60" style={{ color: '#000' }}>
                     {achievement.description}
                   </p>
                   
                   {achievement.unlockedAt && (
-                    <div className="mt-4 pt-3 border-t border-white/10">
-                      <p className="text-xs opacity-50" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                    <div className="mt-4 pt-3 border-t border-black/20">
+                      <p className="text-xs opacity-50" style={{ color: '#000' }}>
                         Unlocked: {new Date(achievement.unlockedAt).toLocaleDateString()}
                       </p>
                     </div>
@@ -184,49 +212,71 @@ export const AchievementsPage: React.FC<AchievementsPageProps> = ({
             </h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {lockedAchievements.map((achievement) => (
-                <div
-                  key={achievement.id}
-                  className="p-6 rounded-xl border transition-all duration-200 opacity-60"
-                  style={{
-                    background: 'rgba(255, 255, 255, 0.04)',
-                    backdropFilter: 'blur(25px)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)'
-                  }}
-                >
-                  <div className="flex items-start justify-between mb-4">
-                    <div 
-                      className="p-3 rounded-lg"
-                      style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
-                    >
-                      <div className="text-gray-500">
-                        {getCategoryIcon(achievement.category)}
-                      </div>
-                    </div>
-                    {achievement.wpm > 0 && (
+              {lockedAchievements.map((achievement) => {
+                const progress = getProgress(achievement);
+                
+                return (
+                  <div
+                    key={achievement.id}
+                    className="p-6 rounded-xl border transition-all duration-200 opacity-60"
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.04)',
+                      backdropFilter: 'blur(25px)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)'
+                    }}
+                  >
+                    <div className="flex items-start justify-between mb-4">
                       <div 
-                        className="px-2 py-1 rounded-full text-xs font-semibold opacity-50"
-                        style={{ 
-                          backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                          color: 'hsl(var(--muted-foreground))'
-                        }}
+                        className="p-3 rounded-lg"
+                        style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
                       >
-                        {achievement.wpm} WPM
+                        <div className="text-gray-500">
+                          {getCategoryIcon(achievement.category)}
+                        </div>
+                      </div>
+                      {achievement.wpm > 0 && (
+                        <div 
+                          className="px-2 py-1 rounded-full text-xs font-semibold opacity-50"
+                          style={{ 
+                            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                            color: 'hsl(var(--muted-foreground))'
+                          }}
+                        >
+                          {achievement.wpm} WPM
+                        </div>
+                      )}
+                    </div>
+                    
+                    <h3 className="font-bold text-lg mb-2" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                      {achievement.name}
+                    </h3>
+                    <p className="text-sm mb-3" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                      {achievement.subtitle}
+                    </p>
+                    <p className="text-xs mb-4" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                      {achievement.description}
+                    </p>
+
+                    {progress && (
+                      <div className="mt-4">
+                        <div className="flex justify-between text-xs mb-1" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                          <span>Progress</span>
+                          <span>{progress.current}/{progress.max}</span>
+                        </div>
+                        <div className="w-full h-2 rounded-full" style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}>
+                          <div 
+                            className="h-full rounded-full transition-all duration-300"
+                            style={{ 
+                              width: `${Math.min((progress.current / progress.max) * 100, 100)}%`,
+                              background: getAchievementGradient()
+                            }}
+                          />
+                        </div>
                       </div>
                     )}
                   </div>
-                  
-                  <h3 className="font-bold text-lg mb-2" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                    {achievement.name}
-                  </h3>
-                  <p className="text-sm mb-3" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                    {achievement.subtitle}
-                  </p>
-                  <p className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                    {achievement.description}
-                  </p>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}

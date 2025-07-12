@@ -8,6 +8,7 @@ import { AchievementsPage } from '../components/AchievementsPage';
 import { TestNameMenu } from '../components/TestNameMenu';
 import { AchievementNotification } from '../components/AchievementNotification';
 import { Toast } from '../components/Toast';
+import { EasterEggPage } from '../components/EasterEggPage';
 import { useTypingGame } from '../hooks/useTypingGame';
 import { useSoundEffects } from '../hooks/useSoundEffects';
 import { useBackgroundMusic } from '../hooks/useBackgroundMusic';
@@ -17,6 +18,7 @@ const Index = () => {
   const [sideMenuOpen, setSideMenuOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [achievementsOpen, setAchievementsOpen] = useState(false);
+  const [easterEggOpen, setEasterEggOpen] = useState(false);
   const [usersList, setUsersList] = useState<string[]>([]);
   const [currentActiveUser, setCurrentActiveUser] = useState('');
   const [deleteConfirmState, setDeleteConfirmState] = useState(false);
@@ -30,12 +32,87 @@ const Index = () => {
   const [showTestNameMenu, setShowTestNameMenu] = useState(false);
   const [newTestName, setNewTestName] = useState('');
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
+  const [downKeyPresses, setDownKeyPresses] = useState(0);
+  const [showUnlockButton, setShowUnlockButton] = useState(false);
   const typingTestRef = useRef<HTMLDivElement>(null);
 
   const typingGame = useTypingGame();
   const { playKeyboardSound, playErrorSound } = useSoundEffects(soundEnabled);
   const { isPlaying: isBackgroundMusicPlaying, hasMusic } = useBackgroundMusic(backgroundMusicEnabled, musicVolume);
   const { achievements, recentAchievement, checkAchievements, closeAchievementNotification, getUnlockedCount } = useAchievements(currentActiveUser);
+
+  // Cheat code detection
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Cheat code: Ctrl + Alt + Backspace
+      if (e.ctrlKey && e.altKey && e.key === 'Backspace') {
+        e.preventDefault();
+        if (typingGame.testActive && !typingGame.gameOver) {
+          typingGame.setGameOver(true);
+          const cheatCount = Number(localStorage.getItem(`typeRakCheatCodeUsed-${currentActiveUser}`) || 0) + 1;
+          localStorage.setItem(`typeRakCheatCodeUsed-${currentActiveUser}`, String(cheatCount));
+          setToast({ message: 'Test completed via cheat code!', type: 'info' });
+          
+          // Check cheat code achievements
+          const stats = {
+            wpm: typingGame.getCurrentWPM(),
+            errorRate: typingGame.getCurrentErrorRate(),
+            duration,
+            testsCompleted: Number(localStorage.getItem(`typeRakTestsCompleted-${currentActiveUser}`) || 0),
+            perfectTests: Number(localStorage.getItem(`typeRakPerfectTests-${currentActiveUser}`) || 0),
+            unlockedAchievements: getUnlockedCount(),
+            dailyTypingTime: Number(localStorage.getItem(`typeRakDailyTypingTime-${currentActiveUser}`) || 0),
+            dailyStreak: Number(localStorage.getItem(`typeRakDailyStreak-${currentActiveUser}`) || 0),
+            cleanSessions: Number(localStorage.getItem(`typeRakCleanSessions-${currentActiveUser}`) || 0),
+            daysSinceLastVisit: Number(localStorage.getItem(`typeRakDaysSinceLastVisit-${currentActiveUser}`) || 0),
+            totalVisitedDays: Number(localStorage.getItem(`typeRakTotalVisitedDays-${currentActiveUser}`) || 0),
+            daysSinceFirstLogin: Number(localStorage.getItem(`typeRakDaysSinceFirstLogin-${currentActiveUser}`) || 0),
+            cheatCodeUsed: cheatCount,
+            foundEasterEgg: localStorage.getItem(`typeRakFoundEasterEgg-${currentActiveUser}`) === 'true',
+            maxWpmEver: Number(localStorage.getItem(`typeRakMaxWpm-${currentActiveUser}`) || 0)
+          };
+          checkAchievements(stats);
+        }
+      }
+
+      // Down arrow detection for easter egg
+      if (e.key === 'ArrowDown') {
+        const canScroll = document.documentElement.scrollHeight > document.documentElement.clientHeight;
+        if (!canScroll) {
+          setDownKeyPresses(prev => {
+            const newCount = prev + 1;
+            if (newCount >= 5) {
+              setShowUnlockButton(true);
+              return 0;
+            }
+            return newCount;
+          });
+        }
+      }
+    };
+
+    // Scroll detection for easter egg
+    const handleScroll = () => {
+      const canScroll = document.documentElement.scrollHeight > document.documentElement.clientHeight;
+      if (!canScroll) {
+        setDownKeyPresses(prev => {
+          const newCount = prev + 1;
+          if (newCount >= 5) {
+            setShowUnlockButton(true);
+            return 0;
+          }
+          return newCount;
+        });
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('scroll', handleScroll);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('scroll', handleScroll);
+    };
+  }, [typingGame, currentActiveUser, duration, checkAchievements, getUnlockedCount]);
 
   useEffect(() => {
     document.body.className = document.body.className.replace(/cursor-\S+/g, '').trim();
@@ -55,8 +132,14 @@ const Index = () => {
 
   useEffect(() => {
     if (typingGame.gameOver) {
+      const currentWpm = typingGame.getCurrentWPM();
+      const maxWpm = Number(localStorage.getItem(`typeRakMaxWpm-${currentActiveUser}`) || 0);
+      if (currentWpm > maxWpm) {
+        localStorage.setItem(`typeRakMaxWpm-${currentActiveUser}`, String(currentWpm));
+      }
+
       const stats = {
-        wpm: typingGame.getCurrentWPM(),
+        wpm: currentWpm,
         errorRate: typingGame.getCurrentErrorRate(),
         duration,
         testsCompleted: Number(localStorage.getItem(`typeRakTestsCompleted-${currentActiveUser}`) || 0) + 1,
@@ -65,7 +148,12 @@ const Index = () => {
         dailyTypingTime: Number(localStorage.getItem(`typeRakDailyTypingTime-${currentActiveUser}`) || 0) + (duration / 60),
         dailyStreak: Number(localStorage.getItem(`typeRakDailyStreak-${currentActiveUser}`) || 0),
         cleanSessions: Number(localStorage.getItem(`typeRakCleanSessions-${currentActiveUser}`) || 0),
-        daysSinceLastVisit: Number(localStorage.getItem(`typeRakDaysSinceLastVisit-${currentActiveUser}`) || 0)
+        daysSinceLastVisit: Number(localStorage.getItem(`typeRakDaysSinceLastVisit-${currentActiveUser}`) || 0),
+        totalVisitedDays: Number(localStorage.getItem(`typeRakTotalVisitedDays-${currentActiveUser}`) || 0),
+        daysSinceFirstLogin: Number(localStorage.getItem(`typeRakDaysSinceFirstLogin-${currentActiveUser}`) || 0),
+        cheatCodeUsed: Number(localStorage.getItem(`typeRakCheatCodeUsed-${currentActiveUser}`) || 0),
+        foundEasterEgg: localStorage.getItem(`typeRakFoundEasterEgg-${currentActiveUser}`) === 'true',
+        maxWpmEver: Math.max(currentWpm, maxWpm)
       };
       checkAchievements(stats);
 
@@ -123,8 +211,35 @@ const Index = () => {
   }, [musicVolume]);
 
   const handleIntroductionComplete = () => {
-    // Introduction completion logic if needed
     console.log('Introduction completed');
+  };
+
+  const handleUnlockCuriosity = () => {
+    setEasterEggOpen(true);
+    setShowUnlockButton(false);
+    
+    // Mark easter egg as found
+    localStorage.setItem(`typeRakFoundEasterEgg-${currentActiveUser}`, 'true');
+    
+    // Check easter egg achievement
+    const stats = {
+      wpm: 0,
+      errorRate: 0,
+      duration: 0,
+      testsCompleted: Number(localStorage.getItem(`typeRakTestsCompleted-${currentActiveUser}`) || 0),
+      perfectTests: Number(localStorage.getItem(`typeRakPerfectTests-${currentActiveUser}`) || 0),
+      unlockedAchievements: getUnlockedCount(),
+      dailyTypingTime: Number(localStorage.getItem(`typeRakDailyTypingTime-${currentActiveUser}`) || 0),
+      dailyStreak: Number(localStorage.getItem(`typeRakDailyStreak-${currentActiveUser}`) || 0),
+      cleanSessions: Number(localStorage.getItem(`typeRakCleanSessions-${currentActiveUser}`) || 0),
+      daysSinceLastVisit: Number(localStorage.getItem(`typeRakDaysSinceLastVisit-${currentActiveUser}`) || 0),
+      totalVisitedDays: Number(localStorage.getItem(`typeRakTotalVisitedDays-${currentActiveUser}`) || 0),
+      daysSinceFirstLogin: Number(localStorage.getItem(`typeRakDaysSinceFirstLogin-${currentActiveUser}`) || 0),
+      cheatCodeUsed: Number(localStorage.getItem(`typeRakCheatCodeUsed-${currentActiveUser}`) || 0),
+      foundEasterEgg: true,
+      maxWpmEver: Number(localStorage.getItem(`typeRakMaxWpm-${currentActiveUser}`) || 0)
+    };
+    checkAchievements(stats);
   };
 
   const switchUser = (username: string) => {
@@ -209,7 +324,6 @@ const Index = () => {
 
   const handleTestNameConfirm = () => {
     if (newTestName.trim()) {
-      // Handle test name confirmation
       setShowTestNameMenu(false);
       setNewTestName('');
     }
@@ -220,8 +334,12 @@ const Index = () => {
     setNewTestName('');
   };
 
+  if (easterEggOpen) {
+    return <EasterEggPage theme={theme} onGoBack={() => setEasterEggOpen(false)} />;
+  }
+
   return (
-    <div className="min-h-screen text-foreground font-sans transition-all duration-300 ease-in-out" style={{ fontFamily: getFontFamilyString(fontStyle), fontSize: `${fontSize}%` }}>
+    <div className="min-h-screen text-foreground font-sans transition-all duration-300 ease-in-out main-content" style={{ fontFamily: getFontFamilyString(fontStyle), fontSize: `${fontSize}%` }}>
       <Toast message={toast?.message || ''} type={toast?.type || 'info'} onClose={() => setToast(null)} show={!!toast} />
       {recentAchievement && (
         <AchievementNotification
@@ -232,13 +350,24 @@ const Index = () => {
         />
       )}
 
+      {showUnlockButton && (
+        <button
+          onClick={handleUnlockCuriosity}
+          className="unlock-curiosity-btn"
+        >
+          Unlock Curiosity
+        </button>
+      )}
+
       <header className="flex items-center justify-between p-4 border-b border-muted">
         <div className="flex items-center gap-2">
           <button onClick={() => setSideMenuOpen(true)} className="p-2 rounded-md hover:bg-accent">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-menu"><line x1="4" x2="20" y1="12" y2="12" /><line x1="4" x2="20" y1="6" y2="6" /><line x1="4" x2="20" y1="18" y2="18" /></svg>
           </button>
           <h1 className="text-2xl font-bold" style={{
-            background: 'linear-gradient(135deg, #c471f2 0%, #f76cc6 100%)',
+            background: theme === 'cotton-candy-glow' 
+              ? 'linear-gradient(135deg, #c471f2 0%, #f76cc6 100%)'
+              : 'linear-gradient(135deg, #c471f2 0%, #f76cc6 100%)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text'
@@ -278,14 +407,12 @@ const Index = () => {
               chars={typingGame.chars}
               theme={theme}
               onKeyDown={(e: KeyboardEvent) => {
-                // Handle key press logic here
                 if (!typingGame.testActive && !typingGame.gameOver) {
                   typingGame.setTestActive(true);
                   typingGame.startTimer(duration);
                   typingGame.renderText(typingGame.generateWords(200));
                 }
                 
-                // Play sound effects
                 playKeyboardSound();
               }}
               fontSize={fontSize}
