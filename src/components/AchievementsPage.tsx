@@ -1,286 +1,332 @@
 
 import React from 'react';
-import { ArrowLeft, Trophy, Target, Zap, Star, Gamepad, Heart } from 'lucide-react';
-
-interface Achievement {
-  id: string;
-  name: string;
-  subtitle: string;
-  description: string;
-  category: string;
-  wpm: number;
-  unlocked: boolean;
-  unlockedAt?: string;
-  progress?: number;
-  maxProgress?: number;
-  getProgress?: (stats: any) => { current: number; max: number };
-}
+import { Trophy, Award, Target, Zap, Calendar, Smile } from 'lucide-react';
+import { Achievement } from '../hooks/useAchievements';
 
 interface AchievementsPageProps {
   achievements: Achievement[];
-  onClose?: () => void;
-  onBack?: () => void;
-  theme?: string;
-  getButtonColor?: () => string;
+  onBack: () => void;
+  theme: string;
+  getButtonColor: () => string;
 }
+
+const CategoryIcon = ({ category }: { category: string }) => {
+  switch (category) {
+    case 'speed': return <Zap size={20} />;
+    case 'accuracy': return <Target size={20} />;
+    case 'consistency': return <Calendar size={20} />;
+    case 'milestone': return <Trophy size={20} />;
+    case 'fun': return <Smile size={20} />;
+    default: return <Award size={20} />;
+  }
+};
+
+const CircularProgress = ({ progress, maxProgress, size = 60 }: { progress: number; maxProgress: number; size?: number }) => {
+  const percentage = maxProgress > 0 ? (progress / maxProgress) * 100 : 0;
+  const circumference = 2 * Math.PI * (size / 2 - 4);
+  const strokeDashoffset = circumference - (percentage / 100) * circumference;
+
+  return (
+    <div className="relative" style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="transform -rotate-90">
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={size / 2 - 4}
+          stroke="rgba(255, 255, 255, 0.2)"
+          strokeWidth="3"
+          fill="transparent"
+        />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={size / 2 - 4}
+          stroke="#ffd700"
+          strokeWidth="3"
+          fill="transparent"
+          strokeDasharray={circumference}
+          strokeDashoffset={strokeDashoffset}
+          strokeLinecap="round"
+          style={{ transition: 'stroke-dashoffset 0.5s ease-in-out' }}
+        />
+      </svg>
+      <div className="absolute inset-0 flex items-center justify-center">
+        <span className="text-xs font-bold text-white">
+          {Math.round(percentage)}%
+        </span>
+      </div>
+    </div>
+  );
+};
 
 export const AchievementsPage: React.FC<AchievementsPageProps> = ({
   achievements,
-  onClose,
   onBack,
-  theme = 'cosmic-nebula',
-  getButtonColor = () => '#a3b18a'
+  theme,
+  getButtonColor
 }) => {
-  const handleBack = () => {
-    if (onBack) onBack();
-    if (onClose) onClose();
+  const categories = ['speed', 'accuracy', 'consistency', 'milestone', 'fun'];
+  const totalUnlocked = achievements.filter(a => a.unlocked).length;
+  const totalAchievements = achievements.length;
+
+  const getCategoryAchievements = (category: string) => {
+    return achievements.filter(a => a.category === category);
   };
 
-  const getCategoryIcon = (category: string) => {
-    switch (category) {
-      case 'speed': return <Zap size={20} />;
-      case 'accuracy': return <Target size={20} />;
-      case 'milestone': return <Trophy size={20} />;
-      case 'consistency': return <Heart size={20} />;
-      case 'fun': return <Gamepad size={20} />;
-      default: return <Star size={20} />;
-    }
-  };
-
-  const getCategoryColor = (category: string) => {
-    switch (category) {
-      case 'speed': return '#ef4444';
-      case 'accuracy': return '#10b981';
-      case 'milestone': return '#f59e0b';
-      case 'consistency': return '#8b5cf6';
-      case 'fun': return '#ec4899';
-      default: return getButtonColor();
-    }
-  };
-
-  const getAchievementGradient = () => {
-    return 'linear-gradient(135deg, #f7ba2c 0%, #f8a902 100%)';
-  };
-
-  const getProgress = (achievement: Achievement) => {
-    if (!achievement.getProgress) return null;
-    
-    // Mock stats for progress calculation - in real app this would come from props
-    const mockStats = {
-      testsCompleted: Number(localStorage.getItem('typeRakTestsCompleted') || 0),
-      maxWpmEver: Number(localStorage.getItem('typeRakMaxWpm') || 0),
-      dailyTypingTime: Number(localStorage.getItem('typeRakDailyTypingTime') || 0),
-      dailyStreak: Number(localStorage.getItem('typeRakDailyStreak') || 0),
-      totalVisitedDays: Number(localStorage.getItem('typeRakTotalVisitedDays') || 0),
-      daysSinceFirstLogin: Number(localStorage.getItem('typeRakDaysSinceFirstLogin') || 0),
-      cheatCodeUsed: Number(localStorage.getItem('typeRakCheatCodeUsed') || 0),
-      foundEasterEgg: localStorage.getItem('typeRakFoundEasterEgg') === 'true',
-      perfectTests: Number(localStorage.getItem('typeRakPerfectTests') || 0),
-      unlockedAchievements: achievements.filter(a => a.unlocked).length
+  const getCategoryProgress = (category: string) => {
+    const categoryAchievements = getCategoryAchievements(category);
+    const unlockedCount = categoryAchievements.filter(a => a.unlocked).length;
+    return {
+      unlocked: unlockedCount,
+      total: categoryAchievements.length,
+      percentage: Math.round((unlockedCount / categoryAchievements.length) * 100)
     };
-    
-    return achievement.getProgress(mockStats);
   };
-
-  const unlockedAchievements = achievements.filter(a => a.unlocked);
-  const lockedAchievements = achievements.filter(a => !a.unlocked);
 
   return (
-    <div 
-      className="achievements-page min-h-screen p-6"
-      style={{ 
-        backgroundColor: 'hsl(var(--background))',
-        color: 'hsl(var(--foreground))'
-      }}
-      data-achievements="true"
-    >
-      <div className="max-w-6xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <button
-            onClick={handleBack}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors"
-            style={{
-              background: 'rgba(255, 255, 255, 0.08)',
-              backdropFilter: 'blur(25px)',
-              border: '1px solid rgba(255, 255, 255, 0.15)',
-              color: 'hsl(var(--foreground))'
-            }}
-          >
-            <ArrowLeft size={20} />
-            Back
-          </button>
-          
-          <div className="text-center">
-            <h1 className="text-4xl font-bold mb-2" style={{ color: 'hsl(var(--foreground))' }}>
-              Achievements
-            </h1>
-            <p className="opacity-70" style={{ color: 'hsl(var(--muted-foreground))' }}>
-              {unlockedAchievements.length} of {achievements.length} unlocked
-            </p>
-          </div>
-          
-          <div></div>
-        </div>
-
-        {/* Progress Bar */}
-        <div className="mb-8">
-          <div className="w-full h-3 rounded-full mb-2" style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}>
-            <div 
-              className="h-full rounded-full transition-all duration-500"
-              style={{ 
-                width: `${(unlockedAchievements.length / achievements.length) * 100}%`,
-                background: getAchievementGradient()
-              }}
-            />
-          </div>
-          <p className="text-center text-sm opacity-70" style={{ color: 'hsl(var(--muted-foreground))' }}>
-            Progress: {Math.round((unlockedAchievements.length / achievements.length) * 100)}%
+    <div style={{
+      minHeight: '100vh',
+      padding: '20px',
+      color: 'white'
+    }}>
+      {/* Header */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: '30px'
+      }}>
+        <div>
+          <h1 style={{
+            fontSize: '2.5rem',
+            fontWeight: 'bold',
+            margin: 0,
+            backgroundImage: theme === 'midnight-black' ? 
+              'linear-gradient(90deg, #c559f7 0%, #7f59f7 100%)' :
+              theme === 'cotton-candy-glow' ?
+              'linear-gradient(90deg, #fc03df 0%, #ff3be8 100%)' :
+              'linear-gradient(45deg, #b109d6 0%, #0c6dc2 100%)',
+            WebkitBackgroundClip: 'text',
+            backgroundClip: 'text',
+            WebkitTextFillColor: 'transparent'
+          }}>
+            Achievements
+          </h1>
+          <p style={{
+            fontSize: '1.1rem',
+            opacity: 0.8,
+            margin: '10px 0 0 0'
+          }}>
+            Your Typing Journey Progress
           </p>
         </div>
+        <button
+          onClick={onBack}
+          style={{
+            background: getButtonColor(),
+            color: 'white',
+            border: 'none',
+            padding: '12px 24px',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            fontSize: '1rem',
+            backdropFilter: 'blur(10px)'
+          }}
+        >
+          Back to Dashboard
+        </button>
+      </div>
 
-        {/* Unlocked Achievements */}
-        {unlockedAchievements.length > 0 && (
-          <div className="mb-12">
-            <h2 className="text-2xl font-semibold mb-6 flex items-center gap-2" style={{ color: 'hsl(var(--foreground))' }}>
-              <Trophy size={24} style={{ color: '#f7ba2c' }} />
-              Unlocked ({unlockedAchievements.length})
+      {/* Overall Progress */}
+      <div style={{
+        background: 'rgba(255, 255, 255, 0.1)',
+        backdropFilter: 'blur(20px)',
+        border: '1px solid rgba(255, 255, 255, 0.2)',
+        borderRadius: '16px',
+        padding: '30px',
+        marginBottom: '30px',
+        textAlign: 'center'
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+          <CircularProgress progress={totalUnlocked} maxProgress={totalAchievements} size={100} />
+        </div>
+        <h2 style={{ margin: '0 0 10px 0', fontSize: '1.5rem' }}>
+          Overall Progress
+        </h2>
+        <p style={{ margin: 0, fontSize: '1.1rem', opacity: 0.8 }}>
+          {totalUnlocked} of {totalAchievements} achievements unlocked
+        </p>
+      </div>
+
+      {/* Category Overview */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+        gap: '20px',
+        marginBottom: '40px'
+      }}>
+        {categories.map(category => {
+          const progress = getCategoryProgress(category);
+          return (
+            <div key={category} style={{
+              background: 'rgba(255, 255, 255, 0.1)',
+              backdropFilter: 'blur(20px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              borderRadius: '12px',
+              padding: '20px',
+              textAlign: 'center'
+            }}>
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'center', 
+                marginBottom: '10px',
+                color: '#ffd700'
+              }}>
+                <CategoryIcon category={category} />
+              </div>
+              <h3 style={{ 
+                margin: '0 0 10px 0', 
+                textTransform: 'capitalize',
+                fontSize: '1.1rem'
+              }}>
+                {category}
+              </h3>
+              <CircularProgress 
+                progress={progress.unlocked} 
+                maxProgress={progress.total} 
+                size={50} 
+              />
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Achievement Categories */}
+      {categories.map(category => {
+        const categoryAchievements = getCategoryAchievements(category);
+        if (categoryAchievements.length === 0) return null;
+
+        return (
+          <div key={category} style={{ marginBottom: '40px' }}>
+            <h2 style={{
+              fontSize: '1.8rem',
+              fontWeight: 'bold',
+              margin: '0 0 20px 0',
+              textTransform: 'capitalize',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px'
+            }}>
+              <CategoryIcon category={category} />
+              {category} Achievements
             </h2>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {unlockedAchievements.map((achievement) => (
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
+              gap: '20px'
+            }}>
+              {categoryAchievements.map(achievement => (
                 <div
                   key={achievement.id}
-                  className="p-6 rounded-xl border transition-all duration-200 hover:scale-105"
                   style={{
-                    background: getAchievementGradient(),
-                    border: `1px solid #f8a902`,
-                    boxShadow: `0 4px 20px rgba(247, 186, 44, 0.3)`,
-                    color: '#000'
+                    background: achievement.unlocked ? 
+                      'rgba(255, 215, 0, 0.15)' : 
+                      'rgba(255, 255, 255, 0.08)',
+                    backdropFilter: 'blur(20px)',
+                    border: achievement.unlocked ? 
+                      '1px solid rgba(255, 215, 0, 0.3)' : 
+                      '1px solid rgba(255, 255, 255, 0.15)',
+                    borderRadius: '12px',
+                    padding: '20px',
+                    position: 'relative',
+                    opacity: achievement.unlocked ? 1 : 0.7,
+                    transform: achievement.unlocked ? 'scale(1)' : 'scale(0.98)',
+                    transition: 'all 0.3s ease'
                   }}
                 >
-                  <div className="flex items-start justify-between mb-4">
-                    <div 
-                      className="p-3 rounded-lg"
-                      style={{ backgroundColor: 'rgba(0, 0, 0, 0.1)' }}
-                    >
-                      <div style={{ color: '#000' }}>
-                        {getCategoryIcon(achievement.category)}
-                      </div>
-                    </div>
-                    {achievement.wpm > 0 && (
-                      <div 
-                        className="px-2 py-1 rounded-full text-xs font-semibold"
-                        style={{ 
-                          backgroundColor: 'rgba(0, 0, 0, 0.2)',
-                          color: '#000'
-                        }}
-                      >
-                        {achievement.wpm} WPM
-                      </div>
-                    )}
+                  {/* Achievement Icon */}
+                  <div style={{
+                    position: 'absolute',
+                    top: '15px',
+                    right: '15px',
+                    color: achievement.unlocked ? '#ffd700' : 'rgba(255, 255, 255, 0.4)'
+                  }}>
+                    <Trophy size={24} />
                   </div>
-                  
-                  <h3 className="font-bold text-lg mb-2" style={{ color: '#000' }}>
-                    {achievement.name}
-                  </h3>
-                  <p className="text-sm mb-3 opacity-80" style={{ color: '#000' }}>
-                    {achievement.subtitle}
-                  </p>
-                  <p className="text-xs opacity-60" style={{ color: '#000' }}>
-                    {achievement.description}
-                  </p>
-                  
-                  {achievement.unlockedAt && (
-                    <div className="mt-4 pt-3 border-t border-black/20">
-                      <p className="text-xs opacity-50" style={{ color: '#000' }}>
-                        Unlocked: {new Date(achievement.unlockedAt).toLocaleDateString()}
-                      </p>
+
+                  {/* Progress Circle for incomplete achievements */}
+                  {!achievement.unlocked && achievement.maxProgress && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '15px',
+                      left: '15px'
+                    }}>
+                      <CircularProgress 
+                        progress={achievement.progress || 0} 
+                        maxProgress={achievement.maxProgress} 
+                        size={40} 
+                      />
                     </div>
                   )}
+
+                  <div style={{ 
+                    marginTop: achievement.maxProgress && !achievement.unlocked ? '50px' : '0'
+                  }}>
+                    <h3 style={{
+                      margin: '0 0 8px 0',
+                      fontSize: '1.2rem',
+                      fontWeight: 'bold',
+                      color: achievement.unlocked ? '#ffd700' : 'white'
+                    }}>
+                      {achievement.name}
+                    </h3>
+                    
+                    <p style={{
+                      margin: '0 0 10px 0',
+                      fontSize: '0.9rem',
+                      opacity: 0.8,
+                      fontStyle: 'italic'
+                    }}>
+                      {achievement.subtitle}
+                    </p>
+                    
+                    <p style={{
+                      margin: 0,
+                      fontSize: '0.85rem',
+                      opacity: 0.7
+                    }}>
+                      {achievement.description}
+                    </p>
+
+                    {/* Progress text for incomplete achievements */}
+                    {!achievement.unlocked && achievement.maxProgress && (
+                      <p style={{
+                        margin: '10px 0 0 0',
+                        fontSize: '0.8rem',
+                        opacity: 0.6
+                      }}>
+                        Progress: {achievement.progress || 0} / {achievement.maxProgress}
+                      </p>
+                    )}
+
+                    {/* Unlock date for completed achievements */}
+                    {achievement.unlocked && achievement.unlockedAt && (
+                      <p style={{
+                        margin: '10px 0 0 0',
+                        fontSize: '0.75rem',
+                        opacity: 0.6
+                      }}>
+                        Unlocked: {new Date(achievement.unlockedAt).toLocaleDateString()}
+                      </p>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
           </div>
-        )}
-
-        {/* Locked Achievements */}
-        {lockedAchievements.length > 0 && (
-          <div>
-            <h2 className="text-2xl font-semibold mb-6 flex items-center gap-2" style={{ color: 'hsl(var(--foreground))' }}>
-              <Star size={24} className="opacity-50" />
-              Locked ({lockedAchievements.length})
-            </h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {lockedAchievements.map((achievement) => {
-                const progress = getProgress(achievement);
-                
-                return (
-                  <div
-                    key={achievement.id}
-                    className="p-6 rounded-xl border transition-all duration-200 opacity-60"
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.04)',
-                      backdropFilter: 'blur(25px)',
-                      border: '1px solid rgba(255, 255, 255, 0.1)'
-                    }}
-                  >
-                    <div className="flex items-start justify-between mb-4">
-                      <div 
-                        className="p-3 rounded-lg"
-                        style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
-                      >
-                        <div className="text-gray-500">
-                          {getCategoryIcon(achievement.category)}
-                        </div>
-                      </div>
-                      {achievement.wpm > 0 && (
-                        <div 
-                          className="px-2 py-1 rounded-full text-xs font-semibold opacity-50"
-                          style={{ 
-                            backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                            color: 'hsl(var(--muted-foreground))'
-                          }}
-                        >
-                          {achievement.wpm} WPM
-                        </div>
-                      )}
-                    </div>
-                    
-                    <h3 className="font-bold text-lg mb-2" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                      {achievement.name}
-                    </h3>
-                    <p className="text-sm mb-3" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                      {achievement.subtitle}
-                    </p>
-                    <p className="text-xs mb-4" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                      {achievement.description}
-                    </p>
-
-                    {progress && (
-                      <div className="mt-4">
-                        <div className="flex justify-between text-xs mb-1" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                          <span>Progress</span>
-                          <span>{progress.current}/{progress.max}</span>
-                        </div>
-                        <div className="w-full h-2 rounded-full" style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}>
-                          <div 
-                            className="h-full rounded-full transition-all duration-300"
-                            style={{ 
-                              width: `${Math.min((progress.current / progress.max) * 100, 100)}%`,
-                              background: getAchievementGradient()
-                            }}
-                          />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-      </div>
+        );
+      })}
     </div>
   );
 };

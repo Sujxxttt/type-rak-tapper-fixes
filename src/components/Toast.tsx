@@ -4,13 +4,11 @@ import { X } from 'lucide-react';
 
 interface ToastProps {
   message: string;
-  type?: 'success' | 'error' | 'info';
   onClose: () => void;
-  show?: boolean;
 }
 
-export const Toast: React.FC<ToastProps> = ({ message, type = 'info', onClose, show = true }) => {
-  if (!message || !show) return null;
+export const Toast: React.FC<ToastProps> = ({ message, onClose }) => {
+  if (!message) return null;
 
   return (
     <div style={{

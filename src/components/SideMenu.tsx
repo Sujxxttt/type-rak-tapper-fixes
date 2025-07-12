@@ -1,5 +1,6 @@
+
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Play, Pause, SkipForward, SkipBack, Upload, Music } from 'lucide-react';
+import { X } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,7 +13,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Switch } from '@/components/ui/switch';
 import { CustomDurationSlider } from './CustomDurationSlider';
-import { useMusicPlayer } from '../hooks/useMusicPlayer';
 
 interface SideMenuProps {
   sideMenuOpen: boolean;
@@ -72,69 +72,31 @@ export const SideMenu: React.FC<SideMenuProps> = ({
   const sideMenuRef = useRef<HTMLDivElement>(null);
   const [showCustomDuration, setShowCustomDuration] = useState(false);
   const [cursorStyle, setCursorStyle] = useState(localStorage.getItem('typeRakCursor') || 'blue');
-  const [musicEnabled, setMusicEnabled] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const {
-    isPlaying,
-    currentTrack,
-    currentTime,
-    duration: trackDuration,
-    play,
-    pause,
-    nextTrack,
-    previousTrack,
-    seek,
-    uploadTrack,
-    hasMusic: hasTracks
-  } = useMusicPlayer(musicEnabled, musicVolume);
 
   useEffect(() => {
-    if (musicEnabled) {
-      play();
-    } else {
-      pause();
+    const handleClickOutside = (event: MouseEvent) => {
+      if (sideMenuRef.current && !sideMenuRef.current.contains(event.target as Node)) {
+        const dropdowns = document.querySelectorAll('[data-radix-popper-content-wrapper]');
+        let isClickInsideDropdown = false;
+        dropdowns.forEach(dropdown => {
+          if (dropdown.contains(event.target as Node)) {
+            isClickInsideDropdown = true;
+          }
+        });
+        if (!isClickInsideDropdown) {
+          setSideMenuOpen(false);
+        }
+      }
+    };
+    if (sideMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
     }
-  }, [musicEnabled]);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [sideMenuOpen, setSideMenuOpen]);
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file && file.type.startsWith('audio/')) {
-      uploadTrack(file);
-    }
-  };
-
-  const formatTime = (time: number) => {
-    const minutes = Math.floor(time / 60);
-    const seconds = Math.floor(time % 60);
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-  };
-
-  const getDurationLabel = () => {
-    if (showCustomDuration) return 'Custom';
-    switch (duration) {
-      case 30: return '30 seconds';
-      case 60: return '1 minute';
-      case 120: return '2 minutes';
-      case 180: return '3 minutes';
-      case 300: return '5 minutes';
-      case 600: return '10 minutes';
-      case 1800: return '30 minutes';
-      case 3600: return '60 minutes';
-      default: return `${duration} seconds`;
-    }
-  };
-
-  const handleDurationChange = (value: string) => {
-    if (value === 'custom') {
-      setShowCustomDuration(true);
-    } else {
-      setShowCustomDuration(false);
-      setDuration(Number(value));
-    }
-  };
-
-  const fontSizes = [75, 80, 85, 90, 95, 100, 105, 110, 115, 120, 125, 130];
+  if (!sideMenuOpen) return null;
 
   const getFontFamilyString = (font: string) => {
     switch (font) {
@@ -149,32 +111,56 @@ export const SideMenu: React.FC<SideMenuProps> = ({
     }
   };
 
-  const cursors = [
-    { value: 'blue', label: 'Arrow Cursor (Blue)' },
-    { value: 'black', label: 'Arrow Cursor (Black)' },
-    { value: 'pink', label: 'Arrow Cursor (Pink)' },
-    { value: 'white', label: 'Arrow Cursor (White)' }
-  ];
+  const handleDurationChange = (value: string) => {
+    if (value === 'custom') {
+      setShowCustomDuration(true);
+    } else {
+      setShowCustomDuration(false);
+      setDuration(Number(value));
+    }
+  };
 
-  const handleCursorChange = (value: string) => {
-    setCursorStyle(value);
-    localStorage.setItem('typeRakCursor', value);
+  const getDurationLabel = () => {
+    if (showCustomDuration) return 'Custom';
+    if (duration === 30) return '30 seconds';
+    if (duration === 60) return '1 minute';
+    if (duration === 120) return '2 minutes';
+    if (duration === 180) return '3 minutes';
+    if (duration === 300) return '5 minutes';
+    if (duration === 600) return '10 minutes';
+    if (duration === 1800) return '30 minutes';
+    if (duration === 3600) return '60 minutes';
+    return `${duration} seconds`;
+  };
+
+  const handleCursorChange = (cursor: string) => {
+    setCursorStyle(cursor);
+    localStorage.setItem('typeRakCursor', cursor);
+    
     document.body.className = document.body.className.replace(/cursor-\S+/g, '').trim();
-    document.body.classList.add(`cursor-${value}`);
+    document.body.classList.add(`cursor-${cursor}`);
   };
 
-  const handleCheckThisOut = () => {
-    window.open('https://youtu.be/dQw4w9WgXcQ', '_blank');
+  const dropdownContentStyle: React.CSSProperties = {
+    background: 'rgba(255, 255, 255, 0.08)',
+    backdropFilter: 'blur(25px)',
+    border: '1px solid rgba(255, 255, 255, 0.15)',
+    color: 'white',
+    borderRadius: '15px',
+    zIndex: 1003,
+    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
+    maxHeight: '300px',
+    overflowY: 'auto'
   };
 
-  const dropdownTriggerStyle = {
+  const dropdownTriggerStyle: React.CSSProperties = {
     width: '100%',
     padding: '12px 16px',
     borderRadius: '15px',
     border: '1px solid rgba(255, 255, 255, 0.2)',
     background: 'rgba(255, 255, 255, 0.08)',
     color: 'white',
-    textAlign: 'left' as const,
+    textAlign: 'left',
     cursor: 'pointer',
     display: 'flex',
     justifyContent: 'space-between',
@@ -184,7 +170,19 @@ export const SideMenu: React.FC<SideMenuProps> = ({
     backdropFilter: 'blur(15px)'
   };
 
-  if (!sideMenuOpen) return null;
+  const fontSizes = [80, 90, 100, 110, 120, 130, 140, 150, 175, 200];
+  
+  const cursors = [
+    { value: 'blue', label: 'Arrow Cursor (Blue)' },
+    { value: 'black', label: 'Arrow Cursor (Black)' },
+    { value: 'pink', label: 'Arrow Cursor (Pink)' },
+    { value: 'white', label: 'Arrow Cursor (White)' }
+  ];
+
+  const handleCheckThisOut = () => {
+    window.open('https://raktherock.github.io/Rak/', '_blank');
+    setSideMenuOpen(false);
+  };
 
   return (
     <>
@@ -246,186 +244,6 @@ export const SideMenu: React.FC<SideMenuProps> = ({
 
         <h3 style={{ marginBottom: '2rem', paddingTop: '1rem', fontSize: '2rem', fontWeight: '700' }}>Settings</h3>
 
-        {/* Music Player Section */}
-        <div style={{ marginBottom: '1.5rem' }}>
-          <h4 style={{ marginBottom: '0.5rem', fontSize: '0.8rem', fontWeight: '600', opacity: 0.8 }}>Music Player:</h4>
-          
-          <div style={{ 
-            '--switch-checked-color': getButtonColor(),
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'space-between', 
-            background: 'rgba(255, 255, 255, 0.08)', 
-            padding: '12px 16px', 
-            borderRadius: '15px',
-            fontSize: '0.9rem',
-            marginBottom: '12px',
-            backdropFilter: 'blur(15px)',
-            border: '1px solid rgba(255, 255, 255, 0.15)'
-          } as React.CSSProperties}>
-            <span>{musicEnabled ? 'Enabled' : 'Disabled'}</span>
-            <Switch 
-              checked={musicEnabled} 
-              onCheckedChange={setMusicEnabled}
-              className="data-[state=checked]:bg-[--switch-checked-color]"
-            />
-          </div>
-
-          {musicEnabled && (
-            <div style={{
-              background: 'rgba(255, 255, 255, 0.08)',
-              padding: '16px',
-              borderRadius: '15px',
-              backdropFilter: 'blur(15px)',
-              border: '1px solid rgba(255, 255, 255, 0.15)',
-              marginBottom: '12px'
-            }}>
-              {/* Upload Button */}
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="audio/*"
-                onChange={handleFileUpload}
-                style={{ display: 'none' }}
-              />
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                style={{
-                  width: '100%',
-                  padding: '8px 12px',
-                  marginBottom: '12px',
-                  borderRadius: '10px',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  color: 'white',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px',
-                  cursor: 'pointer',
-                  fontSize: '0.8rem'
-                }}
-              >
-                <Upload size={16} />
-                Upload Music
-              </button>
-
-              {/* Current Track */}
-              {currentTrack && (
-                <div style={{ marginBottom: '12px', textAlign: 'center' }}>
-                  <div style={{ fontSize: '0.7rem', opacity: 0.7, marginBottom: '4px' }}>Now Playing</div>
-                  <div style={{ fontSize: '0.8rem', fontWeight: '500' }}>{currentTrack.name}</div>
-                </div>
-              )}
-
-              {/* Progress Bar */}
-              {currentTrack && (
-                <div style={{ marginBottom: '12px' }}>
-                  <input
-                    type="range"
-                    min="0"
-                    max={trackDuration}
-                    value={currentTime}
-                    onChange={(e) => seek(Number(e.target.value))}
-                    style={{
-                      width: '100%',
-                      height: '4px',
-                      borderRadius: '2px',
-                      background: 'rgba(255, 255, 255, 0.2)',
-                      outline: 'none',
-                      cursor: 'pointer'
-                    }}
-                  />
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.6rem', opacity: 0.7, marginTop: '4px' }}>
-                    <span>{formatTime(currentTime)}</span>
-                    <span>{formatTime(trackDuration)}</span>
-                  </div>
-                </div>
-              )}
-
-              {/* Controls */}
-              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <button
-                  onClick={previousTrack}
-                  disabled={!hasTracks}
-                  style={{
-                    background: 'rgba(255, 255, 255, 0.1)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    borderRadius: '50%',
-                    width: '32px',
-                    height: '32px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: hasTracks ? 'pointer' : 'not-allowed',
-                    opacity: hasTracks ? 1 : 0.5
-                  }}
-                >
-                  <SkipBack size={14} />
-                </button>
-                
-                <button
-                  onClick={isPlaying ? pause : play}
-                  disabled={!hasTracks}
-                  style={{
-                    background: 'rgba(255, 255, 255, 0.1)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    borderRadius: '50%',
-                    width: '40px',
-                    height: '40px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: hasTracks ? 'pointer' : 'not-allowed',
-                    opacity: hasTracks ? 1 : 0.5
-                  }}
-                >
-                  {isPlaying ? <Pause size={16} /> : <Play size={16} />}
-                </button>
-                
-                <button
-                  onClick={nextTrack}
-                  disabled={!hasTracks}
-                  style={{
-                    background: 'rgba(255, 255, 255, 0.1)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    borderRadius: '50%',
-                    width: '32px',
-                    height: '32px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: hasTracks ? 'pointer' : 'not-allowed',
-                    opacity: hasTracks ? 1 : 0.5
-                  }}
-                >
-                  <SkipForward size={14} />
-                </button>
-              </div>
-
-              {/* Volume Control */}
-              <div>
-                <label style={{ fontSize: '0.7rem', marginBottom: '8px', display: 'block', opacity: 0.7 }}>Volume: {musicVolume}%</label>
-                <input 
-                  type="range" 
-                  min="0" 
-                  max="100" 
-                  value={musicVolume} 
-                  onChange={(e) => setMusicVolume(Number(e.target.value))}
-                  style={{
-                    width: '100%',
-                    height: '6px',
-                    borderRadius: '3px',
-                    background: 'rgba(255, 255, 255, 0.2)',
-                    outline: 'none',
-                    cursor: 'pointer'
-                  }}
-                />
-              </div>
-            </div>
-          )}
-        </div>
-
         <div style={{ marginBottom: '1.5rem' }}>
           <h4 style={{ marginBottom: '0.5rem', fontSize: '0.8rem', fontWeight: '600', opacity: 0.8 }}>User:</h4>
           <DropdownMenu>
@@ -435,17 +253,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
                 <span>▼</span>
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent style={{
-              background: 'rgba(255, 255, 255, 0.08)',
-              backdropFilter: 'blur(25px)',
-              border: '1px solid rgba(255, 255, 255, 0.15)',
-              color: 'white',
-              borderRadius: '15px',
-              zIndex: 1003,
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
-              maxHeight: '300px',
-              overflowY: 'auto'
-            }} className="w-[340px]" side="top">
+            <DropdownMenuContent style={dropdownContentStyle} className="w-[340px]" side="top">
               <DropdownMenuRadioGroup value={currentActiveUser} onValueChange={switchUser}>
                 {usersList.map(user => (
                   <DropdownMenuRadioItem key={user} value={user}>{user}</DropdownMenuRadioItem>
@@ -481,17 +289,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
                 <span>▼</span>
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent style={{
-              background: 'rgba(255, 255, 255, 0.08)',
-              backdropFilter: 'blur(25px)',
-              border: '1px solid rgba(255, 255, 255, 0.15)',
-              color: 'white',
-              borderRadius: '15px',
-              zIndex: 1003,
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
-              maxHeight: '300px',
-              overflowY: 'auto'
-            }} className="w-[340px]" side="top">
+            <DropdownMenuContent style={dropdownContentStyle} className="w-[340px]" side="top">
               <DropdownMenuRadioGroup value={showCustomDuration ? 'custom' : String(duration)} onValueChange={handleDurationChange}>
                 <DropdownMenuRadioItem value="30">30 seconds</DropdownMenuRadioItem>
                 <DropdownMenuRadioItem value="60">1 minute</DropdownMenuRadioItem>
@@ -524,17 +322,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
                   <span>▼</span>
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent style={{
-                background: 'rgba(255, 255, 255, 0.08)',
-                backdropFilter: 'blur(25px)',
-                border: '1px solid rgba(255, 255, 255, 0.15)',
-                color: 'white',
-                borderRadius: '15px',
-                zIndex: 1003,
-                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
-                maxHeight: '300px',
-                overflowY: 'auto'
-              }} className="w-[340px]" side="top">
+              <DropdownMenuContent style={dropdownContentStyle} className="w-[340px]" side="top">
                 <DropdownMenuRadioGroup value={String(fontSize)} onValueChange={val => setFontSize(Number(val))}>
                   {fontSizes.map(size => (
                     <DropdownMenuRadioItem key={size} value={String(size)}>{size}%</DropdownMenuRadioItem>
@@ -553,17 +341,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
                   <span>▼</span>
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent style={{
-                background: 'rgba(255, 255, 255, 0.08)',
-                backdropFilter: 'blur(25px)',
-                border: '1px solid rgba(255, 255, 255, 0.15)',
-                color: 'white',
-                borderRadius: '15px',
-                zIndex: 1003,
-                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
-                maxHeight: '300px',
-                overflowY: 'auto'
-              }} className="w-[340px]" side="top">
+              <DropdownMenuContent style={dropdownContentStyle} className="w-[340px]" side="top">
                 <DropdownMenuRadioGroup value={fontStyle} onValueChange={setFontStyle}>
                   {['inter', 'roboto', 'open-sans', 'lato', 'source-sans-pro', 'dancing-script', 'pacifico'].map(font => (
                     <DropdownMenuRadioItem key={font} value={font} style={{ fontFamily: getFontFamilyString(font), textTransform: 'capitalize'}}>{font.replace(/-/g, ' ')}</DropdownMenuRadioItem>
@@ -583,17 +361,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
                 <span>▼</span>
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent style={{
-              background: 'rgba(255, 255, 255, 0.08)',
-              backdropFilter: 'blur(25px)',
-              border: '1px solid rgba(255, 255, 255, 0.15)',
-              color: 'white',
-              borderRadius: '15px',
-              zIndex: 1003,
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
-              maxHeight: '300px',
-              overflowY: 'auto'
-            }} className="w-[340px]" side="top">
+            <DropdownMenuContent style={dropdownContentStyle} className="w-[340px]" side="top">
               <DropdownMenuRadioGroup value={cursorStyle} onValueChange={handleCursorChange}>
                 {cursors.map(cursor => (
                   <DropdownMenuRadioItem key={cursor.value} value={cursor.value}>
@@ -614,17 +382,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
                 <span>▼</span>
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent style={{
-              background: 'rgba(255, 255, 255, 0.08)',
-              backdropFilter: 'blur(25px)',
-              border: '1px solid rgba(255, 255, 255, 0.15)',
-              color: 'white',
-              borderRadius: '15px',
-              zIndex: 1003,
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
-              maxHeight: '300px',
-              overflowY: 'auto'
-            }} className="w-[340px]" side="top">
+            <DropdownMenuContent style={dropdownContentStyle} className="w-[340px]" side="top">
               <DropdownMenuRadioGroup value={theme} onValueChange={applyTheme}>
                 <DropdownMenuRadioItem value='cosmic-nebula'>Cosmic Nebula</DropdownMenuRadioItem>
                 <DropdownMenuRadioItem value='midnight-black'>Midnight Black</DropdownMenuRadioItem>
