@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Introduction } from '../components/Introduction';
 import { TypingTest } from '../components/TypingTest';
@@ -27,33 +28,13 @@ const Index = () => {
   const [soundEnabled, setSoundEnabled] = useState(localStorage.getItem('typeRakSoundEnabled') === 'true' || false);
   const [backgroundMusicEnabled, setBackgroundMusicEnabled] = useState(localStorage.getItem('typeRakBackgroundMusicEnabled') === 'true' || false);
   const [musicVolume, setMusicVolume] = useState(Number(localStorage.getItem('typeRakMusicVolume')) || 50);
+  const [showTestNameMenu, setShowTestNameMenu] = useState(false);
+  const [newTestName, setNewTestName] = useState('');
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
   const typingTestRef = useRef<HTMLDivElement>(null);
 
-  const {
-    text,
-    userInput,
-    start,
-    time,
-    wpm,
-    accuracy,
-    errorCount,
-    errorRate,
-    testCompleted,
-    resetTest,
-    pause,
-    words,
-    characterTyped,
-    selectedTestName,
-    setSelectedTestName,
-    handleNewText,
-    hasStarted,
-    setHasStarted,
-    correctChars,
-    incorrectChars
-  } = useTypingGame(duration);
-
-  const { playCorrectSound, playIncorrectSound } = useSoundEffects(soundEnabled);
+  const typingGame = useTypingGame();
+  const { playKeyboardSound, playErrorSound } = useSoundEffects(soundEnabled);
   const { isPlaying: isBackgroundMusicPlaying, hasMusic } = useBackgroundMusic(backgroundMusicEnabled, musicVolume);
   const { achievements, recentAchievement, checkAchievements, closeAchievementNotification, getUnlockedCount } = useAchievements(currentActiveUser);
 
@@ -74,13 +55,13 @@ const Index = () => {
   }, []);
 
   useEffect(() => {
-    if (testCompleted) {
+    if (typingGame.gameOver) {
       const stats = {
-        wpm,
-        errorRate,
+        wpm: typingGame.getCurrentWPM(),
+        errorRate: typingGame.getCurrentErrorRate(),
         duration,
         testsCompleted: Number(localStorage.getItem(`typeRakTestsCompleted-${currentActiveUser}`) || 0) + 1,
-        perfectTests: Number(localStorage.getItem(`typeRakPerfectTests-${currentActiveUser}`) || 0) + (errorRate === 0 ? 1 : 0),
+        perfectTests: Number(localStorage.getItem(`typeRakPerfectTests-${currentActiveUser}`) || 0) + (typingGame.getCurrentErrorRate() === 0 ? 1 : 0),
         unlockedAchievements: getUnlockedCount(),
         dailyTypingTime: Number(localStorage.getItem(`typeRakDailyTypingTime-${currentActiveUser}`) || 0) + (duration / 60),
         dailyStreak: Number(localStorage.getItem(`typeRakDailyStreak-${currentActiveUser}`) || 0),
@@ -115,7 +96,7 @@ const Index = () => {
         localStorage.setItem(`typeRakDailyTypingTime-${currentActiveUser}`, String(Number(localStorage.getItem(`typeRakDailyTypingTime-${currentActiveUser}`) || 0) + (duration / 60)));
       }
     }
-  }, [testCompleted, wpm, errorRate, duration, currentActiveUser, checkAchievements, getUnlockedCount]);
+  }, [typingGame.gameOver, currentActiveUser, checkAchievements, getUnlockedCount, duration]);
 
   useEffect(() => {
     localStorage.setItem('typeRakTheme', theme);
@@ -222,16 +203,28 @@ const Index = () => {
     }
   };
 
+  const handleTestNameConfirm = () => {
+    if (newTestName.trim()) {
+      // Handle test name confirmation
+      setShowTestNameMenu(false);
+      setNewTestName('');
+    }
+  };
+
+  const handleTestNameCancel = () => {
+    setShowTestNameMenu(false);
+    setNewTestName('');
+  };
+
   return (
     <div className="min-h-screen text-foreground font-sans transition-all duration-300 ease-in-out" style={{ fontFamily: getFontFamilyString(fontStyle), fontSize: `${fontSize}%` }}>
-      <Toast toast={toast} setToast={setToast} />
+      <Toast message={toast?.message || ''} type={toast?.type || 'info'} onClose={() => setToast(null)} show={!!toast} />
       {recentAchievement && (
         <AchievementNotification
-          name={recentAchievement.name}
-          subtitle={recentAchievement.subtitle}
-          wpm={recentAchievement.wpm}
+          title={recentAchievement.name}
+          description={recentAchievement.subtitle}
           onClose={closeAchievementNotification}
-          buttonColor={getButtonColor()}
+          theme={theme}
         />
       )}
 
@@ -240,30 +233,58 @@ const Index = () => {
           <button onClick={() => setSideMenuOpen(true)} className="p-2 rounded-md hover:bg-accent">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-menu"><line x1="4" x2="20" y1="12" y2="12" /><line x1="4" x2="20" y1="6" y2="6" /><line x1="4" x2="20" y1="18" y2="18" /></svg>
           </button>
-          <h1 className="text-2xl font-bold">TypeRak</h1>
+          <h1 className="text-2xl font-bold" style={{
+            background: 'linear-gradient(135deg, #c471f2 0%, #f76cc6 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text'
+          }}>TypeRak</h1>
         </div>
-        <TestNameMenu selectedTestName={selectedTestName} setSelectedTestName={setSelectedTestName} handleNewText={handleNewText} />
-        <StatsDisplay wpm={wpm} accuracy={accuracy} errorCount={errorCount} duration={duration} />
+        <TestNameMenu 
+          showTestNameMenu={showTestNameMenu}
+          newTestName={newTestName}
+          setNewTestName={setNewTestName}
+          onConfirm={handleTestNameConfirm}
+          onCancel={handleTestNameCancel}
+          getButtonColor={getButtonColor}
+        />
+        <StatsDisplay 
+          elapsed={typingGame.elapsed}
+          correctSigns={typingGame.correctCharacters}
+          totalErrors={typingGame.totalErrors}
+          currentErrorRate={typingGame.getCurrentErrorRate()}
+          theme={theme}
+        />
       </header>
 
       <main className="container mx-auto p-4 flex flex-col md:flex-row gap-4">
         <div className="md:w-3/4">
-          <Introduction start={start} testCompleted={testCompleted} resetTest={resetTest} handleAchievementsClick={handleAchievementsClick} />
+          <Introduction 
+            gameOver={typingGame.gameOver}
+            testActive={typingGame.testActive}
+            resetTest={typingGame.resetTest}
+            getUnlockedCount={getUnlockedCount}
+            handleAchievementsClick={handleAchievementsClick}
+          />
           <div ref={typingTestRef} className="typing-test-container">
             <TypingTest
-              text={text}
-              userInput={userInput}
-              start={start}
-              pause={pause}
-              testCompleted={testCompleted}
-              words={words}
-              characterTyped={characterTyped}
-              hasStarted={hasStarted}
-              setHasStarted={setHasStarted}
-              correctChars={correctChars}
-              incorrectChars={incorrectChars}
-              playCorrectSound={playCorrectSound}
-              playIncorrectSound={playIncorrectSound}
+              testText={typingGame.testText}
+              pos={typingGame.pos}
+              chars={typingGame.chars}
+              theme={theme}
+              onKeyDown={(e: KeyboardEvent) => {
+                // Handle key press logic here
+                if (!typingGame.testActive && !typingGame.gameOver) {
+                  typingGame.setTestActive(true);
+                  typingGame.startTimer(duration);
+                  typingGame.renderText(typingGame.generateWords(200));
+                }
+                
+                // Play sound effects
+                playKeyboardSound();
+              }}
+              fontSize={fontSize}
+              fontStyle={fontStyle}
             />
           </div>
         </div>
@@ -275,13 +296,12 @@ const Index = () => {
         </div>
       </main>
 
-      {historyOpen && <HistoryPage setHistoryOpen={setHistoryOpen} />}
+      {historyOpen && <HistoryPage onClose={() => setHistoryOpen(false)} />}
       {achievementsOpen && (
         <AchievementsPage
           achievements={achievements}
-          onBack={() => setAchievementsOpen(false)}
+          onClose={() => setAchievementsOpen(false)}
           theme={theme}
-          getButtonColor={getButtonColor}
         />
       )}
       

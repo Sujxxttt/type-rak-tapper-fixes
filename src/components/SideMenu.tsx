@@ -110,6 +110,80 @@ export const SideMenu: React.FC<SideMenuProps> = ({
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
+  const getDurationLabel = () => {
+    if (showCustomDuration) return 'Custom';
+    switch (duration) {
+      case 30: return '30 seconds';
+      case 60: return '1 minute';
+      case 120: return '2 minutes';
+      case 180: return '3 minutes';
+      case 300: return '5 minutes';
+      case 600: return '10 minutes';
+      case 1800: return '30 minutes';
+      case 3600: return '60 minutes';
+      default: return `${duration} seconds`;
+    }
+  };
+
+  const handleDurationChange = (value: string) => {
+    if (value === 'custom') {
+      setShowCustomDuration(true);
+    } else {
+      setShowCustomDuration(false);
+      setDuration(Number(value));
+    }
+  };
+
+  const fontSizes = [75, 80, 85, 90, 95, 100, 105, 110, 115, 120, 125, 130];
+
+  const getFontFamilyString = (font: string) => {
+    switch (font) {
+      case 'roboto': return "'Roboto', sans-serif";
+      case 'open-sans': return "'Open Sans', sans-serif";
+      case 'lato': return "'Lato', sans-serif";
+      case 'source-sans-pro': return "'Source Sans Pro', sans-serif";
+      case 'inter': return "'Inter', sans-serif";
+      case 'dancing-script': return "'Dancing Script', cursive";
+      case 'pacifico': return "'Pacifico', cursive";
+      default: return "'Inter', sans-serif";
+    }
+  };
+
+  const cursors = [
+    { value: 'blue', label: 'Arrow Cursor (Blue)' },
+    { value: 'black', label: 'Arrow Cursor (Black)' },
+    { value: 'pink', label: 'Arrow Cursor (Pink)' },
+    { value: 'white', label: 'Arrow Cursor (White)' }
+  ];
+
+  const handleCursorChange = (value: string) => {
+    setCursorStyle(value);
+    localStorage.setItem('typeRakCursor', value);
+    document.body.className = document.body.className.replace(/cursor-\S+/g, '').trim();
+    document.body.classList.add(`cursor-${value}`);
+  };
+
+  const handleCheckThisOut = () => {
+    window.open('https://youtu.be/dQw4w9WgXcQ', '_blank');
+  };
+
+  const dropdownTriggerStyle = {
+    width: '100%',
+    padding: '12px 16px',
+    borderRadius: '15px',
+    border: '1px solid rgba(255, 255, 255, 0.2)',
+    background: 'rgba(255, 255, 255, 0.08)',
+    color: 'white',
+    textAlign: 'left' as const,
+    cursor: 'pointer',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    fontSize: '0.9rem',
+    transition: 'all 0.2s ease',
+    backdropFilter: 'blur(15px)'
+  };
+
   if (!sideMenuOpen) return null;
 
   return (
@@ -356,22 +430,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
           <h4 style={{ marginBottom: '0.5rem', fontSize: '0.8rem', fontWeight: '600', opacity: 0.8 }}>User:</h4>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button style={{
-                width: '100%',
-                padding: '12px 16px',
-                borderRadius: '15px',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
-                background: 'rgba(255, 255, 255, 0.08)',
-                color: 'white',
-                textAlign: 'left',
-                cursor: 'pointer',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                fontSize: '0.9rem',
-                transition: 'all 0.2s ease',
-                backdropFilter: 'blur(15px)'
-              }}>
+              <button style={dropdownTriggerStyle}>
                 <span>{currentActiveUser || 'Select User'}</span>
                 <span>▼</span>
               </button>
@@ -417,22 +476,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
           <h4 style={{ marginBottom: '0.5rem', fontSize: '0.8rem', fontWeight: '600', opacity: 0.8 }}>Test Duration:</h4>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button style={{
-                width: '100%',
-                padding: '12px 16px',
-                borderRadius: '15px',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
-                background: 'rgba(255, 255, 255, 0.08)',
-                color: 'white',
-                textAlign: 'left',
-                cursor: 'pointer',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                fontSize: '0.9rem',
-                transition: 'all 0.2s ease',
-                backdropFilter: 'blur(15px)'
-              }}>
+              <button style={dropdownTriggerStyle}>
                 <span>{getDurationLabel()}</span>
                 <span>▼</span>
               </button>
@@ -475,22 +519,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
             <label style={{ fontSize: '0.7rem', marginBottom: '6px', display: 'block', opacity: 0.7 }}>Font Size:</label>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button style={{
-                  width: '100%',
-                  padding: '12px 16px',
-                  borderRadius: '15px',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  background: 'rgba(255, 255, 255, 0.08)',
-                  color: 'white',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  fontSize: '0.9rem',
-                  transition: 'all 0.2s ease',
-                  backdropFilter: 'blur(15px)'
-                }}>
+                <button style={dropdownTriggerStyle}>
                   <span>{fontSize}%</span>
                   <span>▼</span>
                 </button>
@@ -519,22 +548,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
             <label style={{ fontSize: '0.7rem', marginBottom: '6px', display: 'block', opacity: 0.7 }}>Font Style:</label>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button style={{
-                  width: '100%',
-                  padding: '12px 16px',
-                  borderRadius: '15px',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  background: 'rgba(255, 255, 255, 0.08)',
-                  color: 'white',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  fontSize: '0.9rem',
-                  transition: 'all 0.2s ease',
-                  backdropFilter: 'blur(15px)'
-                }}>
+                <button style={dropdownTriggerStyle}>
                   <span style={{ fontFamily: getFontFamilyString(fontStyle), textTransform: 'capitalize' }}>{fontStyle.replace(/-/g, ' ')}</span>
                   <span>▼</span>
                 </button>
@@ -564,22 +578,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
           <h4 style={{ marginBottom: '0.5rem', fontSize: '0.8rem', fontWeight: '600', opacity: 0.8 }}>Cursor Style:</h4>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button style={{
-                width: '100%',
-                padding: '12px 16px',
-                borderRadius: '15px',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
-                background: 'rgba(255, 255, 255, 0.08)',
-                color: 'white',
-                textAlign: 'left',
-                cursor: 'pointer',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                fontSize: '0.9rem',
-                transition: 'all 0.2s ease',
-                backdropFilter: 'blur(15px)'
-              }}>
+              <button style={dropdownTriggerStyle}>
                 <span style={{ textTransform: 'capitalize' }}>{cursors.find(c => c.value === cursorStyle)?.label || 'Arrow Cursor (Blue)'}</span>
                 <span>▼</span>
               </button>
@@ -610,22 +609,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
           <h4 style={{ marginBottom: '0.5rem', fontSize: '0.8rem', fontWeight: '600', opacity: 0.8 }}>Theme:</h4>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button style={{
-                width: '100%',
-                padding: '12px 16px',
-                borderRadius: '15px',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
-                background: 'rgba(255, 255, 255, 0.08)',
-                color: 'white',
-                textAlign: 'left',
-                cursor: 'pointer',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                fontSize: '0.9rem',
-                transition: 'all 0.2s ease',
-                backdropFilter: 'blur(15px)'
-              }}>
+              <button style={dropdownTriggerStyle}>
                 <span style={{textTransform: 'capitalize'}}>{theme.replace(/-/g, ' ')}</span>
                 <span>▼</span>
               </button>
