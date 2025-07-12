@@ -2,18 +2,25 @@
 import React from 'react';
 
 interface HistoryPageProps {
-  allTestHistory: any[];
-  theme: string;
-  onBack: () => void;
-  getButtonColor: () => string;
+  onClose?: () => void;
+  onBack?: () => void;
+  allTestHistory?: any[];
+  theme?: string;
+  getButtonColor?: () => string;
 }
 
 export const HistoryPage: React.FC<HistoryPageProps> = ({
-  allTestHistory,
-  theme,
+  onClose,
   onBack,
-  getButtonColor
+  allTestHistory = [],
+  theme = 'cosmic-nebula',
+  getButtonColor = () => '#a3b18a'
 }) => {
+  const handleBack = () => {
+    if (onBack) onBack();
+    if (onClose) onClose();
+  };
+
   return (
     <div style={{
       width: '100%',
@@ -36,7 +43,7 @@ export const HistoryPage: React.FC<HistoryPageProps> = ({
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
           <h2 style={{ margin: 0, fontSize: '2rem' }}>Test History</h2>
           <button 
-            onClick={onBack}
+            onClick={handleBack}
             style={{
               background: getButtonColor(),
               color: 'white',

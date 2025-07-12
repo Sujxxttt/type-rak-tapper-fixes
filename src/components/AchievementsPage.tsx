@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ArrowLeft, Trophy, Target, Zap, Star, Gamepad, Heart } from 'lucide-react';
 
@@ -15,17 +14,24 @@ interface Achievement {
 
 interface AchievementsPageProps {
   achievements: Achievement[];
-  onBack: () => void;
-  theme: string;
-  getButtonColor: () => string;
+  onClose?: () => void;
+  onBack?: () => void;
+  theme?: string;
+  getButtonColor?: () => string;
 }
 
 export const AchievementsPage: React.FC<AchievementsPageProps> = ({
   achievements,
+  onClose,
   onBack,
-  theme,
-  getButtonColor
+  theme = 'cosmic-nebula',
+  getButtonColor = () => '#a3b18a'
 }) => {
+  const handleBack = () => {
+    if (onBack) onBack();
+    if (onClose) onClose();
+  };
+
   const getCategoryIcon = (category: string) => {
     switch (category) {
       case 'speed': return <Zap size={20} />;
@@ -63,7 +69,7 @@ export const AchievementsPage: React.FC<AchievementsPageProps> = ({
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <button
-            onClick={onBack}
+            onClick={handleBack}
             className="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors"
             style={{
               background: 'rgba(255, 255, 255, 0.08)',

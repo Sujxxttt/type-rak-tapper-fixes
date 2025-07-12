@@ -9,6 +9,11 @@ interface IntroductionProps {
   theme?: string;
   currentTheme?: string;
   isFromTitleClick?: boolean;
+  gameOver?: boolean;
+  testActive?: boolean;
+  resetTest?: () => void;
+  getUnlockedCount?: () => number;
+  handleAchievementsClick?: () => void;
 }
 
 export const Introduction: React.FC<IntroductionProps> = ({ 
@@ -18,7 +23,12 @@ export const Introduction: React.FC<IntroductionProps> = ({
   onTitleClick,
   theme = 'cosmic-nebula',
   currentTheme,
-  isFromTitleClick = false
+  isFromTitleClick = false,
+  gameOver,
+  testActive,
+  resetTest,
+  getUnlockedCount,
+  handleAchievementsClick
 }) => {
   const [currentThemeIndex, setCurrentThemeIndex] = useState(0);
   const [animationPhase, setAnimationPhase] = useState('themes');
