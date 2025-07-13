@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Settings, Trophy, History, Volume2 } from 'lucide-react';
 import { useTypingGame } from '../hooks/useTypingGame';
@@ -259,7 +258,14 @@ const Index = () => {
   }, [startTest]);
 
   if (currentPage === 'history') {
-    return <HistoryPage onBack={() => setCurrentPage('main')} />;
+    return (
+      <HistoryPage 
+        allTestHistory={[]} // Will need to implement actual history data
+        theme={theme}
+        onBack={() => setCurrentPage('main')}
+        getButtonColor={getButtonColor}
+      />
+    );
   }
 
   if (currentPage === 'achievements') {
