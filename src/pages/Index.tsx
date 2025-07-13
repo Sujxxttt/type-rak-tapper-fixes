@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { TypingTest } from '../components/TypingTest';
 import { StatsDisplay } from '../components/StatsDisplay';
@@ -36,6 +37,7 @@ export default function Index() {
   const [firstLoginDate, setFirstLoginDate] = useLocalStorage('typeRakFirstLoginDate', '');
   const [easterEggVisited, setEasterEggVisited] = useState(false);
   const [maxWPM, setMaxWPM] = useState(0);
+  const [sideMenuOpen, setSideMenuOpen] = useState(false);
 
   const { playKeyboardSound, playErrorSound } = useSoundEffects(soundEnabled);
   const { isPlaying, hasMusic } = useBackgroundMusic(musicEnabled, musicVolume);
@@ -345,22 +347,31 @@ export default function Index() {
       }}>
         {/* Sidebar */}
         <SideMenu
+          sideMenuOpen={sideMenuOpen}
+          setSideMenuOpen={setSideMenuOpen}
+          usersList={[username].filter(Boolean)}
+          currentActiveUser={username}
+          switchUser={(user: string) => setUsername(user)}
+          handleDeleteUser={() => setUsername('')}
+          deleteConfirmState={false}
+          duration={60}
+          setDuration={() => {}}
           theme={theme}
-          setTheme={setTheme}
+          applyTheme={setTheme}
+          handleHistoryClick={handleHistoryClick}
+          handleContactMe={() => {}}
+          getButtonColor={getButtonColor}
           fontSize={fontSize}
           setFontSize={setFontSize}
-          cursorStyle={cursorStyle}
-          setCursorStyle={setCursorStyle}
+          fontStyle={'inter'}
+          setFontStyle={() => {}}
           soundEnabled={soundEnabled}
           setSoundEnabled={setSoundEnabled}
-          musicEnabled={musicEnabled}
-          setMusicEnabled={setMusicEnabled}
+          backgroundMusicEnabled={musicEnabled}
+          setBackgroundMusicEnabled={setMusicEnabled}
           musicVolume={musicVolume}
           setMusicVolume={setMusicVolume}
-          onHistoryClick={handleHistoryClick}
-          onAchievementsClick={handleAchievementsClick}
           hasMusic={hasMusic}
-          isPlaying={isPlaying}
         />
 
         <div style={{
@@ -374,34 +385,27 @@ export default function Index() {
         }}>
           {showIntro ? (
             <Introduction
-              testActive={testActive}
-              resetTest={resetTest}
-              getUnlockedCount={getUnlockedCount}
-              handleAchievementsClick={handleAchievementsClick}
               onComplete={handleComplete}
             />
           ) : (
             <>
               <TypingTest
-                text={text}
-                userInput={userInput}
-                currentIndex={currentIndex}
-                onInputChange={handleInputChange}
-                onKeyPress={handleKeyPress}
-                gameStarted={gameStarted}
-                gameOver={gameOver}
+                testText={text}
+                pos={currentIndex}
+                chars={[]}
+                theme={theme}
+                onKeyDown={handleKeyPress}
                 fontSize={fontSize}
-                currentWordIndex={currentWordIndex}
-                errorPositions={errorPositions}
+                fontStyle={'inter'}
               />
 
               <StatsDisplay
                 wpm={wpm}
                 accuracy={accuracy}
                 timeLeft={timeLeft}
-                gameOver={gameOver}
-                onRestart={resetTest}
+                errors={errorPositions.length}
                 theme={theme}
+                onRestart={resetTest}
               />
             </>
           )}
@@ -430,11 +434,8 @@ export default function Index() {
       {/* Achievement Notification */}
       {recentAchievement && (
         <AchievementNotification
-          name={recentAchievement.name}
-          subtitle={recentAchievement.subtitle}
-          wpm={recentAchievement.wpm}
+          achievement={recentAchievement}
           onClose={closeAchievementNotification}
-          theme={theme}
         />
       )}
 
@@ -442,9 +443,7 @@ export default function Index() {
       {showToast && (
         <Toast
           message={toastMessage}
-          variant={toastType}
           onClose={() => setShowToast(false)}
-          show={showToast}
         />
       )}
     </div>
