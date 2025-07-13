@@ -89,25 +89,31 @@
     @apply border-border;
   }
 
+  html, body {
+    background: #1a1a1a !important;
+    transition: none !important;
+  }
+
   body {
-    @apply bg-background text-foreground;
-    transition: all 0.5s ease-in-out !important;
+    @apply text-foreground;
   }
 
   /* Theme backgrounds with no flash - Fixed colors */
   .theme-cosmic-nebula {
     background: linear-gradient(135deg, #400354, #03568c) !important;
-    transition: background 0.5s ease-in-out !important;
   }
 
   .theme-midnight-black {
-    background: #0a0a0a !important; /* Slightly lighter to prevent white flash */
-    transition: background 0.5s ease-in-out !important;
+    background: #1a1a1a !important;
   }
 
   .theme-cotton-candy-glow {
-    background: linear-gradient(135deg, #12cff3, #5ab2f7) !important; /* Updated to match animation */
-    transition: background 0.5s ease-in-out !important;
+    background: linear-gradient(135deg, #12cff3, #5ab2f7) !important;
+  }
+
+  /* Make buttons 30% more transparent (not in sidebar) */
+  .main-content button:not(.sidebar button) {
+    opacity: 0.7 !important;
   }
 
   /* Custom cursor styles */
@@ -151,5 +157,17 @@
   /* Achievement notification styles */
   .achievement-glow {
     box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+  }
+
+  /* Achievement backgrounds */
+  .achievement-bg {
+    background: linear-gradient(135deg, #f7ba2c, #f8a902);
+  }
+
+  /* Glass button style */
+  .glass-button {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
   }
 }
