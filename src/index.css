@@ -96,27 +96,18 @@
 
   /* Theme backgrounds with no flash - Fixed colors */
   .theme-cosmic-nebula {
-    background: linear-gradient(135deg, hsl(284, 89%, 20%), hsl(203, 93%, 28%)) !important;
+    background: linear-gradient(135deg, #400354, #03568c) !important;
     transition: background 0.5s ease-in-out !important;
   }
 
   .theme-midnight-black {
-    background: hsl(0, 0%, 4%) !important;
+    background: #0a0a0a !important; /* Slightly lighter to prevent white flash */
     transition: background 0.5s ease-in-out !important;
   }
 
   .theme-cotton-candy-glow {
-    background: linear-gradient(135deg, hsl(193, 91%, 51%), hsl(201, 91%, 62%)) !important;
+    background: linear-gradient(135deg, #12cff3, #5ab2f7) !important; /* Updated to match animation */
     transition: background 0.5s ease-in-out !important;
-  }
-
-  /* Button transparency - make all buttons 30% more transparent */
-  button:not(.sidebar *) {
-    opacity: 0.7 !important;
-  }
-
-  button:not(.sidebar *):hover {
-    opacity: 0.9 !important;
   }
 
   /* Custom cursor styles */
@@ -157,9 +148,8 @@
     background: rgba(255, 255, 255, 0.4);
   }
 
-  /* Achievement notification styles with new colors */
+  /* Achievement notification styles */
   .achievement-glow {
-    background: linear-gradient(135deg, hsl(45, 93%, 56%), hsl(42, 95%, 49%)) !important;
-    box-shadow: 0 0 20px hsla(45, 93%, 56%, 0.3);
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
   }
 }
