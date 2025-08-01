@@ -5,11 +5,11 @@ import { useToast } from "@/components/ui/use-toast"
 import { useTypingGame } from '../hooks/useTypingGame';
 import { useAchievements } from '../hooks/useAchievements';
 import { useBackgroundMusic } from '../hooks/useBackgroundMusic';
-import Introduction from '../components/Introduction';
+import { Introduction } from '../components/Introduction';
 import TypingArea from '../components/TypingArea';
 import GameOver from '../components/GameOver';
-import SideMenu from '../components/SideMenu';
-import AchievementsPage from '../components/AchievementsPage';
+import { SideMenu } from '../components/SideMenu';
+import { AchievementsPage } from '../components/AchievementsPage';
 import EasterEgg from '../components/EasterEgg';
 import { MusicUploadPage } from '../components/MusicUploadPage';
 
@@ -234,7 +234,7 @@ const Index = () => {
           <>
             {!gameStarted && !gameOver && (
               <Introduction
-                onStart={startGame}
+                onComplete={startGame}
                 getUnlockedCount={() => {
                   return achievements.filter(a => a.unlocked).length;
                 }}
