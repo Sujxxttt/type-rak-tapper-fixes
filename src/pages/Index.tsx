@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCookies } from 'react-cookie';
@@ -14,7 +15,7 @@ import EasterEgg from '../components/EasterEgg';
 import { MusicUploadPage } from '../components/MusicUploadPage';
 
 const Index = () => {
-  const [cookies, setCookie] = useCookies(['username', 'theme', 'musicEnabled', 'musicVolume', 'firstTime', 'totalVisitedDays', 'daysSinceFirstLogin', 'firstTimeEasterEgg']);
+  const [cookies, setCookie] = useCookies(['username', 'theme', 'musicEnabled', 'musicVolume', 'firstTime', 'totalVisitedDays', 'daysSinceFirstLogin', 'firstTimeEasterEgg', 'testsCompleted']);
   const navigate = useNavigate();
   const { toast } = useToast()
 
@@ -165,11 +166,12 @@ const Index = () => {
       const totalVisitedDays = parseInt(cookies.totalVisitedDays || '0', 10);
       const daysSinceFirstLogin = parseInt(cookies.daysSinceFirstLogin || '1', 10);
       const daysSinceLastVisit = parseInt(cookies.daysSinceFirstLogin || '1', 10);
+      const testsCompleted = parseInt(cookies.testsCompleted || '0', 10);
       checkAchievements({
         wpm,
         errorRate: 100 - accuracy,
         duration,
-        testsCompleted: parseInt(cookies.testsCompleted || '0', 10) + 1,
+        testsCompleted: testsCompleted + 1,
         perfectTests: 0, // Needs actual implementation
         unlockedAchievements: getUnlockedCount(),
         dailyTypingTime: 60, // Needs actual implementation
@@ -183,7 +185,7 @@ const Index = () => {
         dailyTypingMinutes: 60,
         firstTimeEasterEgg: cookies.firstTimeEasterEgg === 'true'
       });
-      setCookie('testsCompleted', String(parseInt(cookies.testsCompleted || '0', 10) + 1), { path: '/' });
+      setCookie('testsCompleted', String(testsCompleted + 1), { path: '/' });
     }
   }, [gameOver, wpm, accuracy, duration, checkAchievements, getUnlockedCount, setCookie, cookies, cheatUsages, maxWpmAchieved]);
 
@@ -204,6 +206,10 @@ const Index = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
+  const handleKeyPressWrapper = (event: React.KeyboardEvent) => {
+    handleKeyPress(event.key);
+  };
+
   return (
     <div
       className={`min-h-screen transition-all duration-500 ease-in-out ${
@@ -214,19 +220,31 @@ const Index = () => {
       }`}
     >
       <SideMenu
-        isOpen={isSidebarOpen}
-        onClose={toggleSidebar}
+        sideMenuOpen={isSidebarOpen}
+        setSideMenuOpen={setIsSidebarOpen}
+        usersList={[username].filter(Boolean)}
+        currentActiveUser={username}
+        switchUser={setUsername}
+        handleDeleteUser={() => {}}
+        deleteConfirmState={false}
+        duration={duration}
+        setDuration={setDuration}
         theme={theme}
-        setTheme={setTheme}
-        username={username}
-        setUsername={setUsername}
-        musicEnabled={musicEnabled}
-        setMusicEnabled={setMusicEnabled}
+        applyTheme={setTheme}
+        handleHistoryClick={() => {}}
+        handleContactMe={() => {}}
+        getButtonColor={getButtonColor}
+        fontSize={100}
+        setFontSize={() => {}}
+        fontStyle="inter"
+        setFontStyle={() => {}}
+        soundEnabled={true}
+        setSoundEnabled={() => {}}
+        backgroundMusicEnabled={musicEnabled}
+        setBackgroundMusicEnabled={setMusicEnabled}
         musicVolume={musicVolume}
         setMusicVolume={setMusicVolume}
-        isPlaying={isPlaying}
         hasMusic={hasMusic}
-        onMusicUploadClick={() => setCurrentView('musicUpload')}
       />
 
       <div className="flex-1 flex flex-col">
@@ -235,10 +253,6 @@ const Index = () => {
             {!gameStarted && !gameOver && (
               <Introduction
                 onComplete={startGame}
-                getUnlockedCount={() => {
-                  return achievements.filter(a => a.unlocked).length;
-                }}
-                onAchievementsClick={() => setCurrentView('achievements')}
               />
             )}
 
@@ -251,7 +265,7 @@ const Index = () => {
                 accuracy={accuracy}
                 timeLeft={timeLeft}
                 handleInputChange={handleInputChange}
-                handleKeyPress={handleKeyPress}
+                handleKeyPress={handleKeyPressWrapper}
               />
             )}
 
@@ -294,6 +308,17 @@ const Index = () => {
           <p className="text-xs">WPM: {recentAchievement.wpm}</p>
           <button onClick={closeAchievementNotification} className="mt-2 text-white underline">
             Close
+          </button>
+        </div>
+      )}
+
+      {showUnlockButton && (
+        <div className="fixed bottom-5 left-1/2 transform -translate-x-1/2">
+          <button
+            onClick={unlockEasterEgg}
+            className="bg-white bg-opacity-10 backdrop-blur-md text-white px-4 py-2 rounded-lg border border-white border-opacity-20 hover:bg-opacity-20 transition-all duration-200"
+          >
+            Unlock Curiosity
           </button>
         </div>
       )}
