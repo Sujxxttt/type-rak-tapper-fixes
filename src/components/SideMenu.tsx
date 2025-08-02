@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { X } from 'lucide-react';
 import {
@@ -40,6 +39,13 @@ interface SideMenuProps {
   musicVolume: number;
   setMusicVolume: (volume: number) => void;
   hasMusic: boolean;
+  username: string;
+  setUsername: (username: string) => void;
+  musicEnabled: boolean;
+  setMusicEnabled: (enabled: boolean) => void;
+  onAchievementsClick: () => void;
+  onHistoryClick: () => void;
+  onMusicUploadClick: () => void;
 }
 
 export const SideMenu: React.FC<SideMenuProps> = ({
@@ -67,7 +73,14 @@ export const SideMenu: React.FC<SideMenuProps> = ({
   setBackgroundMusicEnabled,
   musicVolume,
   setMusicVolume,
-  hasMusic
+  hasMusic,
+  username,
+  setUsername,
+  musicEnabled,
+  setMusicEnabled,
+  onAchievementsClick,
+  onHistoryClick,
+  onMusicUploadClick
 }) => {
   const sideMenuRef = useRef<HTMLDivElement>(null);
   const [showCustomDuration, setShowCustomDuration] = useState(false);
@@ -469,7 +482,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
         )}
         
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-          <button onClick={handleHistoryClick} style={{...dropdownTriggerStyle, justifyContent: 'center' }}>View Test History</button>
+          <button onClick={onHistoryClick} style={{...dropdownTriggerStyle, justifyContent: 'center' }}>View Test History</button>
           <button onClick={handleContactMe} style={{...dropdownTriggerStyle, justifyContent: 'center' }}>Contact Me</button>
           <button onClick={handleCheckThisOut} style={{...dropdownTriggerStyle, justifyContent: 'center' }}>Check this out</button>
         </div>
