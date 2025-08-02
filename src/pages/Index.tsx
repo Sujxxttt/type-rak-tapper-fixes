@@ -37,7 +37,7 @@ const Index = () => {
   
   const containerRef = useRef<HTMLDivElement>(null);
   const { isPlaying, hasMusic } = useBackgroundMusic(musicEnabled, musicVolume);
-  const { playSound } = useSoundEffects();
+  const { playKeyboardSound, playErrorSound } = useSoundEffects();
 
   // Get today's date for tracking
   const today = new Date().toDateString();
@@ -325,7 +325,7 @@ const Index = () => {
     };
     
     checkAchievements(achievementStats);
-    playSound('complete');
+    playKeyboardSound();
   };
 
   const handleIntroComplete = () => {
