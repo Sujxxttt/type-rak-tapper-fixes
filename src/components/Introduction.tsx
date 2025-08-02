@@ -93,7 +93,7 @@ export const Introduction: React.FC<IntroductionProps> = ({
       clearTimeout(phaseTimeout);
       clearTimeout(completeTimeout);
     };
-  }, [onComplete, onReplay, isReplay, theme, currentTheme, isFromTitleClick]);
+  }, []); // Empty dependency array to prevent infinite loop
 
   const replayAnimation = () => {
     if (onTitleClick) {
