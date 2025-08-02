@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useCookies } from 'react-cookie';
 import { TypingTest } from '../components/TypingTest';
@@ -34,10 +35,14 @@ const Index = () => {
   const [currentDuration, setCurrentDuration] = useState<number>(TYPING_DURATIONS[1]);
   const [showUnlockCuriosity, setShowUnlockCuriosity] = useState<boolean>(false);
   const [scrollCount, setScrollCount] = useState<number>(0);
+  const [fontSize, setFontSize] = useState<number>(100);
+  const [fontStyle, setFontStyle] = useState<string>('inter');
+  const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
+  const [deleteConfirmState, setDeleteConfirmState] = useState<boolean>(false);
   
   const containerRef = useRef<HTMLDivElement>(null);
   const { isPlaying, hasMusic } = useBackgroundMusic(musicEnabled, musicVolume);
-  const { playKeyboardSound, playErrorSound } = useSoundEffects(musicEnabled);
+  const { playKeyboardSound, playErrorSound } = useSoundEffects();
 
   // Get today's date for tracking
   const today = new Date().toDateString();
@@ -47,6 +52,9 @@ const Index = () => {
   const [dailyTypingTime, setDailyTypingTime] = useState<number>(parseInt(localStorage.getItem(`dailyTypingTime-${username}-${today}`) || '0'));
   const [dailyStreak, setDailyStreak] = useState<number>(parseInt(localStorage.getItem(`dailyStreak-${username}`) || '0'));
   const [cheatUsageCount, setCheatUsageCount] = useState<number>(parseInt(localStorage.getItem(`cheatUsageCount-${username}`) || '0'));
+
+  // Mock users list - you may want to implement proper user management
+  const [usersList, setUsersList] = useState<string[]>([username].filter(Boolean));
 
   const {
     achievements,
@@ -92,6 +100,13 @@ const Index = () => {
         setDailyStreak(1);
         localStorage.setItem(`dailyStreak-${username}`, '1');
       }
+    }
+  }, [username]);
+
+  // Update users list when username changes
+  useEffect(() => {
+    if (username && !usersList.includes(username)) {
+      setUsersList(prev => [...prev, username]);
     }
   }, [username]);
 
@@ -333,6 +348,36 @@ const Index = () => {
     setCookie('firstTime', 'false', { path: '/' });
   };
 
+  const switchUser = (newUsername: string) => {
+    setUsername(newUsername);
+  };
+
+  const handleDeleteUser = () => {
+    if (!deleteConfirmState) {
+      setDeleteConfirmState(true);
+      setTimeout(() => setDeleteConfirmState(false), 3000);
+    } else {
+      // Actually delete the user
+      setUsersList(prev => prev.filter(u => u !== username));
+      if (usersList.length > 1) {
+        const remainingUsers = usersList.filter(u => u !== username);
+        setUsername(remainingUsers[0]);
+      } else {
+        setUsername('');
+      }
+      setDeleteConfirmState(false);
+    }
+  };
+
+  const applyTheme = (newTheme: string) => {
+    setTheme(newTheme);
+  };
+
+  const handleContactMe = () => {
+    // Implement contact functionality
+    window.open('mailto:contact@example.com', '_blank');
+  };
+
   if (showEasterEgg) {
     return <EasterEggPage theme={theme} onGoBack={() => setShowEasterEgg(false)} />;
   }
@@ -384,13 +429,35 @@ const Index = () => {
       }}
     >
       <SideMenu
+        sideMenuOpen={showMenu}
+        setSideMenuOpen={setShowMenu}
+        usersList={usersList}
+        currentActiveUser={username}
+        switchUser={switchUser}
+        handleDeleteUser={handleDeleteUser}
+        deleteConfirmState={deleteConfirmState}
+        duration={currentDuration}
+        setDuration={setCurrentDuration}
         theme={theme}
+        applyTheme={applyTheme}
+        handleHistoryClick={() => setShowHistory(true)}
+        handleContactMe={handleContactMe}
+        getButtonColor={getButtonColor}
+        fontSize={fontSize}
+        setFontSize={setFontSize}
+        fontStyle={fontStyle}
+        setFontStyle={setFontStyle}
+        soundEnabled={soundEnabled}
+        setSoundEnabled={setSoundEnabled}
+        backgroundMusicEnabled={musicEnabled}
+        setBackgroundMusicEnabled={setMusicEnabled}
+        musicVolume={musicVolume}
+        setMusicVolume={setMusicVolume}
+        hasMusic={hasMusic}
         username={username}
         setUsername={setUsername}
         musicEnabled={musicEnabled}
         setMusicEnabled={setMusicEnabled}
-        musicVolume={musicVolume}
-        setMusicVolume={setMusicVolume}
         onAchievementsClick={() => setShowAchievements(true)}
         onHistoryClick={() => setShowHistory(true)}
         onMusicUploadClick={() => {}}
@@ -440,8 +507,8 @@ const Index = () => {
           chars={[]}
           theme={theme}
           onKeyDown={() => {}}
-          fontSize={100}
-          fontStyle="inter"
+          fontSize={fontSize}
+          fontStyle={fontStyle}
         />
 
         <MusicPlayer 
