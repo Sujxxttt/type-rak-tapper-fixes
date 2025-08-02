@@ -37,7 +37,7 @@ const Index = () => {
   
   const containerRef = useRef<HTMLDivElement>(null);
   const { isPlaying, hasMusic } = useBackgroundMusic(musicEnabled, musicVolume);
-  const { playKeyboardSound, playErrorSound } = useSoundEffects();
+  const { playKeyboardSound, playErrorSound } = useSoundEffects(musicEnabled);
 
   // Get today's date for tracking
   const today = new Date().toDateString();
@@ -334,14 +334,14 @@ const Index = () => {
   };
 
   if (showEasterEgg) {
-    return <EasterEggPage onBack={() => setShowEasterEgg(false)} />;
+    return <EasterEggPage theme={theme} onGoBack={() => setShowEasterEgg(false)} />;
   }
 
   if (showIntro) {
     return (
       <Introduction
         onComplete={handleIntroComplete}
-        onAchievementsClick={() => setShowAchievements(true)}
+        theme={theme}
       />
     );
   }
@@ -365,7 +365,12 @@ const Index = () => {
   }
 
   if (showHistory) {
-    return <HistoryPage onBack={() => setShowHistory(false)} username={username} />;
+    return <HistoryPage 
+      onBack={() => setShowHistory(false)} 
+      allTestHistory={[]}
+      theme={theme}
+      getButtonColor={getButtonColor}
+    />;
   }
 
   return (
@@ -380,7 +385,6 @@ const Index = () => {
     >
       <SideMenu
         theme={theme}
-        setTheme={setTheme}
         username={username}
         setUsername={setUsername}
         musicEnabled={musicEnabled}
@@ -418,27 +422,26 @@ const Index = () => {
             backgroundClip: 'text',
             WebkitTextFillColor: 'transparent'
           }}>
-            TypeRak
+            TypeWave
           </h1>
         </div>
 
         <StatsDisplay 
+          elapsed={0}
+          correctSigns={0}
+          totalErrors={0}
+          currentErrorRate={0}
           theme={theme}
-          achievements={achievements}
-          testsCompleted={testsCompleted}
-          getUnlockedCount={getUnlockedCount}
-          totalVisitedDays={totalVisitedDays}
-          dailyStreak={dailyStreak}
         />
 
         <TypingTest
+          testText=""
+          pos={0}
+          chars={[]}
           theme={theme}
-          duration={currentDuration}
-          onComplete={handleTestComplete}
-          getButtonColor={getButtonColor}
-          onDurationChange={setCurrentDuration}
-          durations={TYPING_DURATIONS}
-          data-testid="typing-test"
+          onKeyDown={() => {}}
+          fontSize={100}
+          fontStyle="inter"
         />
 
         <MusicPlayer 
