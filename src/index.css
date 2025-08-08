@@ -101,19 +101,13 @@
   }
 
   .theme-midnight-black {
-    background: #0f0f0f !important; /* Darker to prevent white flash */
+    background: #0a0a0a !important; /* Slightly lighter to prevent white flash */
     transition: background 0.5s ease-in-out !important;
   }
 
   .theme-cotton-candy-glow {
-    background: linear-gradient(135deg, #12cff3, #5ab2f7) !important;
+    background: linear-gradient(135deg, #12cff3, #5ab2f7) !important; /* Updated to match animation */
     transition: background 0.5s ease-in-out !important;
-  }
-
-  /* Prevent white flash on theme change */
-  html, body, #root {
-    background: #0f0f0f !important; /* Dark base to prevent flash */
-    transition: background 0.3s ease-in-out !important;
   }
 
   /* Custom cursor styles */
@@ -156,6 +150,6 @@
 
   /* Achievement notification styles */
   .achievement-glow {
-    box-shadow: 0 0 20px rgba(247, 186, 44, 0.5);
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
   }
 }
