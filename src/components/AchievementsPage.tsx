@@ -1,14 +1,6 @@
-import React from 'react';
 
-interface Achievement {
-  id: string;
-  title: string;
-  description: string;
-  unlocked: boolean;
-  unlockedAt?: Date;
-  progress?: number;
-  maxProgress?: number;
-}
+import React from 'react';
+import { Achievement } from '../hooks/useAchievements';
 
 interface AchievementsPageProps {
   achievements: Achievement[];
@@ -87,7 +79,8 @@ export const AchievementsPage: React.FC<AchievementsPageProps> = ({
                 minHeight: '150px'
               }}>
                 <div>
-                  <h3 style={{ margin: '0 0 10px', fontSize: '1.2rem' }}>{achievement.title}</h3>
+                  <h3 style={{ margin: '0 0 10px', fontSize: '1.2rem' }}>{achievement.name}</h3>
+                  <p style={{ margin: '0 0 10px', fontSize: '0.85rem', opacity: 0.9, fontStyle: 'italic' }}>{achievement.subtitle}</p>
                   <p style={{ margin: 0, fontSize: '0.9rem', opacity: 0.8 }}>{achievement.description}</p>
                 </div>
                 <div style={{ marginTop: '15px', fontSize: '0.8rem', opacity: 0.7 }}>
