@@ -41,7 +41,7 @@ const CircularProgress = ({ progress, maxProgress, size = 60 }: { progress: numb
           cx={size / 2}
           cy={size / 2}
           r={size / 2 - 4}
-          stroke="#ffd700"
+          stroke="url(#goldGradient)"
           strokeWidth="3"
           fill="transparent"
           strokeDasharray={circumference}
@@ -50,6 +50,12 @@ const CircularProgress = ({ progress, maxProgress, size = 60 }: { progress: numb
           style={{ transition: 'stroke-dashoffset 0.5s ease-in-out' }}
         />
       </svg>
+      <defs>
+        <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#f7ba2c" />
+          <stop offset="100%" stopColor="#f8a902" />
+        </linearGradient>
+      </defs>
       <div className="absolute inset-0 flex items-center justify-center">
         <span className="text-xs font-bold text-white">
           {Math.round(percentage)}%
@@ -89,6 +95,16 @@ export const AchievementsPage: React.FC<AchievementsPageProps> = ({
       padding: '20px',
       color: 'white'
     }}>
+      {/* SVG Definitions */}
+      <svg width="0" height="0">
+        <defs>
+          <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#f7ba2c" />
+            <stop offset="100%" stopColor="#f8a902" />
+          </linearGradient>
+        </defs>
+      </svg>
+
       {/* Header */}
       <div style={{
         display: 'flex',
@@ -139,9 +155,9 @@ export const AchievementsPage: React.FC<AchievementsPageProps> = ({
 
       {/* Overall Progress */}
       <div style={{
-        background: 'rgba(255, 255, 255, 0.1)',
+        background: 'linear-gradient(135deg, rgba(247, 186, 44, 0.15), rgba(248, 169, 2, 0.15))',
         backdropFilter: 'blur(20px)',
-        border: '1px solid rgba(255, 255, 255, 0.2)',
+        border: '1px solid rgba(247, 186, 44, 0.3)',
         borderRadius: '16px',
         padding: '30px',
         marginBottom: '30px',
@@ -169,9 +185,9 @@ export const AchievementsPage: React.FC<AchievementsPageProps> = ({
           const progress = getCategoryProgress(category);
           return (
             <div key={category} style={{
-              background: 'rgba(255, 255, 255, 0.1)',
+              background: 'linear-gradient(135deg, rgba(247, 186, 44, 0.1), rgba(248, 169, 2, 0.1))',
               backdropFilter: 'blur(20px)',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
+              border: '1px solid rgba(247, 186, 44, 0.2)',
               borderRadius: '12px',
               padding: '20px',
               textAlign: 'center'
@@ -180,7 +196,7 @@ export const AchievementsPage: React.FC<AchievementsPageProps> = ({
                 display: 'flex', 
                 justifyContent: 'center', 
                 marginBottom: '10px',
-                color: '#ffd700'
+                color: '#f7ba2c'
               }}>
                 <CategoryIcon category={category} />
               </div>
@@ -231,11 +247,11 @@ export const AchievementsPage: React.FC<AchievementsPageProps> = ({
                   key={achievement.id}
                   style={{
                     background: achievement.unlocked ? 
-                      'rgba(255, 215, 0, 0.15)' : 
+                      'linear-gradient(135deg, rgba(247, 186, 44, 0.25), rgba(248, 169, 2, 0.25))' : 
                       'rgba(255, 255, 255, 0.08)',
                     backdropFilter: 'blur(20px)',
                     border: achievement.unlocked ? 
-                      '1px solid rgba(255, 215, 0, 0.3)' : 
+                      '1px solid rgba(247, 186, 44, 0.4)' : 
                       '1px solid rgba(255, 255, 255, 0.15)',
                     borderRadius: '12px',
                     padding: '20px',
@@ -250,13 +266,13 @@ export const AchievementsPage: React.FC<AchievementsPageProps> = ({
                     position: 'absolute',
                     top: '15px',
                     right: '15px',
-                    color: achievement.unlocked ? '#ffd700' : 'rgba(255, 255, 255, 0.4)'
+                    color: achievement.unlocked ? '#f7ba2c' : 'rgba(255, 255, 255, 0.4)'
                   }}>
                     <Trophy size={24} />
                   </div>
 
                   {/* Progress Circle for incomplete achievements */}
-                  {!achievement.unlocked && achievement.maxProgress && (
+                  {!achievement.unlocked && achievement.maxProgress && achievement.maxProgress > 1 && (
                     <div style={{
                       position: 'absolute',
                       top: '15px',
@@ -271,13 +287,13 @@ export const AchievementsPage: React.FC<AchievementsPageProps> = ({
                   )}
 
                   <div style={{ 
-                    marginTop: achievement.maxProgress && !achievement.unlocked ? '50px' : '0'
+                    marginTop: (!achievement.unlocked && achievement.maxProgress && achievement.maxProgress > 1) ? '50px' : '0'
                   }}>
                     <h3 style={{
                       margin: '0 0 8px 0',
                       fontSize: '1.2rem',
                       fontWeight: 'bold',
-                      color: achievement.unlocked ? '#ffd700' : 'white'
+                      color: achievement.unlocked ? '#f7ba2c' : 'white'
                     }}>
                       {achievement.name}
                     </h3>
@@ -300,7 +316,7 @@ export const AchievementsPage: React.FC<AchievementsPageProps> = ({
                     </p>
 
                     {/* Progress text for incomplete achievements */}
-                    {!achievement.unlocked && achievement.maxProgress && (
+                    {!achievement.unlocked && achievement.maxProgress && achievement.maxProgress > 1 && (
                       <p style={{
                         margin: '10px 0 0 0',
                         fontSize: '0.8rem',
