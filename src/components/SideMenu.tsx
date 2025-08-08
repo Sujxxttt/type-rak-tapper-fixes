@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { X } from 'lucide-react';
 import {
@@ -14,80 +15,63 @@ import { Switch } from '@/components/ui/switch';
 import { CustomDurationSlider } from './CustomDurationSlider';
 
 interface SideMenuProps {
-  theme: string;
-  setTheme: (theme: string) => void;
-  username: string;
-  setUsername: (username: string) => void;
   sideMenuOpen: boolean;
   setSideMenuOpen: (open: boolean) => void;
-  musicEnabled: boolean;
-  setMusicEnabled: (enabled: boolean) => void;
-  musicVolume: number;
-  setMusicVolume: (volume: number) => void;
-  soundEnabled: boolean;
-  setSoundEnabled: (enabled: boolean) => void;
-  soundVolume: number;
-  setSoundVolume: (volume: number) => void;
-  customDuration: number;
-  setCustomDuration: (duration: number) => void;
+  usersList: string[];
+  currentActiveUser: string;
+  switchUser: (username: string) => void;
+  handleDeleteUser: () => void;
+  deleteConfirmState: boolean;
+  duration: number;
+  setDuration: (duration: number) => void;
+  theme: string;
+  applyTheme: (theme: string) => void;
+  handleHistoryClick: () => void;
+  handleContactMe: () => void;
+  getButtonColor: () => string;
   fontSize: number;
   setFontSize: (size: number) => void;
   fontStyle: string;
   setFontStyle: (style: string) => void;
-  cursorStyle: string;
-  setCursorStyle: (style: string) => void;
-  deleteConfirmState: boolean;
-  onDeleteConfirm: (callback: any) => void;
-  onDeleteCancel: () => void;
-  onDeleteExecute: () => void;
-  usersList: string[];
-  setUsersList: (users: string[]) => void;
-  currentActiveUser: string;
-  setCurrentActiveUser: (user: string) => void;
-  onAchievementsClick: () => void;
-  onHistoryClick: () => void;
-  onMusicUploadClick: () => void;
+  soundEnabled: boolean;
+  setSoundEnabled: (enabled: boolean) => void;
+  backgroundMusicEnabled: boolean;
+  setBackgroundMusicEnabled: (enabled: boolean) => void;
+  musicVolume: number;
+  setMusicVolume: (volume: number) => void;
   hasMusic: boolean;
 }
 
 export const SideMenu: React.FC<SideMenuProps> = ({
-  theme,
-  setTheme,
-  username,
-  setUsername,
   sideMenuOpen,
   setSideMenuOpen,
-  musicEnabled,
-  setMusicEnabled,
-  musicVolume,
-  setMusicVolume,
-  soundEnabled,
-  setSoundEnabled,
-  soundVolume,
-  setSoundVolume,
-  customDuration,
-  setCustomDuration,
+  usersList,
+  currentActiveUser,
+  switchUser,
+  handleDeleteUser,
+  deleteConfirmState,
+  duration,
+  setDuration,
+  theme,
+  applyTheme,
+  handleHistoryClick,
+  handleContactMe,
+  getButtonColor,
   fontSize,
   setFontSize,
   fontStyle,
   setFontStyle,
-  cursorStyle,
-  setCursorStyle,
-  deleteConfirmState,
-  onDeleteConfirm,
-  onDeleteCancel,
-  onDeleteExecute,
-  usersList,
-  setUsersList,
-  currentActiveUser,
-  setCurrentActiveUser,
-  onAchievementsClick,
-  onHistoryClick,
-  onMusicUploadClick,
+  soundEnabled,
+  setSoundEnabled,
+  backgroundMusicEnabled,
+  setBackgroundMusicEnabled,
+  musicVolume,
+  setMusicVolume,
   hasMusic
 }) => {
   const sideMenuRef = useRef<HTMLDivElement>(null);
   const [showCustomDuration, setShowCustomDuration] = useState(false);
+  const [cursorStyle, setCursorStyle] = useState(localStorage.getItem('typeRakCursor') || 'blue');
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -132,40 +116,29 @@ export const SideMenu: React.FC<SideMenuProps> = ({
       setShowCustomDuration(true);
     } else {
       setShowCustomDuration(false);
-      setCustomDuration(Number(value));
+      setDuration(Number(value));
     }
   };
 
   const getDurationLabel = () => {
     if (showCustomDuration) return 'Custom';
-    if (customDuration === 30) return '30 seconds';
-    if (customDuration === 60) return '1 minute';
-    if (customDuration === 120) return '2 minutes';
-    if (customDuration === 180) return '3 minutes';
-    if (customDuration === 300) return '5 minutes';
-    if (customDuration === 600) return '10 minutes';
-    if (customDuration === 1800) return '30 minutes';
-    if (customDuration === 3600) return '60 minutes';
-    return `${customDuration} seconds`;
+    if (duration === 30) return '30 seconds';
+    if (duration === 60) return '1 minute';
+    if (duration === 120) return '2 minutes';
+    if (duration === 180) return '3 minutes';
+    if (duration === 300) return '5 minutes';
+    if (duration === 600) return '10 minutes';
+    if (duration === 1800) return '30 minutes';
+    if (duration === 3600) return '60 minutes';
+    return `${duration} seconds`;
   };
 
   const handleCursorChange = (cursor: string) => {
     setCursorStyle(cursor);
-    localStorage.setItem('typeRakCursorStyle', cursor);
+    localStorage.setItem('typeRakCursor', cursor);
     
     document.body.className = document.body.className.replace(/cursor-\S+/g, '').trim();
     document.body.classList.add(`cursor-${cursor}`);
-  };
-
-  const getButtonColor = () => {
-    switch (theme) {
-      case 'midnight-black':
-        return 'rgba(197, 89, 247, 0.21)';
-      case 'cotton-candy-glow':
-        return 'rgba(252, 3, 223, 0.21)';
-      default:
-        return 'rgba(177, 9, 214, 0.21)';
-    }
   };
 
   const dropdownContentStyle: React.CSSProperties = {
@@ -209,22 +182,6 @@ export const SideMenu: React.FC<SideMenuProps> = ({
   const handleCheckThisOut = () => {
     window.open('https://raktherock.github.io/Rak/', '_blank');
     setSideMenuOpen(false);
-  };
-
-  const handleDeleteUser = () => {
-    if (deleteConfirmState) {
-      onDeleteExecute();
-    } else {
-      onDeleteConfirm(() => {
-        // Delete user logic would go here
-        console.log('Deleting user:', currentActiveUser);
-      });
-    }
-  };
-
-  const switchUser = (user: string) => {
-    setCurrentActiveUser(user);
-    setUsername(user);
   };
 
   return (
@@ -292,7 +249,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button style={dropdownTriggerStyle}>
-                <span>{currentActiveUser || username || 'Select User'}</span>
+                <span>{currentActiveUser || 'Select User'}</span>
                 <span>▼</span>
               </button>
             </DropdownMenuTrigger>
@@ -333,7 +290,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent style={dropdownContentStyle} className="w-[340px]" side="top">
-              <DropdownMenuRadioGroup value={showCustomDuration ? 'custom' : String(customDuration)} onValueChange={handleDurationChange}>
+              <DropdownMenuRadioGroup value={showCustomDuration ? 'custom' : String(duration)} onValueChange={handleDurationChange}>
                 <DropdownMenuRadioItem value="30">30 seconds</DropdownMenuRadioItem>
                 <DropdownMenuRadioItem value="60">1 minute</DropdownMenuRadioItem>
                 <DropdownMenuRadioItem value="120">2 minutes</DropdownMenuRadioItem>
@@ -348,7 +305,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
           </DropdownMenu>
           {showCustomDuration && (
             <div style={{ marginTop: '10px' }}>
-              <CustomDurationSlider value={customDuration} onChange={setCustomDuration} theme={theme} />
+              <CustomDurationSlider value={duration} onChange={setDuration} theme={theme} />
             </div>
           )}
         </div>
@@ -426,7 +383,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent style={dropdownContentStyle} className="w-[340px]" side="top">
-              <DropdownMenuRadioGroup value={theme} onValueChange={setTheme}>
+              <DropdownMenuRadioGroup value={theme} onValueChange={applyTheme}>
                 <DropdownMenuRadioItem value='cosmic-nebula'>Cosmic Nebula</DropdownMenuRadioItem>
                 <DropdownMenuRadioItem value='midnight-black'>Midnight Black</DropdownMenuRadioItem>
                 <DropdownMenuRadioItem value='cotton-candy-glow'>Cotton Candy Glow</DropdownMenuRadioItem>
@@ -456,91 +413,64 @@ export const SideMenu: React.FC<SideMenuProps> = ({
               className="data-[state=checked]:bg-[--switch-checked-color]"
             />
           </div>
-          {soundEnabled && (
-            <div style={{ 
-              background: 'rgba(255, 255, 255, 0.08)', 
-              padding: '12px 16px', 
-              borderRadius: '15px',
-              fontSize: '0.9rem',
-              marginTop: '12px',
-              backdropFilter: 'blur(15px)',
-              border: '1px solid rgba(255, 255, 255, 0.15)'
-            }}>
-              <label style={{ fontSize: '0.7rem', marginBottom: '8px', display: 'block', opacity: 0.7 }}>Volume: {soundVolume}%</label>
-              <input 
-                type="range" 
-                min="0" 
-                max="100" 
-                value={soundVolume} 
-                onChange={(e) => setSoundVolume(Number(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '6px',
-                  borderRadius: '3px',
-                  background: 'rgba(255, 255, 255, 0.2)',
-                  outline: 'none',
-                  cursor: 'pointer'
-                }}
-              />
-            </div>
-          )}
         </div>
 
-        <div style={{ marginBottom: '1.5rem' }}>
-          <h4 style={{ marginBottom: '0.5rem', fontSize: '0.8rem', fontWeight: '600', opacity: 0.8 }}>Background Music:</h4>
-          <div style={{ 
-            '--switch-checked-color': getButtonColor(),
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'space-between', 
-            background: 'rgba(255, 255, 255, 0.08)', 
-            padding: '12px 16px', 
-            borderRadius: '15px',
-            fontSize: '0.9rem',
-            marginBottom: '12px',
-            backdropFilter: 'blur(15px)',
-            border: '1px solid rgba(255, 255, 255, 0.15)'
-          } as React.CSSProperties}>
-            <span>{musicEnabled ? 'Enabled' : 'Disabled'}</span>
-            <Switch 
-              checked={musicEnabled} 
-              onCheckedChange={setMusicEnabled}
-              className="data-[state=checked]:bg-[--switch-checked-color]"
-            />
-          </div>
-          {musicEnabled && (
+        {hasMusic && (
+          <div style={{ marginBottom: '1.5rem' }}>
+            <h4 style={{ marginBottom: '0.5rem', fontSize: '0.8rem', fontWeight: '600', opacity: 0.8 }}>Background Music:</h4>
             <div style={{ 
+              '--switch-checked-color': getButtonColor(),
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'space-between', 
               background: 'rgba(255, 255, 255, 0.08)', 
               padding: '12px 16px', 
               borderRadius: '15px',
               fontSize: '0.9rem',
+              marginBottom: '12px',
               backdropFilter: 'blur(15px)',
               border: '1px solid rgba(255, 255, 255, 0.15)'
-            }}>
-              <label style={{ fontSize: '0.7rem', marginBottom: '8px', display: 'block', opacity: 0.7 }}>Volume: {musicVolume}%</label>
-              <input 
-                type="range" 
-                min="0" 
-                max="100" 
-                value={musicVolume} 
-                onChange={(e) => setMusicVolume(Number(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '6px',
-                  borderRadius: '3px',
-                  background: 'rgba(255, 255, 255, 0.2)',
-                  outline: 'none',
-                  cursor: 'pointer'
-                }}
+            } as React.CSSProperties}>
+              <span>{backgroundMusicEnabled ? 'Enabled' : 'Disabled'}</span>
+              <Switch 
+                checked={backgroundMusicEnabled} 
+                onCheckedChange={setBackgroundMusicEnabled}
+                className="data-[state=checked]:bg-[--switch-checked-color]"
               />
             </div>
-          )}
-        </div>
+            {backgroundMusicEnabled && (
+              <div style={{ 
+                background: 'rgba(255, 255, 255, 0.08)', 
+                padding: '12px 16px', 
+                borderRadius: '15px',
+                fontSize: '0.9rem',
+                backdropFilter: 'blur(15px)',
+                border: '1px solid rgba(255, 255, 255, 0.15)'
+              }}>
+                <label style={{ fontSize: '0.7rem', marginBottom: '8px', display: 'block', opacity: 0.7 }}>Volume: {musicVolume}%</label>
+                <input 
+                  type="range" 
+                  min="0" 
+                  max="100" 
+                  value={musicVolume} 
+                  onChange={(e) => setMusicVolume(Number(e.target.value))}
+                  style={{
+                    width: '100%',
+                    height: '6px',
+                    borderRadius: '3px',
+                    background: 'rgba(255, 255, 255, 0.2)',
+                    outline: 'none',
+                    cursor: 'pointer'
+                  }}
+                />
+              </div>
+            )}
+          </div>
+        )}
         
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-          <button onClick={onHistoryClick} style={{...dropdownTriggerStyle, justifyContent: 'center' }}>View Test History</button>
-          <button onClick={onAchievementsClick} style={{...dropdownTriggerStyle, justifyContent: 'center' }}>View Achievements</button>
-          <button onClick={onMusicUploadClick} style={{...dropdownTriggerStyle, justifyContent: 'center' }}>Upload Music</button>
+          <button onClick={handleHistoryClick} style={{...dropdownTriggerStyle, justifyContent: 'center' }}>View Test History</button>
+          <button onClick={handleContactMe} style={{...dropdownTriggerStyle, justifyContent: 'center' }}>Contact Me</button>
           <button onClick={handleCheckThisOut} style={{...dropdownTriggerStyle, justifyContent: 'center' }}>Check this out</button>
         </div>
       </div>

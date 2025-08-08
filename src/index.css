@@ -91,56 +91,40 @@
 
   body {
     @apply bg-background text-foreground;
-    transition: none !important;
+    transition: all 0.5s ease-in-out !important;
   }
 
   /* Theme backgrounds with no flash - Fixed colors */
   .theme-cosmic-nebula {
-    background: linear-gradient(135deg, hsl(280, 87%, 20%), hsl(206, 95%, 28%)) !important;
-    transition: none !important;
+    background: linear-gradient(135deg, #400354, #03568c) !important;
+    transition: background 0.5s ease-in-out !important;
   }
 
   .theme-midnight-black {
-    background: hsl(0, 0%, 4%) !important;
-    transition: none !important;
+    background: #0a0a0a !important; /* Slightly lighter to prevent white flash */
+    transition: background 0.5s ease-in-out !important;
   }
 
   .theme-cotton-candy-glow {
-    background: linear-gradient(135deg, hsl(194, 92%, 52%), hsl(208, 92%, 68%)) !important;
-    transition: none !important;
+    background: linear-gradient(135deg, #12cff3, #5ab2f7) !important; /* Updated to match animation */
+    transition: background 0.5s ease-in-out !important;
   }
 
   /* Custom cursor styles */
   .cursor-blue {
-    cursor: url('./assets/cursor-blue.svg') 12 12, auto !important;
-  }
-
-  .cursor-blue * {
-    cursor: url('./assets/cursor-blue.svg') 12 12, auto !important;
+    cursor: url('./assets/cursor-blue.svg') 12 12, auto;
   }
 
   .cursor-black {
-    cursor: url('./assets/cursor-black.svg') 12 12, auto !important;
-  }
-
-  .cursor-black * {
-    cursor: url('./assets/cursor-black.svg') 12 12, auto !important;
+    cursor: url('./assets/cursor-black.svg') 12 12, auto;
   }
 
   .cursor-pink {
-    cursor: url('./assets/cursor-pink.svg') 12 12, auto !important;
-  }
-
-  .cursor-pink * {
-    cursor: url('./assets/cursor-pink.svg') 12 12, auto !important;
+    cursor: url('./assets/cursor-pink.svg') 12 12, auto;
   }
 
   .cursor-white {
-    cursor: url('./assets/cursor-white.svg') 12 12, auto !important;
-  }
-
-  .cursor-white * {
-    cursor: url('./assets/cursor-white.svg') 12 12, auto !important;
+    cursor: url('./assets/cursor-white.svg') 12 12, auto;
   }
 
   /* Glass style scrollbar */
