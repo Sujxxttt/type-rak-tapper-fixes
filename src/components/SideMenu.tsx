@@ -88,7 +88,6 @@ export const SideMenu: React.FC<SideMenuProps> = ({
 }) => {
   const sideMenuRef = useRef<HTMLDivElement>(null);
   const [showCustomDuration, setShowCustomDuration] = useState(false);
-  const [cursorStyle, setCursorStyle] = useState(localStorage.getItem('typeRakCursor') || 'blue');
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

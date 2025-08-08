@@ -375,6 +375,7 @@ export default function Index() {
         onAchievementsClick={handleShowAchievements}
         onHistoryClick={handleShowHistory}
         onMusicUploadClick={handleMusicUploadClick}
+        hasMusic={hasMusic}
       />
 
       <div style={{
