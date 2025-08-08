@@ -7,6 +7,8 @@ interface StatsDisplayProps {
   totalErrors: number;
   currentErrorRate: number;
   theme: string;
+  unlockedAchievements?: number;
+  totalAchievements?: number;
 }
 
 export const StatsDisplay: React.FC<StatsDisplayProps> = ({
@@ -14,7 +16,9 @@ export const StatsDisplay: React.FC<StatsDisplayProps> = ({
   correctSigns,
   totalErrors,
   currentErrorRate,
-  theme
+  theme,
+  unlockedAchievements,
+  totalAchievements
 }) => {
   // Calculate WPM properly - correctSigns is already the correct character count
   const currentWPM = Math.round(Math.max(0, (correctSigns / 5) / Math.max(elapsed / 60, 1 / 60)));
@@ -91,7 +95,7 @@ export const StatsDisplay: React.FC<StatsDisplayProps> = ({
       }}>
         <span style={{ display: 'block', fontSize: '0.9rem', opacity: 0.8, marginBottom: '0.25rem' }}>Error Rate:</span>
         <span style={{ fontWeight: 'bold', fontSize: '1.2em' }}>
-          {currentErrorRate.toFixed(2)}%
+          {(currentErrorRate || 0).toFixed(2)}%
         </span>
       </div>
       <div style={{
@@ -107,6 +111,21 @@ export const StatsDisplay: React.FC<StatsDisplayProps> = ({
         <span style={{ display: 'block', fontSize: '0.9rem', opacity: 0.8, marginBottom: '0.25rem' }}>Signs:</span>
         <span style={{ fontWeight: 'bold', fontSize: '1.2em' }}>{correctSigns}</span>
       </div>
+      {unlockedAchievements !== undefined && totalAchievements !== undefined && (
+        <div style={{
+          background: theme === 'cotton-candy-glow' ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.3)',
+          padding: '0.8rem 1.2rem',
+          borderRadius: '6px',
+          textAlign: 'center',
+          color: theme === 'cotton-candy-glow' ? '#333' : 'white',
+          flexGrow: 1,
+          flexBasis: '150px',
+          minWidth: '120px'
+        }}>
+          <span style={{ display: 'block', fontSize: '0.9rem', opacity: 0.8, marginBottom: '0.25rem' }}>Achievements:</span>
+          <span style={{ fontWeight: 'bold', fontSize: '1.2em' }}>{unlockedAchievements}/{totalAchievements}</span>
+        </div>
+      )}
     </div>
   );
 };
