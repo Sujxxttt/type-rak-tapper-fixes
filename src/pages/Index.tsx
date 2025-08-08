@@ -28,17 +28,18 @@ export default function Index() {
   const [soundEnabled, setSoundEnabled] = useState(() => localStorage.getItem('typeRakSoundEnabled') === 'true');
   const [soundVolume, setSoundVolume] = useState(() => parseInt(localStorage.getItem('typeRakSoundVolume') || '50'));
   const [customDuration, setCustomDuration] = useState(() => parseInt(localStorage.getItem('typeRakCustomDuration') || '60'));
-  const [fontSize, setFontSize] = useState(() => localStorage.getItem('typeRakFontSize') || 'medium');
-  const [fontStyle, setFontStyle] = useState(() => localStorage.getItem('typeRakFontStyle') || 'sans');
+  const [fontSize, setFontSize] = useState(() => parseInt(localStorage.getItem('typeRakFontSize') || '100'));
+  const [fontStyle, setFontStyle] = useState(() => localStorage.getItem('typeRakFontStyle') || 'inter');
   const [cursorStyle, setCursorStyle] = useState(() => localStorage.getItem('typeRakCursorStyle') || 'blue');
   const [deleteConfirmState, setDeleteConfirmState] = useState({ show: false, callback: null });
   const [usersList, setUsersList] = useState([]);
   const [currentActiveUser, setCurrentActiveUser] = useState('');
-  const [toast, setToast] = useState(null);
+  const [toast, setToast] = useState<{message: string} | null>(null);
   const [easterEggUnlocked, setEasterEggUnlocked] = useState(false);
   const [cheatUsageCount, setCheatUsageCount] = useState(() => parseInt(localStorage.getItem(`typeRakCheatCount-${username}`) || '0'));
   const [downArrowCount, setDownArrowCount] = useState(0);
   const [showEasterEggButton, setShowEasterEggButton] = useState(false);
+  const [allTestHistory, setAllTestHistory] = useState([]);
 
   const containerRef = useRef(null);
   
@@ -47,9 +48,10 @@ export default function Index() {
   const { playSound } = useSoundEffects(soundEnabled, soundVolume);
 
   useEffect(() => {
-    document.body.className = `theme-${theme}`;
+    const newClass = `theme-${theme} cursor-${cursorStyle}`;
+    document.body.className = newClass;
     localStorage.setItem('typeRakTheme', theme);
-  }, [theme]);
+  }, [theme, cursorStyle]);
 
   useEffect(() => {
     localStorage.setItem('typeRakUsername', username);
@@ -76,7 +78,7 @@ export default function Index() {
   }, [customDuration]);
 
   useEffect(() => {
-    localStorage.setItem('typeRakFontSize', fontSize);
+    localStorage.setItem('typeRakFontSize', fontSize.toString());
   }, [fontSize]);
 
   useEffect(() => {
@@ -85,8 +87,7 @@ export default function Index() {
 
   useEffect(() => {
     localStorage.setItem('typeRakCursorStyle', cursorStyle);
-    document.body.className = `theme-${theme} cursor-${cursorStyle}`;
-  }, [cursorStyle, theme]);
+  }, [cursorStyle]);
 
   useEffect(() => {
     localStorage.setItem(`typeRakCheatCount-${username}`, cheatUsageCount.toString());
@@ -100,10 +101,8 @@ export default function Index() {
         const newCount = cheatUsageCount + 1;
         setCheatUsageCount(newCount);
         
-        // Show toast
         setToast({ message: 'Cheat activated! Test completed.' });
         
-        // Check for cheat-related achievements
         const stats = {
           wpm: 0,
           errorRate: 0,
@@ -121,9 +120,6 @@ export default function Index() {
         };
         
         checkAchievements(stats);
-        
-        // Trigger completion without using window.completeTest
-        // This would normally be handled by the TypingTest component
         console.log('Cheat activated - test should complete');
       }
     };
@@ -134,7 +130,7 @@ export default function Index() {
 
   // Down arrow and scroll detection for easter egg
   useEffect(() => {
-    const handleKeyDown = (event) => {
+    const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'ArrowDown' && !canScroll()) {
         const newCount = downArrowCount + 1;
         setDownArrowCount(newCount);
@@ -178,7 +174,7 @@ export default function Index() {
       case 'midnight-black':
         return '#0a0a0a';
       case 'cotton-candy-glow':
-        return 'linear-gradient(135deg, #12cff3 0%, #5ab2f7 100%)';
+        return 'linear-gradient(135deg, #ff69b4 0%, #ff1493 25%, #da70d6 50%, #ba55d3 75%, #9370db 100%)';
       default:
         return 'linear-gradient(135deg, #400354, #03568c)';
     }
@@ -187,11 +183,11 @@ export default function Index() {
   const getButtonColor = () => {
     switch (theme) {
       case 'midnight-black':
-        return 'rgba(197, 89, 247, 0.21)'; // 30% more transparent
+        return 'rgba(197, 89, 247, 0.21)';
       case 'cotton-candy-glow':
-        return 'rgba(252, 3, 223, 0.21)'; // 30% more transparent
+        return 'rgba(252, 3, 223, 0.21)';
       default:
-        return 'rgba(177, 9, 214, 0.21)'; // 30% more transparent
+        return 'rgba(177, 9, 214, 0.21)';
     }
   };
 
@@ -219,7 +215,6 @@ export default function Index() {
       localStorage.setItem(lastVisitKey, today);
     }
     
-    // Set first login date if not set
     if (!localStorage.getItem(`typeRakFirstLogin-${username}`)) {
       localStorage.setItem(`typeRakFirstLogin-${username}`, Date.now().toString());
     }
@@ -271,7 +266,7 @@ export default function Index() {
   const handleShowHistory = () => setCurrentView('history');
   const handleMusicUploadClick = () => setCurrentView('music-upload');
   const handleBackToDashboard = () => setCurrentView('main');
-  const handleDeleteConfirm = (callback) => setDeleteConfirmState({ show: true, callback });
+  const handleDeleteConfirm = (callback: any) => setDeleteConfirmState({ show: true, callback });
   const handleDeleteCancel = () => setDeleteConfirmState({ show: false, callback: null });
   const handleDeleteExecute = () => {
     if (deleteConfirmState.callback) {
@@ -300,6 +295,7 @@ export default function Index() {
         onBack={handleBackToDashboard}
         theme={theme}
         getButtonColor={getButtonColor}
+        username={username}
       />
     );
   }
@@ -307,6 +303,7 @@ export default function Index() {
   if (currentView === 'history') {
     return (
       <HistoryPage
+        allTestHistory={allTestHistory}
         onBack={handleBackToDashboard}
         theme={theme}
         getButtonColor={getButtonColor}
@@ -361,8 +358,8 @@ export default function Index() {
         setSoundVolume={setSoundVolume}
         customDuration={customDuration}
         setCustomDuration={setCustomDuration}
-        fontSize={parseInt(fontSize) || 16}
-        setFontSize={(size: number) => setFontSize(size.toString())}
+        fontSize={fontSize}
+        setFontSize={setFontSize}
         fontStyle={fontStyle}
         setFontStyle={setFontStyle}
         cursorStyle={cursorStyle}
@@ -402,7 +399,7 @@ export default function Index() {
         <TypingTest 
           theme={theme}
           customDuration={customDuration}
-          fontSize={parseInt(fontSize) || 16}
+          fontSize={fontSize}
           fontStyle={fontStyle}
           onTestComplete={handleTestComplete}
           playSound={playSound}
