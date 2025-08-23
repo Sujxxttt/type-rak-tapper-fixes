@@ -13,6 +13,7 @@ export interface Achievement {
   progress?: number;
   maxProgress?: number;
   condition: (stats: AchievementStats) => boolean;
+  progressCalculator?: (stats: AchievementStats) => number;
 }
 
 export interface AchievementStats {
@@ -26,6 +27,11 @@ export interface AchievementStats {
   dailyStreak: number;
   cleanSessions: number;
   daysSinceLastVisit: number;
+  totalVisitedDays: number;
+  daysSinceFirstLogin: number;
+  cheatCodeUsed: number;
+  maxWpmEver: number;
+  easterEggVisited: boolean;
 }
 
 export const useAchievements = (username: string) => {
@@ -42,7 +48,9 @@ export const useAchievements = (username: string) => {
       category: 'milestone',
       wpm: 0,
       unlocked: false,
-      condition: (stats) => stats.testsCompleted >= 1
+      maxProgress: 1,
+      condition: (stats) => stats.testsCompleted >= 1,
+      progressCalculator: (stats) => Math.min(stats.testsCompleted, 1)
     },
     {
       id: 'rookie-cookie',
@@ -52,7 +60,9 @@ export const useAchievements = (username: string) => {
       category: 'milestone',
       wpm: 0,
       unlocked: false,
-      condition: (stats) => stats.testsCompleted >= 10
+      maxProgress: 10,
+      condition: (stats) => stats.testsCompleted >= 10,
+      progressCalculator: (stats) => Math.min(stats.testsCompleted, 10)
     },
     {
       id: 'halfway-hero',
@@ -62,17 +72,21 @@ export const useAchievements = (username: string) => {
       category: 'speed',
       wpm: 50,
       unlocked: false,
-      condition: (stats) => stats.wpm >= 50
+      maxProgress: 50,
+      condition: (stats) => stats.wpm >= 50,
+      progressCalculator: (stats) => Math.min(stats.maxWpmEver, 50)
     },
     {
-      id: 'wpm-rising',
-      name: 'WPM Rising',
-      subtitle: 'Feels good, doesn\'t it?',
+      id: 'youre-not-slow-anymore',
+      name: 'You\'re Not Slow Anymore',
+      subtitle: '60 WPM — welcome to the real game.',
       description: 'Reach 60 WPM for the first time.',
       category: 'speed',
       wpm: 60,
       unlocked: false,
-      condition: (stats) => stats.wpm >= 60
+      maxProgress: 60,
+      condition: (stats) => stats.wpm >= 60,
+      progressCalculator: (stats) => Math.min(stats.maxWpmEver, 60)
     },
     {
       id: 'typist-on-rise',
@@ -82,7 +96,9 @@ export const useAchievements = (username: string) => {
       category: 'speed',
       wpm: 70,
       unlocked: false,
-      condition: (stats) => stats.wpm >= 70
+      maxProgress: 70,
+      condition: (stats) => stats.wpm >= 70,
+      progressCalculator: (stats) => Math.min(stats.maxWpmEver, 70)
     },
     {
       id: 'speed-class',
@@ -92,7 +108,9 @@ export const useAchievements = (username: string) => {
       category: 'speed',
       wpm: 80,
       unlocked: false,
-      condition: (stats) => stats.wpm >= 80
+      maxProgress: 80,
+      condition: (stats) => stats.wpm >= 80,
+      progressCalculator: (stats) => Math.min(stats.maxWpmEver, 80)
     },
     {
       id: 'ninety-nine',
@@ -102,7 +120,9 @@ export const useAchievements = (username: string) => {
       category: 'speed',
       wpm: 99,
       unlocked: false,
-      condition: (stats) => stats.wpm === 99
+      maxProgress: 99,
+      condition: (stats) => stats.wpm === 99,
+      progressCalculator: (stats) => Math.min(stats.maxWpmEver, 99)
     },
     {
       id: 'hundred-club',
@@ -112,7 +132,9 @@ export const useAchievements = (username: string) => {
       category: 'speed',
       wpm: 100,
       unlocked: false,
-      condition: (stats) => stats.wpm >= 100
+      maxProgress: 100,
+      condition: (stats) => stats.wpm >= 100,
+      progressCalculator: (stats) => Math.min(stats.maxWpmEver, 100)
     },
     {
       id: 'the-one',
@@ -122,7 +144,9 @@ export const useAchievements = (username: string) => {
       category: 'speed',
       wpm: 150,
       unlocked: false,
-      condition: (stats) => stats.wpm >= 150
+      maxProgress: 150,
+      condition: (stats) => stats.wpm >= 150,
+      progressCalculator: (stats) => Math.min(stats.maxWpmEver, 150)
     },
     {
       id: 'global-menace',
@@ -132,7 +156,9 @@ export const useAchievements = (username: string) => {
       category: 'speed',
       wpm: 180,
       unlocked: false,
-      condition: (stats) => stats.wpm >= 180
+      maxProgress: 180,
+      condition: (stats) => stats.wpm >= 180,
+      progressCalculator: (stats) => Math.min(stats.maxWpmEver, 180)
     },
     {
       id: 'sniper-hands',
@@ -182,7 +208,9 @@ export const useAchievements = (username: string) => {
       category: 'milestone',
       wpm: 0,
       unlocked: false,
-      condition: (stats) => stats.testsCompleted >= 50
+      maxProgress: 50,
+      condition: (stats) => stats.testsCompleted >= 50,
+      progressCalculator: (stats) => Math.min(stats.testsCompleted, 50)
     },
     {
       id: 'bruisy-finger',
@@ -192,7 +220,9 @@ export const useAchievements = (username: string) => {
       category: 'milestone',
       wpm: 0,
       unlocked: false,
-      condition: (stats) => stats.testsCompleted >= 100
+      maxProgress: 100,
+      condition: (stats) => stats.testsCompleted >= 100,
+      progressCalculator: (stats) => Math.min(stats.testsCompleted, 100)
     },
     {
       id: 'perfectionist',
@@ -202,27 +232,21 @@ export const useAchievements = (username: string) => {
       category: 'accuracy',
       wpm: 0,
       unlocked: false,
-      condition: (stats) => stats.perfectTests >= 5
+      maxProgress: 5,
+      condition: (stats) => stats.perfectTests >= 5,
+      progressCalculator: (stats) => Math.min(stats.perfectTests, 5)
     },
     {
-      id: 'clean-cutter',
-      name: 'Clean Cutter',
-      subtitle: 'Typed clean across 3 sessions.',
-      description: 'Complete 3 clean typing sessions.',
-      category: 'consistency',
-      wpm: 0,
-      unlocked: false,
-      condition: (stats) => stats.cleanSessions >= 3
-    },
-    {
-      id: 'consistent-chaos',
-      name: 'Consistent Chaos',
-      subtitle: 'Daily typing like it\'s therapy.',
+      id: 'key-commitment',
+      name: 'Key Commitment',
+      subtitle: 'You did it. One week, zero skips.',
       description: 'Use the app daily for 7 consecutive days.',
       category: 'consistency',
       wpm: 0,
       unlocked: false,
-      condition: (stats) => stats.dailyStreak >= 7
+      maxProgress: 7,
+      condition: (stats) => stats.dailyStreak >= 7,
+      progressCalculator: (stats) => Math.min(stats.dailyStreak, 7)
     },
     {
       id: 'logged-locked',
@@ -232,7 +256,81 @@ export const useAchievements = (username: string) => {
       category: 'consistency',
       wpm: 0,
       unlocked: false,
-      condition: (stats) => stats.dailyStreak >= 15
+      maxProgress: 15,
+      condition: (stats) => stats.dailyStreak >= 15,
+      progressCalculator: (stats) => Math.min(stats.dailyStreak, 15)
+    },
+    {
+      id: 'frequent-flyer',
+      name: 'Frequent Flyer',
+      subtitle: 'Your visits are basically scheduled.',
+      description: 'Visit the app for 50 total days.',
+      category: 'consistency',
+      wpm: 0,
+      unlocked: false,
+      maxProgress: 50,
+      condition: (stats) => stats.totalVisitedDays >= 50,
+      progressCalculator: (stats) => Math.min(stats.totalVisitedDays, 50)
+    },
+    {
+      id: 'that-one-typing-guy',
+      name: 'That One Typing Guy',
+      subtitle: 'You\'re not addicted. You\'re just... extremely attached.',
+      description: 'Visit the app for 100 total days.',
+      category: 'consistency',
+      wpm: 0,
+      unlocked: false,
+      maxProgress: 100,
+      condition: (stats) => stats.totalVisitedDays >= 100,
+      progressCalculator: (stats) => Math.min(stats.totalVisitedDays, 100)
+    },
+    {
+      id: 'loyal-keypresser',
+      name: 'Loyal Keypresser',
+      subtitle: '200 days Since We Met in. Just saying',
+      description: 'It\'s been 200 days since your first login.',
+      category: 'milestone',
+      wpm: 0,
+      unlocked: false,
+      maxProgress: 200,
+      condition: (stats) => stats.daysSinceFirstLogin >= 200,
+      progressCalculator: (stats) => Math.min(stats.daysSinceFirstLogin, 200)
+    },
+    {
+      id: 'typing-together-forever',
+      name: 'Typing Together, Forever',
+      subtitle: '300 Days.You stayed long enough for us to care deeply.',
+      description: 'It\'s been 300 days since your first login.',
+      category: 'milestone',
+      wpm: 0,
+      unlocked: false,
+      maxProgress: 300,
+      condition: (stats) => stats.daysSinceFirstLogin >= 300,
+      progressCalculator: (stats) => Math.min(stats.daysSinceFirstLogin, 300)
+    },
+    {
+      id: 'its-been-a-year-love',
+      name: 'It\'s Been a Year, Love',
+      subtitle: 'Happy Typeiversary. You never wrote a love letter — but every test felt like one.',
+      description: 'It\'s been 365 days since your first login.',
+      category: 'milestone',
+      wpm: 0,
+      unlocked: false,
+      maxProgress: 365,
+      condition: (stats) => stats.daysSinceFirstLogin >= 365,
+      progressCalculator: (stats) => Math.min(stats.daysSinceFirstLogin, 365)
+    },
+    {
+      id: 'till-typing-do-us-part',
+      name: 'Till Typing Do Us Part',
+      subtitle: 'No logout could end this bond. And I mean that from the bottom of my cache.',
+      description: 'Complete 500 typing tests.',
+      category: 'milestone',
+      wpm: 0,
+      unlocked: false,
+      maxProgress: 500,
+      condition: (stats) => stats.testsCompleted >= 500,
+      progressCalculator: (stats) => Math.min(stats.testsCompleted, 500)
     },
     {
       id: 'comeback',
@@ -252,17 +350,21 @@ export const useAchievements = (username: string) => {
       category: 'milestone',
       wpm: 0,
       unlocked: false,
-      condition: (stats) => stats.dailyTypingTime >= 120
+      maxProgress: 120,
+      condition: (stats) => stats.dailyTypingTime >= 120,
+      progressCalculator: (stats) => Math.min(stats.dailyTypingTime, 120)
     },
     {
       id: 'hour-power',
       name: 'The Hour of Power',
       subtitle: 'Full hour of finger breaking exercise.',
-      description: 'Type for 3 hours in a single day.',
+      description: 'Type for 1 hour in a single day.',
       category: 'milestone',
       wpm: 0,
       unlocked: false,
-      condition: (stats) => stats.dailyTypingTime >= 180
+      maxProgress: 60,
+      condition: (stats) => stats.dailyTypingTime >= 60,
+      progressCalculator: (stats) => Math.min(stats.dailyTypingTime, 60)
     },
     {
       id: 'ultimate-grind',
@@ -272,17 +374,79 @@ export const useAchievements = (username: string) => {
       category: 'milestone',
       wpm: 0,
       unlocked: false,
-      condition: (stats) => stats.dailyTypingTime >= 300
+      maxProgress: 300,
+      condition: (stats) => stats.dailyTypingTime >= 300,
+      progressCalculator: (stats) => Math.min(stats.dailyTypingTime, 300)
+    },
+    {
+      id: 'wait-that-works',
+      name: 'Wait, That Works?',
+      subtitle: 'You found the secret. Now don\'t abuse it... too much.',
+      description: 'Access the cheat code for the first time.',
+      category: 'fun',
+      wpm: 0,
+      unlocked: false,
+      maxProgress: 1,
+      condition: (stats) => stats.cheatCodeUsed >= 1,
+      progressCalculator: (stats) => Math.min(stats.cheatCodeUsed, 1)
+    },
+    {
+      id: 'effort-overrated',
+      name: 'Effort is Overrated right?',
+      subtitle: 'I dont see any actual reason for it, but you do',
+      description: 'Use the cheat code 10 times.',
+      category: 'fun',
+      wpm: 0,
+      unlocked: false,
+      maxProgress: 10,
+      condition: (stats) => stats.cheatCodeUsed >= 10,
+      progressCalculator: (stats) => Math.min(stats.cheatCodeUsed, 10)
+    },
+    {
+      id: 'full-test-never-heard',
+      name: 'Full Test? Never Heard of It',
+      subtitle: 'You\'re allergic to full sessions, huh?',
+      description: 'Use the cheat code 50 times.',
+      category: 'fun',
+      wpm: 0,
+      unlocked: false,
+      maxProgress: 50,
+      condition: (stats) => stats.cheatCodeUsed >= 50,
+      progressCalculator: (stats) => Math.min(stats.cheatCodeUsed, 50)
+    },
+    {
+      id: 'legendary-skipper',
+      name: 'Legendary Skipper',
+      subtitle: 'You\'re the reason we made this badge.',
+      description: 'Use the cheat code 100 times.',
+      category: 'fun',
+      wpm: 0,
+      unlocked: false,
+      maxProgress: 100,
+      condition: (stats) => stats.cheatCodeUsed >= 100,
+      progressCalculator: (stats) => Math.min(stats.cheatCodeUsed, 100)
+    },
+    {
+      id: 'you-found-it',
+      name: 'You Found It',
+      subtitle: 'What were you hoping for? Definitely not this',
+      description: 'Visit the easter egg page.',
+      category: 'fun',
+      wpm: 0,
+      unlocked: false,
+      condition: (stats) => stats.easterEggVisited
     },
     {
       id: 'achievement-collector',
       name: 'Achievement Collector',
       subtitle: 'You unlocked this for unlocking stuff.',
-      description: 'Unlock 23 other achievements.',
+      description: 'Unlock 25 other achievements.',
       category: 'milestone',
       wpm: 0,
       unlocked: false,
-      condition: (stats) => stats.unlockedAchievements >= 23
+      maxProgress: 25,
+      condition: (stats) => stats.unlockedAchievements >= 25,
+      progressCalculator: (stats) => Math.min(stats.unlockedAchievements, 25)
     }
   ];
 
@@ -303,6 +467,12 @@ export const useAchievements = (username: string) => {
 
   const checkAchievements = (stats: AchievementStats) => {
     const updatedAchievements = achievements.map(achievement => {
+      // Calculate progress for unlocked achievements
+      let progress = 0;
+      if (achievement.progressCalculator && achievement.maxProgress) {
+        progress = achievement.progressCalculator(stats);
+      }
+
       if (!achievement.unlocked && achievement.condition(stats)) {
         // Achievement unlocked!
         setRecentAchievement({
@@ -310,9 +480,10 @@ export const useAchievements = (username: string) => {
           subtitle: achievement.subtitle,
           wpm: achievement.wpm
         });
-        return { ...achievement, unlocked: true, unlockedAt: new Date().toISOString() };
+        return { ...achievement, unlocked: true, unlockedAt: new Date().toISOString(), progress };
       }
-      return achievement;
+      
+      return { ...achievement, progress };
     });
 
     setAchievements(updatedAchievements);
