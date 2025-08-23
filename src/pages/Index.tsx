@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCookies } from 'react-cookie';
@@ -176,7 +177,6 @@ const Index = () => {
     setTotalErrors(0);
     setActualTypedCount(0);
     setWasLastError(false);
-    setCheatTimeAdded(0);
     setTime(60);
     startTimer(60);
   };
@@ -232,7 +232,7 @@ const Index = () => {
   };
 
   const handleNewTest = () => {
-    newTest(); // Call without arguments
+    newTest();
   };
 
   const handleUsernameSubmit = (name: string) => {
@@ -241,10 +241,10 @@ const Index = () => {
     setShowUsernameModal(false);
   };
 
-  const AchievementsPage = React.lazy(() => import('../components/AchievementsPage'));
+  const AchievementsPage = React.lazy(() => import('../components/AchievementsPage').then(module => ({ default: module.AchievementsPage })));
   const SettingsPage = React.lazy(() => import('../components/SettingsPage'));
   const TestHistoryPage = React.lazy(() => import('../components/TestHistoryPage'));
-  const EasterEggPage = React.lazy(() => import('../components/EasterEggPage'));
+  const EasterEggPage = React.lazy(() => import('../components/EasterEggPage').then(module => ({ default: module.default })));
 
   let content;
   switch (currentView) {
@@ -336,7 +336,7 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 py-6 flex flex-col justify-center sm:py-12">
+    <div className="min-h-screen bg-background py-6 flex flex-col justify-center sm:py-12">
       {showConfetti && <Confetti />}
       <div className="relative py-3 sm:max-w-xl sm:mx-auto">
         <div
@@ -405,8 +405,8 @@ const Index = () => {
       )}
 
       {showAchievementNotification && recentAchievement && (
-        <div className="fixed bottom-5 right-5 z-50 max-w-sm w-full bg-white shadow-lg rounded-lg pointer-events-auto ring-1 ring-black ring-opacity-5 overflow-hidden">
-          <div className="p-4">
+        <div className="fixed bottom-5 right-5 z-50 max-w-sm w-full bg-white shadow-lg rounded-lg pointer-events-auto ring-1 ring-black ring-opacity-5 overflow-hidden achievement-glow">
+          <div className="p-4 achievement-bg">
             <div className="flex items-start">
               <div className="flex-shrink-0">
                 <Trophy className="h-6 w-6 text-yellow-500" aria-hidden="true" />
