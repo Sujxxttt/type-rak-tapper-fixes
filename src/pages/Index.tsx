@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCookies } from 'react-cookie';
@@ -244,7 +243,9 @@ const Index = () => {
   const AchievementsPage = React.lazy(() => import('../components/AchievementsPage').then(module => ({ default: module.AchievementsPage })));
   const SettingsPage = React.lazy(() => import('../components/SettingsPage'));
   const TestHistoryPage = React.lazy(() => import('../components/TestHistoryPage'));
-  const EasterEggPage = React.lazy(() => import('../components/EasterEggPage').then(module => ({ default: module.default })));
+  const EasterEggPage = React.lazy(() =>
+    import('../components/EasterEggPage').then(module => ({ default: module.EasterEggPage }))
+  );
 
   let content;
   switch (currentView) {
@@ -323,13 +324,13 @@ const Index = () => {
         </React.Suspense>
       );
       break;
-      case 'easter-egg':
-        content = (
-          <React.Suspense fallback={<div>Loading Easter Egg...</div>}>
-            <EasterEggPage />
-          </React.Suspense>
-        );
-        break;
+    case 'easter-egg':
+      content = (
+        <React.Suspense fallback={<div>Loading Easter Egg...</div>}>
+          <EasterEggPage theme={theme} onGoBack={() => setCurrentView('typing-test')} />
+        </React.Suspense>
+      );
+      break;
     default:
       content = <div>Invalid view</div>;
       break;
