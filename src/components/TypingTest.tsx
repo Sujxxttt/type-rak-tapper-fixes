@@ -1,109 +1,161 @@
+
 import React, { useEffect } from 'react';
 
 interface TypingTestProps {
-  testText: string;
-  pos: number;
-  chars: HTMLElement[];
+  words: string[];
+  typed: string;
+  cursor: number;
+  start: boolean;
+  setStart: (start: boolean) => void;
+  time: number;
+  setTime: (time: number) => void;
+  wordCount: number;
+  errors: number;
+  newTest: () => void;
+  resetKeys: () => void;
+  clearTyped: () => void;
+  showConfetti: boolean;
   theme: string;
-  onKeyDown: (e: KeyboardEvent) => void;
-  fontSize: number;
-  fontStyle: string;
+  getButtonColor: () => string;
 }
 
 export const TypingTest: React.FC<TypingTestProps> = ({
-  testText,
-  pos,
-  chars,
+  words,
+  typed,
+  cursor,
+  start,
+  setStart,
+  time,
+  setTime,
+  wordCount,
+  errors,
+  newTest,
+  resetKeys,
+  clearTyped,
+  showConfetti,
   theme,
-  onKeyDown,
-  fontSize,
-  fontStyle
+  getButtonColor
 }) => {
+  const testText = words.join(' ');
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      onKeyDown(e);
+      if (!start && e.key !== 'Enter') {
+        setStart(true);
+      }
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [onKeyDown]);
+  }, [start, setStart]);
 
-  useEffect(() => {
-    if (chars.length > 0 && pos < chars.length) {
-      const currentChar = chars[pos];
-      const textFlowElement = document.getElementById('text-flow');
-      
-      if (currentChar && textFlowElement) {
-        // Calculate position for smooth horizontal scrolling
-        const charLeft = currentChar.offsetLeft;
-        const containerWidth = textFlowElement.clientWidth;
-        // Start scrolling when cursor is past the halfway point
-        const scrollLeft = Math.max(0, charLeft - containerWidth / 2);
-        
-        textFlowElement.scrollTo({
-          left: scrollLeft,
-          behavior: 'smooth'
-        });
+  const renderText = () => {
+    return testText.split('').map((char, index) => {
+      let className = '';
+      if (index < typed.length) {
+        className = typed[index] === char ? 'correct' : 'incorrect';
+      } else if (index === cursor) {
+        className = 'cursor';
       }
-    }
-  }, [pos, chars]);
-
-  const getFontFamily = () => {
-    switch (fontStyle) {
-      case 'roboto': return "'Roboto', sans-serif";
-      case 'open-sans': return "'Open Sans', sans-serif";
-      case 'lato': return "'Lato', sans-serif";
-      case 'source-sans-pro': return "'Source Sans Pro', sans-serif";
-      case 'inter': return "'Inter', sans-serif";
-      case 'dancing-script': return "'Dancing Script', cursive";
-      case 'pacifico': return "'Pacifico', cursive";
-      default: return "'Inter', sans-serif";
-    }
+      
+      return (
+        <span key={index} className={className}>
+          {char}
+        </span>
+      );
+    });
   };
 
   return (
     <div style={{
       width: '100%',
       maxWidth: '1040px',
-      height: '120px',
-      margin: '3rem auto 2rem auto', // Changed from 4rem to 3rem to move up by 1cm
+      margin: '3rem auto 2rem auto',
       padding: '1.5rem',
       background: theme === 'cotton-candy-glow' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.1)',
       borderRadius: '12px',
       backdropFilter: 'blur(10px)',
       border: '1px solid rgba(255, 255, 255, 0.2)',
-      position: 'relative',
-      fontSize: `${fontSize}%`,
-      fontFamily: getFontFamily(),
-      lineHeight: '1.4',
-      letterSpacing: '0.02em',
-      overflow: 'hidden'
+      position: 'relative'
     }}>
-      <div
-        id="text-flow"
-        style={{
-          color: 'white',
-          outline: 'none',
-          fontSize: 'inherit',
-          fontFamily: 'inherit',
-          lineHeight: 'inherit',
-          letterSpacing: 'inherit',
-          userSelect: 'none',
-          cursor: 'text',
-          height: '100%',
-          overflowX: 'auto',
-          overflowY: 'hidden',
-          whiteSpace: 'nowrap',
-          scrollbarWidth: 'none',
-          msOverflowStyle: 'none',
-          scrollBehavior: 'smooth',
-        }}
-        tabIndex={0}
-      />
+      {showConfetti && (
+        <div style={{
+          position: 'absolute',
+          top: '0',
+          left: '0',
+          right: '0',
+          bottom: '0',
+          pointerEvents: 'none',
+          background: 'linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.1) 50%, transparent 60%)',
+          animation: 'confetti 3s ease-out'
+        }} />
+      )}
       
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: '20px',
+        color: 'white'
+      }}>
+        <div>Time: {Math.floor(time / 60)}:{(time % 60).toString().padStart(2, '0')}</div>
+        <div>WPM: {Math.round((wordCount / Math.max((60 - time) / 60, 1/60)))}</div>
+        <div>Errors: {errors}</div>
+      </div>
+
+      <div style={{
+        color: 'white',
+        fontSize: '1.2rem',
+        lineHeight: '1.6',
+        fontFamily: 'monospace',
+        minHeight: '120px',
+        padding: '20px',
+        background: 'rgba(0, 0, 0, 0.2)',
+        borderRadius: '8px',
+        marginBottom: '20px'
+      }}>
+        {renderText()}
+      </div>
+
+      <div style={{ textAlign: 'center' }}>
+        <button
+          onClick={() => {
+            newTest();
+            resetKeys();
+            clearTyped();
+            setTime(60);
+            setStart(false);
+          }}
+          style={{
+            padding: '12px 24px',
+            background: getButtonColor(),
+            border: 'none',
+            borderRadius: '6px',
+            color: 'white',
+            fontSize: '16px',
+            cursor: 'pointer',
+            opacity: 0.7
+          }}
+        >
+          New Test
+        </button>
+      </div>
+
       <style>{`
-        #text-flow::-webkit-scrollbar {
-          display: none;
+        .correct { color: #4ade80; }
+        .incorrect { color: #ef4444; background: rgba(239, 68, 68, 0.2); }
+        .cursor { 
+          background: rgba(255, 255, 255, 0.8); 
+          color: #000;
+          animation: blink 1s infinite;
+        }
+        @keyframes blink {
+          0%, 50% { opacity: 1; }
+          51%, 100% { opacity: 0; }
+        }
+        @keyframes confetti {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
         }
       `}</style>
     </div>
