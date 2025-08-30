@@ -252,7 +252,7 @@ const Index: React.FC = () => {
       if (e.ctrlKey && e.altKey && e.key === 'Backspace' && testActive) {
         e.preventDefault();
         // Fixed: Only add time, don't subtract
-        addCheatTime(30);
+        addCheatTime();
         showToast("Cheat activated: +30 seconds added to your typing time!");
       }
     };
@@ -618,7 +618,7 @@ const Index: React.FC = () => {
       fontFamily: fontStyle === 'roboto' ? "'Roboto', sans-serif" : fontStyle === 'open-sans' ? "'Open Sans', sans-serif" : fontStyle === 'lato' ? "'Lato', sans-serif" : fontStyle === 'source-sans' ? "'Source Sans Pro', sans-serif" : fontStyle === 'dancing-script' ? "'Dancing Script', cursive" : fontStyle === 'pacifico' ? "'Pacifico', cursive" : "'Inter', sans-serif",
       fontSize: '112.5%',
       color: 'white',
-      background: theme === 'midnight-black' ? '#0a0a0a' : theme === 'cotton-candy-glow' ? 'linear-gradient(135deg, #12cff3, #5ab2f7)' : 'linear-gradient(45deg, #400354, #03568c)',
+      background: theme === 'midnight-black' ? '#000000' : theme === 'cotton-candy-glow' ? 'linear-gradient(135deg, #12cff3, #5ab2f7)' : 'linear-gradient(45deg, #400354, #03568c)',
       minHeight: '100vh',
       overflowX: 'hidden',
       transition: 'background 0.5s ease-in-out'
@@ -1148,29 +1148,6 @@ const Index: React.FC = () => {
 
             <StatsDisplay elapsed={elapsed} correctSigns={correctCharacters} totalErrors={totalErrors} currentErrorRate={getCurrentErrorRate()} theme={theme} />
 
-            {/* Achievement Panel in Test Area */}
-            <div style={{
-              position: 'fixed',
-              top: '20px',
-              left: '20px',
-              background: 'rgba(255, 215, 0, 0.1)',
-              backdropFilter: 'blur(20px)',
-              border: '1px solid rgba(255, 215, 0, 0.2)',
-              borderRadius: '12px',
-              padding: '15px',
-              minWidth: '200px',
-              zIndex: 100
-            }}>
-              <h4 style={{ margin: '0 0 10px 0', color: '#ffd700', fontSize: '0.9rem' }}>
-                <Trophy size={16} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
-                Progress
-              </h4>
-              <div style={{ fontSize: '0.8rem' }}>
-                <div>Achievements: {getUnlockedCount()}/{achievements.length}</div>
-                <div>Current WPM: {getCurrentWPM()}</div>
-                <div>Accuracy: {(100 - getCurrentErrorRate()).toFixed(1)}%</div>
-              </div>
-            </div>
 
             <div style={{
               display: 'flex',

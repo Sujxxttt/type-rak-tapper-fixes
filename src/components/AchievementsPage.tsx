@@ -41,7 +41,7 @@ const CircularProgress = ({ progress, maxProgress, size = 60 }: { progress: numb
           cx={size / 2}
           cy={size / 2}
           r={size / 2 - 4}
-          stroke="#ffd700"
+          stroke="#f7ba2c"
           strokeWidth="3"
           fill="transparent"
           strokeDasharray={circumference}
@@ -180,7 +180,7 @@ export const AchievementsPage: React.FC<AchievementsPageProps> = ({
                 display: 'flex', 
                 justifyContent: 'center', 
                 marginBottom: '10px',
-                color: '#ffd700'
+                color: '#f7ba2c'
               }}>
                 <CategoryIcon category={category} />
               </div>
@@ -231,11 +231,11 @@ export const AchievementsPage: React.FC<AchievementsPageProps> = ({
                   key={achievement.id}
                   style={{
                     background: achievement.unlocked ? 
-                      'rgba(255, 215, 0, 0.15)' : 
+                      'linear-gradient(135deg, rgba(247, 186, 44, 0.15), rgba(248, 169, 2, 0.15))' : 
                       'rgba(255, 255, 255, 0.08)',
                     backdropFilter: 'blur(20px)',
                     border: achievement.unlocked ? 
-                      '1px solid rgba(255, 215, 0, 0.3)' : 
+                      '1px solid rgba(247, 186, 44, 0.4)' : 
                       '1px solid rgba(255, 255, 255, 0.15)',
                     borderRadius: '12px',
                     padding: '20px',
@@ -250,7 +250,7 @@ export const AchievementsPage: React.FC<AchievementsPageProps> = ({
                     position: 'absolute',
                     top: '15px',
                     right: '15px',
-                    color: achievement.unlocked ? '#ffd700' : 'rgba(255, 255, 255, 0.4)'
+                    color: achievement.unlocked ? '#f7ba2c' : 'rgba(255, 255, 255, 0.4)'
                   }}>
                     <Trophy size={24} />
                   </div>
@@ -277,7 +277,7 @@ export const AchievementsPage: React.FC<AchievementsPageProps> = ({
                       margin: '0 0 8px 0',
                       fontSize: '1.2rem',
                       fontWeight: 'bold',
-                      color: achievement.unlocked ? '#ffd700' : 'white'
+                      color: achievement.unlocked ? '#f7ba2c' : 'white'
                     }}>
                       {achievement.name}
                     </h3>

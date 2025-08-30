@@ -34,7 +34,7 @@ export const Introduction: React.FC<IntroductionProps> = ({
     },
     {
       id: 'midnight-black',
-      background: '#0a0a0a', // Slightly lighter to prevent white flash
+      background: '#000000', // True AMOLED black to prevent white flash
       titleGradient: 'linear-gradient(90deg, #c559f7 0%, #7f59f7 100%)'
     },
     {
