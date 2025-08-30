@@ -89,7 +89,7 @@ export const AchievementsPage: React.FC<AchievementsPageProps> = ({
       padding: '20px',
       color: 'white'
     }}>
-      {/* Header - no progress icon here */}
+      {/* Header */}
       <div style={{
         display: 'flex',
         justifyContent: 'space-between',
@@ -130,8 +130,7 @@ export const AchievementsPage: React.FC<AchievementsPageProps> = ({
             borderRadius: '8px',
             cursor: 'pointer',
             fontSize: '1rem',
-            backdropFilter: 'blur(10px)',
-            opacity: 0.7
+            backdropFilter: 'blur(10px)'
           }}
         >
           Back to Dashboard
@@ -140,9 +139,9 @@ export const AchievementsPage: React.FC<AchievementsPageProps> = ({
 
       {/* Overall Progress */}
       <div style={{
-        background: 'linear-gradient(135deg, #f7ba2c, #f8a902)',
+        background: 'rgba(255, 255, 255, 0.1)',
         backdropFilter: 'blur(20px)',
-        border: '1px solid rgba(247, 186, 44, 0.3)',
+        border: '1px solid rgba(255, 255, 255, 0.2)',
         borderRadius: '16px',
         padding: '30px',
         marginBottom: '30px',
@@ -170,9 +169,9 @@ export const AchievementsPage: React.FC<AchievementsPageProps> = ({
           const progress = getCategoryProgress(category);
           return (
             <div key={category} style={{
-              background: 'linear-gradient(135deg, rgba(247, 186, 44, 0.2), rgba(248, 169, 2, 0.2))',
+              background: 'rgba(255, 255, 255, 0.1)',
               backdropFilter: 'blur(20px)',
-              border: '1px solid rgba(247, 186, 44, 0.3)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
               borderRadius: '12px',
               padding: '20px',
               textAlign: 'center'
@@ -232,11 +231,11 @@ export const AchievementsPage: React.FC<AchievementsPageProps> = ({
                   key={achievement.id}
                   style={{
                     background: achievement.unlocked ? 
-                      'linear-gradient(135deg, rgba(247, 186, 44, 0.25), rgba(248, 169, 2, 0.25))' : 
+                      'rgba(255, 215, 0, 0.15)' : 
                       'rgba(255, 255, 255, 0.08)',
                     backdropFilter: 'blur(20px)',
                     border: achievement.unlocked ? 
-                      '1px solid rgba(247, 186, 44, 0.4)' : 
+                      '1px solid rgba(255, 215, 0, 0.3)' : 
                       '1px solid rgba(255, 255, 255, 0.15)',
                     borderRadius: '12px',
                     padding: '20px',
@@ -246,22 +245,22 @@ export const AchievementsPage: React.FC<AchievementsPageProps> = ({
                     transition: 'all 0.3s ease'
                   }}
                 >
-                  {/* Achievement Icon - positioned to not cover title */}
+                  {/* Achievement Icon */}
                   <div style={{
                     position: 'absolute',
                     top: '15px',
                     right: '15px',
-                    color: achievement.unlocked ? '#f7ba2c' : 'rgba(255, 255, 255, 0.4)'
+                    color: achievement.unlocked ? '#ffd700' : 'rgba(255, 255, 255, 0.4)'
                   }}>
                     <Trophy size={24} />
                   </div>
 
-                  {/* Progress Circle for incomplete achievements - positioned to not interfere */}
+                  {/* Progress Circle for incomplete achievements */}
                   {!achievement.unlocked && achievement.maxProgress && (
                     <div style={{
                       position: 'absolute',
-                      bottom: '15px',
-                      right: '15px'
+                      top: '15px',
+                      left: '15px'
                     }}>
                       <CircularProgress 
                         progress={achievement.progress || 0} 
@@ -271,13 +270,14 @@ export const AchievementsPage: React.FC<AchievementsPageProps> = ({
                     </div>
                   )}
 
-                  <div>
+                  <div style={{ 
+                    marginTop: achievement.maxProgress && !achievement.unlocked ? '50px' : '0'
+                  }}>
                     <h3 style={{
                       margin: '0 0 8px 0',
                       fontSize: '1.2rem',
                       fontWeight: 'bold',
-                      color: achievement.unlocked ? '#f7ba2c' : 'white',
-                      paddingRight: '40px'
+                      color: achievement.unlocked ? '#ffd700' : 'white'
                     }}>
                       {achievement.name}
                     </h3>
