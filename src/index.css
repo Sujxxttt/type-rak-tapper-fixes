@@ -102,7 +102,16 @@
 
   .theme-midnight-black {
     background: #000000 !important; /* True AMOLED black to prevent white flash */
-    transition: background 0.5s ease-in-out !important;
+    transition: background 0.3s ease-in-out !important;
+  }
+
+  /* Prevent white flash on theme changes */
+  html, body {
+    background-color: #000000 !important;
+  }
+
+  .theme-midnight-black * {
+    transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out !important;
   }
 
   .theme-cotton-candy-glow {

@@ -87,7 +87,8 @@ export const AchievementsPage: React.FC<AchievementsPageProps> = ({
     <div style={{
       minHeight: '100vh',
       padding: '20px',
-      color: 'white'
+      color: 'white',
+      background: '#000000' // Pitch black background
     }}>
       {/* Header */}
       <div style={{

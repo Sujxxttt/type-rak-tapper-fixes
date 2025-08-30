@@ -15,6 +15,7 @@ import { useLocalStorage } from '../hooks/useLocalStorage';
 import { useSoundEffects } from '../hooks/useSoundEffects';
 import { useAchievements } from '../hooks/useAchievements';
 import { EasterEggPage } from '../components/EasterEggPage';
+import { EasterEggPrompt } from '../components/EasterEggPrompt';
 import { useBackgroundMusic } from '../hooks/useBackgroundMusic';
 
 const Index: React.FC = () => {
@@ -55,6 +56,11 @@ const Index: React.FC = () => {
   const [scrollCount, setScrollCount] = useState(0);
   const [scrollMessage, setScrollMessage] = useState('');
   const [showEasterEgg, setShowEasterEgg] = useState(false);
+  const [showEasterEggPrompt, setShowEasterEggPrompt] = useState(false);
+  const [cheatUsageCount, setCheatUsageCount] = useLocalStorage<number>(`typeRakCheatCount-${currentActiveUser}`, 0);
+  const [totalVisitDays, setTotalVisitDays] = useLocalStorage<number>(`typeRakVisitDays-${currentActiveUser}`, 0);
+  const [firstLoginDate, setFirstLoginDate] = useLocalStorage<string>(`typeRakFirstLogin-${currentActiveUser}`, '');
+  const [dailyTypingTime, setDailyTypingTime] = useLocalStorage<{ date: string; minutes: number }>(`typeRakDailyTime-${currentActiveUser}`, { date: '', minutes: 0 });
   const messageTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
   const startMessageTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
   const titleMessageTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
@@ -168,26 +174,36 @@ const Index: React.FC = () => {
     return () => window.removeEventListener('showEasterEgg', handleEasterEgg);
   }, []);
 
-  // Handle scroll easter egg
+  // Handle scroll easter egg - new logic for scrollable elements
   useEffect(() => {
+    const checkScrollableElements = () => {
+      const scrollableElements = Array.from(document.querySelectorAll('*')).filter(el => {
+        const style = window.getComputedStyle(el);
+        return (
+          (style.overflowY === 'scroll' || style.overflowY === 'auto') &&
+          el.scrollHeight > el.clientHeight
+        );
+      });
+      return scrollableElements.length > 0;
+    };
+
     const handleScroll = () => {
-      if (testActive || showEasterEgg) return;
-      const scrollMessages = ['Trying something , huh', 'well its working maybe you should try again', 'Again please !!!'];
-      if (scrollCount < 3) {
-        setScrollMessage(scrollMessages[scrollCount]);
-        setScrollCount(prev => prev + 1);
-        if (scrollTimeoutRef.current) {
-          clearTimeout(scrollTimeoutRef.current);
+      if (testActive || showEasterEgg || showEasterEggPrompt) return;
+      
+      const hasScrollableElements = checkScrollableElements();
+      
+      if (!hasScrollableElements) {
+        // No scrollable elements, show prompt immediately
+        setShowEasterEggPrompt(true);
+      } else {
+        // Has scrollable elements, check if at bottom of page
+        const isAtBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 10;
+        if (isAtBottom) {
+          setShowEasterEggPrompt(true);
         }
-        scrollTimeoutRef.current = setTimeout(() => {
-          setScrollMessage('');
-        }, 2000);
-      } else if (scrollCount === 3) {
-        setShowEasterEgg(true);
-        setScrollCount(0);
-        setScrollMessage('');
       }
     };
+
     let throttleTimer: NodeJS.Timeout;
     const throttledScroll = () => {
       if (throttleTimer) return;
@@ -196,14 +212,36 @@ const Index: React.FC = () => {
         throttleTimer = null as any;
       }, 500);
     };
+
     window.addEventListener('scroll', throttledScroll);
+    
+    // Also check on mount after content loads
+    const checkTimer = setTimeout(() => {
+      if (!testActive && !showEasterEgg && !showEasterEggPrompt) {
+        const hasScrollableElements = checkScrollableElements();
+        if (!hasScrollableElements) {
+          setShowEasterEggPrompt(true);
+        }
+      }
+    }, 1000);
+
     return () => {
       window.removeEventListener('scroll', throttledScroll);
+      clearTimeout(checkTimer);
       if (scrollTimeoutRef.current) {
         clearTimeout(scrollTimeoutRef.current);
       }
     };
-  }, [testActive, showEasterEgg, scrollCount]);
+  }, [testActive, showEasterEgg, showEasterEggPrompt]);
+
+  const handleEasterEggPromptOption = (option: 'sure' | 'fine' | 'no') => {
+    setShowEasterEggPrompt(false);
+    
+    if (option === 'sure' || option === 'fine') {
+      setShowEasterEgg(true);
+    }
+    // If 'no', just hide the prompt
+  };
 
   useEffect(() => {
     if (showIntroduction) return;
@@ -253,12 +291,13 @@ const Index: React.FC = () => {
         e.preventDefault();
         // Fixed: Only add time, don't subtract
         addCheatTime();
+        setCheatUsageCount(prev => prev + 1);
         showToast("Cheat activated: +30 seconds added to your typing time!");
       }
     };
     document.addEventListener('keydown', handleCheatCode);
     return () => document.removeEventListener('keydown', handleCheatCode);
-  }, [testActive, addCheatTime, showToast]);
+  }, [testActive, addCheatTime, showToast, setCheatUsageCount]);
 
   const endTest = useCallback(() => {
     if (gameOver) return;
@@ -298,6 +337,28 @@ const Index: React.FC = () => {
     setAllTestHistory(newHistory);
     localStorage.setItem(`typeRakHistory-${currentActiveUser}`, JSON.stringify(newHistory));
 
+    // Update daily typing time
+    const today = new Date().toDateString();
+    const currentDailyMinutes = dailyTypingTime.date === today ? dailyTypingTime.minutes + (actualTestDuration / 60) : (actualTestDuration / 60);
+    setDailyTypingTime({ date: today, minutes: currentDailyMinutes });
+
+    // Update visit tracking
+    const visitKey = `typeRakLastVisit-${currentActiveUser}`;
+    const lastVisit = localStorage.getItem(visitKey);
+    const daysSinceLastVisit = lastVisit ? Math.floor((Date.now() - new Date(lastVisit).getTime()) / (1000 * 60 * 60 * 24)) : 0;
+    
+    if (!lastVisit || daysSinceLastVisit >= 1) {
+      setTotalVisitDays(prev => prev + 1);
+      localStorage.setItem(visitKey, new Date().toISOString());
+    }
+
+    // Set first login date if not set
+    if (!firstLoginDate) {
+      setFirstLoginDate(new Date().toISOString());
+    }
+
+    const daysSinceFirstLogin = firstLoginDate ? Math.floor((Date.now() - new Date(firstLoginDate).getTime()) / (1000 * 60 * 60 * 24)) : 0;
+
     // Check achievements
     const achievementStats = {
       wpm: speed,
@@ -306,10 +367,14 @@ const Index: React.FC = () => {
       testsCompleted: newHistory.length,
       perfectTests: newHistory.filter(t => t.errorRate === 0).length,
       unlockedAchievements: getUnlockedCount(),
-      dailyTypingTime: 0, // This would need to be tracked separately
-      dailyStreak: 0, // This would need to be tracked separately
+      dailyTypingTime: 0, // Legacy field
+      dailyStreak: 0, // This would need to be tracked separately for consecutive days
       cleanSessions: 0, // This would need to be tracked separately
-      daysSinceLastVisit: 0 // This would need to be tracked separately
+      daysSinceLastVisit: daysSinceLastVisit,
+      cheatUsageCount: cheatUsageCount,
+      totalVisitDays: totalVisitDays,
+      daysSinceFirstLogin: daysSinceFirstLogin,
+      currentDailyTypingMinutes: currentDailyMinutes
     };
 
     // Only check speed achievements for tests 1+ minute
@@ -627,6 +692,12 @@ const Index: React.FC = () => {
       <AchievementNotification 
         achievement={recentAchievement} 
         onClose={closeAchievementNotification} 
+      />
+
+      {/* Easter Egg Prompt */}
+      <EasterEggPrompt 
+        visible={showEasterEggPrompt && !testActive} 
+        onOptionSelect={handleEasterEggPromptOption} 
       />
 
       <div style={{
