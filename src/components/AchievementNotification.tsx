@@ -17,6 +17,18 @@ export const AchievementNotification: React.FC<AchievementNotificationProps> = (
 }) => {
   const [isVisible, setIsVisible] = useState(false);
 
+  const handleClick = () => {
+    setIsVisible(false);
+    setTimeout(() => {
+      // Navigate to achievements page and scroll to achievement
+      const event = new CustomEvent('navigateToAchievement', { 
+        detail: { achievementName: achievement?.name } 
+      });
+      window.dispatchEvent(event);
+      onClose();
+    }, 300);
+  };
+
   useEffect(() => {
     if (achievement) {
       setIsVisible(true);
@@ -42,6 +54,7 @@ export const AchievementNotification: React.FC<AchievementNotificationProps> = (
 
   return (
     <div
+      onClick={handleClick}
       style={{
         position: 'fixed',
         top: '20px',
@@ -56,7 +69,8 @@ export const AchievementNotification: React.FC<AchievementNotificationProps> = (
         padding: '20px',
         color: 'white',
         minWidth: '300px',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+        cursor: 'pointer'
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>

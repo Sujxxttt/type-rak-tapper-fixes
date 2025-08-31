@@ -230,6 +230,7 @@ export const AchievementsPage: React.FC<AchievementsPageProps> = ({
               {categoryAchievements.map(achievement => (
                 <div
                   key={achievement.id}
+                  data-achievement-name={achievement.name}
                   style={{
                     background: achievement.unlocked ? 
                       'linear-gradient(135deg, rgba(247, 186, 44, 0.15), rgba(248, 169, 2, 0.15))' : 

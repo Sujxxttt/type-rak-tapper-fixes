@@ -41,9 +41,9 @@ export const EasterEggPrompt: React.FC<EasterEggPromptProps> = ({ onOptionSelect
         backdropFilter: 'blur(20px)',
         border: '1px solid rgba(255, 255, 255, 0.2)',
         borderRadius: '12px', 
-        padding: '15px 25px',
+        padding: '13.5px 22.5px',
         color: 'white',
-        fontSize: '1.1rem',
+        fontSize: '0.99rem',
         textAlign: 'center',
         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
       }}>
@@ -64,10 +64,10 @@ export const EasterEggPrompt: React.FC<EasterEggPromptProps> = ({ onOptionSelect
             backdropFilter: 'blur(20px)',
             border: '1px solid rgba(255, 255, 255, 0.3)',
             borderRadius: '8px',
-            padding: '10px 20px',
+            padding: '9px 18px',
             color: 'white',
             cursor: 'pointer',
-            fontSize: '0.95rem',
+            fontSize: '0.86rem',
             transition: 'all 0.3s ease',
             boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)'
           }}
@@ -90,10 +90,10 @@ export const EasterEggPrompt: React.FC<EasterEggPromptProps> = ({ onOptionSelect
             backdropFilter: 'blur(20px)',
             border: '1px solid rgba(255, 255, 255, 0.3)',
             borderRadius: '8px',
-            padding: '10px 20px',
+            padding: '9px 18px',
             color: 'white',
             cursor: 'pointer',
-            fontSize: '0.95rem',
+            fontSize: '0.86rem',
             transition: 'all 0.3s ease',
             boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)'
           }}
@@ -116,10 +116,10 @@ export const EasterEggPrompt: React.FC<EasterEggPromptProps> = ({ onOptionSelect
             backdropFilter: 'blur(20px)',
             border: '1px solid rgba(255, 255, 255, 0.3)',
             borderRadius: '8px',
-            padding: '10px 20px',
+            padding: '9px 18px',
             color: 'white',
             cursor: 'pointer',
-            fontSize: '0.95rem',
+            fontSize: '0.86rem',
             transition: 'all 0.3s ease',
             boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)'
           }}

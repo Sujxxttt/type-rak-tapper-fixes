@@ -161,4 +161,19 @@
   .achievement-glow {
     box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
   }
+
+  /* Achievement highlight animation */
+  .achievement-highlight {
+    animation: achievementGlow 3s ease-in-out;
+  }
+
+  @keyframes achievementGlow {
+    0%, 100% { 
+      box-shadow: 0 0 5px rgba(247, 186, 44, 0.3); 
+    }
+    50% { 
+      box-shadow: 0 0 20px rgba(247, 186, 44, 0.8), 0 0 30px rgba(248, 169, 2, 0.6); 
+      transform: scale(1.02);
+    }
+  }
 }

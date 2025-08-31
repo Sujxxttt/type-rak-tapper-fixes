@@ -57,6 +57,8 @@ const Index: React.FC = () => {
   const [scrollMessage, setScrollMessage] = useState('');
   const [showEasterEgg, setShowEasterEgg] = useState(false);
   const [showEasterEggPrompt, setShowEasterEggPrompt] = useState(false);
+  const [easterEggDismissed, setEasterEggDismissed] = useState(false);
+  const [scrollCountForEasterEgg, setScrollCountForEasterEgg] = useState(0);
   const [cheatUsageCount, setCheatUsageCount] = useLocalStorage<number>(`typeRakCheatCount-${currentActiveUser}`, 0);
   const [totalVisitDays, setTotalVisitDays] = useLocalStorage<number>(`typeRakVisitDays-${currentActiveUser}`, 0);
   const [firstLoginDate, setFirstLoginDate] = useLocalStorage<string>(`typeRakFirstLogin-${currentActiveUser}`, '');
@@ -74,6 +76,28 @@ const Index: React.FC = () => {
     closeAchievementNotification,
     getUnlockedCount 
   } = useAchievements(currentActiveUser);
+
+  // Listen for achievement navigation
+  useEffect(() => {
+    const handleNavigateToAchievement = (event: CustomEvent) => {
+      setCurrentScreen('achievements');
+      // Scroll to achievement after screen change
+      setTimeout(() => {
+        const achievementElement = document.querySelector(`[data-achievement-name="${event.detail.achievementName}"]`);
+        if (achievementElement) {
+          achievementElement.scrollIntoView({ behavior: 'smooth' });
+          // Add highlight effect
+          achievementElement.classList.add('achievement-highlight');
+          setTimeout(() => {
+            achievementElement.classList.remove('achievement-highlight');
+          }, 3000);
+        }
+      }, 100);
+    };
+
+    window.addEventListener('navigateToAchievement' as any, handleNavigateToAchievement);
+    return () => window.removeEventListener('navigateToAchievement' as any, handleNavigateToAchievement);
+  }, []);
 
   // Define showToast function early
   const showToast = (msg: string, isError = false) => {
@@ -174,8 +198,14 @@ const Index: React.FC = () => {
     return () => window.removeEventListener('showEasterEgg', handleEasterEgg);
   }, []);
 
-  // Handle scroll easter egg - new logic for scrollable elements
+  // Handle scroll easter egg - improved logic for scrollable elements
   useEffect(() => {
+    // Don't show on certain screens
+    const restrictedScreens = ['testName', 'newUser', 'typing'];
+    if (restrictedScreens.includes(currentScreen) || testActive || showEasterEgg || showEasterEggPrompt || easterEggDismissed) {
+      return;
+    }
+
     const checkScrollableElements = () => {
       const scrollableElements = Array.from(document.querySelectorAll('*')).filter(el => {
         const style = window.getComputedStyle(el);
@@ -188,17 +218,21 @@ const Index: React.FC = () => {
     };
 
     const handleScroll = () => {
-      if (testActive || showEasterEgg || showEasterEggPrompt) return;
+      if (restrictedScreens.includes(currentScreen) || testActive || showEasterEgg || showEasterEggPrompt || easterEggDismissed) {
+        return;
+      }
+      
+      setScrollCountForEasterEgg(prev => prev + 1);
       
       const hasScrollableElements = checkScrollableElements();
       
-      if (!hasScrollableElements) {
-        // No scrollable elements, show prompt immediately
+      if (!hasScrollableElements && scrollCountForEasterEgg >= 3) {
+        // No scrollable elements and scrolled 3+ times, show prompt
         setShowEasterEggPrompt(true);
-      } else {
+      } else if (hasScrollableElements) {
         // Has scrollable elements, check if at bottom of page
         const isAtBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 10;
-        if (isAtBottom) {
+        if (isAtBottom && scrollCountForEasterEgg >= 3) {
           setShowEasterEggPrompt(true);
         }
       }
@@ -215,9 +249,9 @@ const Index: React.FC = () => {
 
     window.addEventListener('scroll', throttledScroll);
     
-    // Also check on mount after content loads
+    // Also check on mount after content loads with scroll requirement
     const checkTimer = setTimeout(() => {
-      if (!testActive && !showEasterEgg && !showEasterEggPrompt) {
+      if (!restrictedScreens.includes(currentScreen) && !testActive && !showEasterEgg && !showEasterEggPrompt && !easterEggDismissed && scrollCountForEasterEgg >= 3) {
         const hasScrollableElements = checkScrollableElements();
         if (!hasScrollableElements) {
           setShowEasterEggPrompt(true);
@@ -232,15 +266,16 @@ const Index: React.FC = () => {
         clearTimeout(scrollTimeoutRef.current);
       }
     };
-  }, [testActive, showEasterEgg, showEasterEggPrompt]);
+  }, [testActive, showEasterEgg, showEasterEggPrompt, easterEggDismissed, currentScreen, scrollCountForEasterEgg]);
 
   const handleEasterEggPromptOption = (option: 'sure' | 'fine' | 'no') => {
     setShowEasterEggPrompt(false);
     
     if (option === 'sure' || option === 'fine') {
       setShowEasterEgg(true);
+    } else if (option === 'no') {
+      setEasterEggDismissed(true);
     }
-    // If 'no', just hide the prompt
   };
 
   useEffect(() => {
