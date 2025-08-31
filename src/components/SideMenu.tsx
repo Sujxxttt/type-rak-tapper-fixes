@@ -71,7 +71,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
 }) => {
   const sideMenuRef = useRef<HTMLDivElement>(null);
   const [showCustomDuration, setShowCustomDuration] = useState(false);
-  const [cursorStyle, setCursorStyle] = useState(localStorage.getItem('typeRakCursor') || 'blue');
+  const [cursorStyle, setCursorStyle] = useState(localStorage.getItem('typeRakCursor') || 'void-black');
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -100,14 +100,14 @@ export const SideMenu: React.FC<SideMenuProps> = ({
 
   const getFontFamilyString = (font: string) => {
     switch (font) {
-      case 'roboto': return "'Roboto', sans-serif";
-      case 'open-sans': return "'Open Sans', sans-serif";
-      case 'lato': return "'Lato', sans-serif";
-      case 'source-sans-pro': return "'Source Sans Pro', sans-serif";
-      case 'inter': return "'Inter', sans-serif";
-      case 'dancing-script': return "'Dancing Script', cursive";
+      case 'work-sans': return "'Work Sans', sans-serif";
+      case 'outfit': return "'Outfit', sans-serif";
+      case 'libre-baskerville': return "'Libre Baskerville', serif";
+      case 'sniglet': return "'Sniglet', cursive";
+      case 'codystar': return "'Codystar', cursive";
       case 'pacifico': return "'Pacifico', cursive";
-      default: return "'Inter', sans-serif";
+      case 'simple-day': return "'Simple Day', cursive";
+      default: return "'Work Sans', sans-serif";
     }
   };
 
@@ -173,10 +173,12 @@ export const SideMenu: React.FC<SideMenuProps> = ({
   const fontSizes = [80, 90, 100, 110, 120, 130, 140, 150, 175, 200];
   
   const cursors = [
-    { value: 'blue', label: 'Arrow Cursor (Blue)' },
-    { value: 'black', label: 'Arrow Cursor (Black)' },
-    { value: 'pink', label: 'Arrow Cursor (Pink)' },
-    { value: 'white', label: 'Arrow Cursor (White)' }
+    { value: 'void-black', label: 'Void Black' },
+    { value: 'snow-fall', label: 'Snow Fall' },
+    { value: 'mystic-purple', label: 'Mystic Purple' },
+    { value: 'glacier-blue', label: 'Glacier Blue' },
+    { value: 'sunset-orange', label: 'Sunset Orange' },
+    { value: 'dark-clouds', label: 'Dark Clouds' }
   ];
 
   const handleCheckThisOut = () => {
@@ -343,7 +345,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
               </DropdownMenuTrigger>
               <DropdownMenuContent style={dropdownContentStyle} className="w-[340px]" side="top">
                 <DropdownMenuRadioGroup value={fontStyle} onValueChange={setFontStyle}>
-                  {['inter', 'roboto', 'open-sans', 'lato', 'source-sans-pro', 'dancing-script', 'pacifico'].map(font => (
+                  {['work-sans', 'outfit', 'libre-baskerville', 'sniglet', 'codystar', 'pacifico', 'simple-day'].map(font => (
                     <DropdownMenuRadioItem key={font} value={font} style={{ fontFamily: getFontFamilyString(font), textTransform: 'capitalize'}}>{font.replace(/-/g, ' ')}</DropdownMenuRadioItem>
                   ))}
                 </DropdownMenuRadioGroup>
@@ -357,7 +359,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button style={dropdownTriggerStyle}>
-                <span style={{ textTransform: 'capitalize' }}>{cursors.find(c => c.value === cursorStyle)?.label || 'Arrow Cursor (Blue)'}</span>
+                <span style={{ textTransform: 'capitalize' }}>{cursors.find(c => c.value === cursorStyle)?.label || 'Void Black'}</span>
                 <span>▼</span>
               </button>
             </DropdownMenuTrigger>

@@ -18,6 +18,15 @@ export default {
 			}
 		},
 		extend: {
+			fontFamily: {
+				'work-sans': ['Work Sans', 'sans-serif'],
+				'outfit': ['Outfit', 'sans-serif'],
+				'libre-baskerville': ['Libre Baskerville', 'serif'],
+				'sniglet': ['Sniglet', 'cursive'],
+				'codystar': ['Codystar', 'cursive'],
+				'pacifico': ['Pacifico', 'cursive'],
+				'simple-day': ['Simple Day', 'cursive'],
+			},
 			colors: {
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',

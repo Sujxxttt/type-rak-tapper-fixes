@@ -33,7 +33,7 @@ const Index: React.FC = () => {
   const [deleteConfirmState, setDeleteConfirmState] = useState<boolean>(false);
   const [duration, setDuration] = useLocalStorage<number>("typeRakDuration", 60);
   const [fontSize, setFontSize] = useLocalStorage<number>("typeRakFontSize", 120);
-  const [fontStyle, setFontStyle] = useLocalStorage<string>("typeRakFontStyle", 'inter');
+  const [fontStyle, setFontStyle] = useLocalStorage<string>("typeRakFontStyle", 'work-sans');
   const [soundEnabled, setSoundEnabled] = useLocalStorage<boolean>("typeRakSoundEnabled", true);
   const [backgroundMusicEnabled, setBackgroundMusicEnabled] = useLocalStorage<boolean>("typeRakBackgroundMusicEnabled", false);
   const [musicVolume, setMusicVolume] = useLocalStorage<number>("typeRakMusicVolume", 50);
@@ -315,7 +315,7 @@ const Index: React.FC = () => {
     document.body.classList.add(`theme-${theme}`);
     
     // Apply cursor class from localStorage
-    const cursorStyle = localStorage.getItem('typeRakCursor') || 'blue';
+    const cursorStyle = localStorage.getItem('typeRakCursor') || 'void-black';
     document.body.className = document.body.className.replace(/cursor-\S+/g, '').trim();
     document.body.classList.add(`cursor-${cursorStyle}`);
   }, [theme]);
@@ -715,7 +715,7 @@ const Index: React.FC = () => {
 
   return (
     <div style={{
-      fontFamily: fontStyle === 'roboto' ? "'Roboto', sans-serif" : fontStyle === 'open-sans' ? "'Open Sans', sans-serif" : fontStyle === 'lato' ? "'Lato', sans-serif" : fontStyle === 'source-sans' ? "'Source Sans Pro', sans-serif" : fontStyle === 'dancing-script' ? "'Dancing Script', cursive" : fontStyle === 'pacifico' ? "'Pacifico', cursive" : "'Inter', sans-serif",
+      fontFamily: fontStyle === 'work-sans' ? "'Work Sans', sans-serif" : fontStyle === 'outfit' ? "'Outfit', sans-serif" : fontStyle === 'libre-baskerville' ? "'Libre Baskerville', serif" : fontStyle === 'sniglet' ? "'Sniglet', cursive" : fontStyle === 'codystar' ? "'Codystar', cursive" : fontStyle === 'pacifico' ? "'Pacifico', cursive" : fontStyle === 'simple-day' ? "'Simple Day', cursive" : "'Work Sans', sans-serif",
       fontSize: '112.5%',
       color: 'white',
       background: theme === 'midnight-black' ? '#000000' : theme === 'cotton-candy-glow' ? 'linear-gradient(135deg, #12cff3, #5ab2f7)' : 'linear-gradient(45deg, #400354, #03568c)',

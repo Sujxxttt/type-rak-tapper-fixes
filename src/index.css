@@ -120,20 +120,28 @@
   }
 
   /* Custom cursor styles */
-  .cursor-blue {
-    cursor: url('./assets/cursor-blue.svg') 12 12, auto;
+  .cursor-void-black {
+    cursor: url('./assets/cursor-void-black.svg') 12 12, auto;
   }
 
-  .cursor-black {
-    cursor: url('./assets/cursor-black.svg') 12 12, auto;
+  .cursor-snow-fall {
+    cursor: url('./assets/cursor-snow-fall.svg') 12 12, auto;
   }
 
-  .cursor-pink {
-    cursor: url('./assets/cursor-pink.svg') 12 12, auto;
+  .cursor-mystic-purple {
+    cursor: url('./assets/cursor-mystic-purple.svg') 12 12, auto;
   }
 
-  .cursor-white {
-    cursor: url('./assets/cursor-white.svg') 12 12, auto;
+  .cursor-glacier-blue {
+    cursor: url('./assets/cursor-glacier-blue.svg') 12 12, auto;
+  }
+
+  .cursor-sunset-orange {
+    cursor: url('./assets/cursor-sunset-orange.svg') 12 12, auto;
+  }
+
+  .cursor-dark-clouds {
+    cursor: url('./assets/cursor-dark-clouds.svg') 12 12, auto;
   }
 
   /* Glass style scrollbar */

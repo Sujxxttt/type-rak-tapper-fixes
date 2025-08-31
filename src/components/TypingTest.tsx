@@ -50,14 +50,14 @@ export const TypingTest: React.FC<TypingTestProps> = ({
 
   const getFontFamily = () => {
     switch (fontStyle) {
-      case 'roboto': return "'Roboto', sans-serif";
-      case 'open-sans': return "'Open Sans', sans-serif";
-      case 'lato': return "'Lato', sans-serif";
-      case 'source-sans-pro': return "'Source Sans Pro', sans-serif";
-      case 'inter': return "'Inter', sans-serif";
-      case 'dancing-script': return "'Dancing Script', cursive";
+      case 'work-sans': return "'Work Sans', sans-serif";
+      case 'outfit': return "'Outfit', sans-serif";
+      case 'libre-baskerville': return "'Libre Baskerville', serif";
+      case 'sniglet': return "'Sniglet', cursive";
+      case 'codystar': return "'Codystar', cursive";
       case 'pacifico': return "'Pacifico', cursive";
-      default: return "'Inter', sans-serif";
+      case 'simple-day': return "'Simple Day', cursive";
+      default: return "'Work Sans', sans-serif";
     }
   };
 
