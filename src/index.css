@@ -119,29 +119,45 @@
     transition: background 0.5s ease-in-out !important;
   }
 
-  /* Custom cursor styles */
-  .cursor-void-black {
-    cursor: url('./assets/cursor-void-black.svg') 12 12, auto;
+  /* Custom cursor styles - Applied to all elements */
+  .cursor-void-black, .cursor-void-black * {
+    cursor: url('./assets/cursor-void-black.svg') 12 12, auto !important;
   }
 
-  .cursor-snow-fall {
-    cursor: url('./assets/cursor-snow-fall.svg') 12 12, auto;
+  .cursor-snow-fall, .cursor-snow-fall * {
+    cursor: url('./assets/cursor-snow-fall.svg') 12 12, auto !important;
   }
 
-  .cursor-mystic-purple {
-    cursor: url('./assets/cursor-mystic-purple.svg') 12 12, auto;
+  .cursor-mystic-purple, .cursor-mystic-purple * {
+    cursor: url('./assets/cursor-mystic-purple.svg') 12 12, auto !important;
   }
 
-  .cursor-glacier-blue {
-    cursor: url('./assets/cursor-glacier-blue.svg') 12 12, auto;
+  .cursor-glacier-blue, .cursor-glacier-blue * {
+    cursor: url('./assets/cursor-glacier-blue.svg') 12 12, auto !important;
   }
 
-  .cursor-sunset-orange {
-    cursor: url('./assets/cursor-sunset-orange.svg') 12 12, auto;
+  .cursor-sunset-orange, .cursor-sunset-orange * {
+    cursor: url('./assets/cursor-sunset-orange.svg') 12 12, auto !important;
   }
 
-  .cursor-dark-clouds {
-    cursor: url('./assets/cursor-dark-clouds.svg') 12 12, auto;
+  .cursor-dark-clouds, .cursor-dark-clouds * {
+    cursor: url('./assets/cursor-dark-clouds.svg') 12 12, auto !important;
+  }
+
+  /* Smooth animations for all transitions */
+  * {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  }
+
+  /* Extra smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Smoother text flow */
+  #text-flow {
+    scroll-behavior: smooth !important;
+    transition: scroll-left 0.2s cubic-bezier(0.25, 0.1, 0.25, 1) !important;
   }
 
   /* Glass style scrollbar */

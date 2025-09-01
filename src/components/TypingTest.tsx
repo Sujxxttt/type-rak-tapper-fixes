@@ -40,10 +40,21 @@ export const TypingTest: React.FC<TypingTestProps> = ({
         // Start scrolling when cursor is past the halfway point
         const scrollLeft = Math.max(0, charLeft - containerWidth / 2);
         
-        textFlowElement.scrollTo({
-          left: scrollLeft,
-          behavior: 'smooth'
-        });
+        // Use requestAnimationFrame for ultra-smooth scrolling
+        const smoothScroll = () => {
+          const currentScrollLeft = textFlowElement.scrollLeft;
+          const distance = scrollLeft - currentScrollLeft;
+          const step = distance * 0.15; // Smooth easing
+          
+          if (Math.abs(step) > 0.5) {
+            textFlowElement.scrollLeft = currentScrollLeft + step;
+            requestAnimationFrame(smoothScroll);
+          } else {
+            textFlowElement.scrollLeft = scrollLeft;
+          }
+        };
+        
+        requestAnimationFrame(smoothScroll);
       }
     }
   }, [pos, chars]);

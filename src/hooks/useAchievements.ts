@@ -454,8 +454,8 @@ export const useAchievements = (username: string) => {
     const updatedAchievements = achievements.map(achievement => {
       const newAchievement = { ...achievement };
       
-      // Update progress for incomplete achievements
-      if (!achievement.unlocked && achievement.maxProgress && achievement.progressFunction) {
+      // Always update progress, even for completed achievements (for display purposes)
+      if (achievement.maxProgress && achievement.progressFunction) {
         newAchievement.progress = achievement.progressFunction(stats);
       }
       
@@ -474,6 +474,16 @@ export const useAchievements = (username: string) => {
 
     setAchievements(updatedAchievements);
     localStorage.setItem(`typeRakAchievements-${username}`, JSON.stringify(updatedAchievements));
+    
+    // Store additional persistent stats
+    localStorage.setItem(`typeRakMaxWpm-${username}`, String(Math.max(
+      parseInt(localStorage.getItem(`typeRakMaxWpm-${username}`) || '0'),
+      stats.wpm
+    )));
+    localStorage.setItem(`typeRakTotalTests-${username}`, String(stats.testsCompleted));
+    localStorage.setItem(`typeRakCheatCount-${username}`, String(stats.cheatUsageCount));
+    localStorage.setItem(`typeRakVisitDays-${username}`, String(stats.totalVisitDays));
+    localStorage.setItem(`typeRakDailyTime-${username}`, String(stats.currentDailyTypingMinutes));
   };
 
   const closeAchievementNotification = () => {

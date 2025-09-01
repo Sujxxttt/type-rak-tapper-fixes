@@ -198,75 +198,20 @@ const Index: React.FC = () => {
     return () => window.removeEventListener('showEasterEgg', handleEasterEgg);
   }, []);
 
-  // Handle scroll easter egg - improved logic for scrollable elements
+  // Handle easter egg with Ctrl+Shift+Space
   useEffect(() => {
-    // Don't show on certain screens
-    const restrictedScreens = ['testName', 'newUser', 'typing'];
-    if (restrictedScreens.includes(currentScreen) || testActive || showEasterEgg || showEasterEggPrompt || easterEggDismissed) {
-      return;
-    }
-
-    const checkScrollableElements = () => {
-      const scrollableElements = Array.from(document.querySelectorAll('*')).filter(el => {
-        const style = window.getComputedStyle(el);
-        return (
-          (style.overflowY === 'scroll' || style.overflowY === 'auto') &&
-          el.scrollHeight > el.clientHeight
-        );
-      });
-      return scrollableElements.length > 0;
-    };
-
-    const handleScroll = () => {
-      if (restrictedScreens.includes(currentScreen) || testActive || showEasterEgg || showEasterEggPrompt || easterEggDismissed) {
-        return;
-      }
-      
-      setScrollCountForEasterEgg(prev => prev + 1);
-      
-      const hasScrollableElements = checkScrollableElements();
-      
-      if (!hasScrollableElements && scrollCountForEasterEgg >= 3) {
-        // No scrollable elements and scrolled 3+ times, show prompt
-        setShowEasterEggPrompt(true);
-      } else if (hasScrollableElements) {
-        // Has scrollable elements, check if at bottom of page
-        const isAtBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 10;
-        if (isAtBottom && scrollCountForEasterEgg >= 3) {
+    const handleEasterEggShortcut = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.shiftKey && e.code === 'Space') {
+        e.preventDefault();
+        if (!showEasterEgg && !showEasterEggPrompt) {
           setShowEasterEggPrompt(true);
         }
       }
     };
 
-    let throttleTimer: NodeJS.Timeout;
-    const throttledScroll = () => {
-      if (throttleTimer) return;
-      throttleTimer = setTimeout(() => {
-        handleScroll();
-        throttleTimer = null as any;
-      }, 500);
-    };
-
-    window.addEventListener('scroll', throttledScroll);
-    
-    // Also check on mount after content loads with scroll requirement
-    const checkTimer = setTimeout(() => {
-      if (!restrictedScreens.includes(currentScreen) && !testActive && !showEasterEgg && !showEasterEggPrompt && !easterEggDismissed && scrollCountForEasterEgg >= 3) {
-        const hasScrollableElements = checkScrollableElements();
-        if (!hasScrollableElements) {
-          setShowEasterEggPrompt(true);
-        }
-      }
-    }, 1000);
-
-    return () => {
-      window.removeEventListener('scroll', throttledScroll);
-      clearTimeout(checkTimer);
-      if (scrollTimeoutRef.current) {
-        clearTimeout(scrollTimeoutRef.current);
-      }
-    };
-  }, [testActive, showEasterEgg, showEasterEggPrompt, easterEggDismissed, currentScreen, scrollCountForEasterEgg]);
+    document.addEventListener('keydown', handleEasterEggShortcut);
+    return () => document.removeEventListener('keydown', handleEasterEggShortcut);
+  }, [showEasterEgg, showEasterEggPrompt]);
 
   const handleEasterEggPromptOption = (option: 'sure' | 'fine' | 'no') => {
     setShowEasterEggPrompt(false);
@@ -324,7 +269,6 @@ const Index: React.FC = () => {
     const handleCheatCode = (e: KeyboardEvent) => {
       if (e.ctrlKey && e.altKey && e.key === 'Backspace' && testActive) {
         e.preventDefault();
-        // Fixed: Only add time, don't subtract
         addCheatTime();
         setCheatUsageCount(prev => prev + 1);
         showToast("Cheat activated: +30 seconds added to your typing time!");
@@ -377,13 +321,15 @@ const Index: React.FC = () => {
     const currentDailyMinutes = dailyTypingTime.date === today ? dailyTypingTime.minutes + (actualTestDuration / 60) : (actualTestDuration / 60);
     setDailyTypingTime({ date: today, minutes: currentDailyMinutes });
 
-    // Update visit tracking
+    // Update visit tracking - Day 1 logic fix
     const visitKey = `typeRakLastVisit-${currentActiveUser}`;
     const lastVisit = localStorage.getItem(visitKey);
     const daysSinceLastVisit = lastVisit ? Math.floor((Date.now() - new Date(lastVisit).getTime()) / (1000 * 60 * 60 * 24)) : 0;
     
     if (!lastVisit || daysSinceLastVisit >= 1) {
-      setTotalVisitDays(prev => prev + 1);
+      const currentVisitDays = totalVisitDays;
+      const newVisitDays = currentVisitDays === 0 ? 1 : currentVisitDays + 1; // Fix: Start from day 1, not 0
+      setTotalVisitDays(newVisitDays);
       localStorage.setItem(visitKey, new Date().toISOString());
     }
 
@@ -394,20 +340,26 @@ const Index: React.FC = () => {
 
     const daysSinceFirstLogin = firstLoginDate ? Math.floor((Date.now() - new Date(firstLoginDate).getTime()) / (1000 * 60 * 60 * 24)) : 0;
 
-    // Check achievements
+    // Load persistent progress from localStorage
+    const maxWpmStored = parseInt(localStorage.getItem(`typeRakMaxWpm-${currentActiveUser}`) || '0');
+    const totalTestsStored = parseInt(localStorage.getItem(`typeRakTotalTests-${currentActiveUser}`) || '0');
+    const cheatCountStored = parseInt(localStorage.getItem(`typeRakCheatCount-${currentActiveUser}`) || '0');
+    const visitDaysStored = parseInt(localStorage.getItem(`typeRakVisitDays-${currentActiveUser}`) || '0');
+
+    // Check achievements with persistent and current stats
     const achievementStats = {
-      wpm: speed,
+      wpm: Math.max(speed, maxWpmStored), // Use max WPM ever achieved
       errorRate: parseFloat(errorRate.toFixed(2)),
       duration: actualTestDuration,
-      testsCompleted: newHistory.length,
+      testsCompleted: Math.max(newHistory.length, totalTestsStored), // Use max tests completed
       perfectTests: newHistory.filter(t => t.errorRate === 0).length,
       unlockedAchievements: getUnlockedCount(),
       dailyTypingTime: 0, // Legacy field
       dailyStreak: 0, // This would need to be tracked separately for consecutive days
       cleanSessions: 0, // This would need to be tracked separately
       daysSinceLastVisit: daysSinceLastVisit,
-      cheatUsageCount: cheatUsageCount,
-      totalVisitDays: totalVisitDays,
+      cheatUsageCount: Math.max(cheatUsageCount, cheatCountStored), // Use max cheat usage
+      totalVisitDays: Math.max(totalVisitDays, visitDaysStored), // Use max visit days
       daysSinceFirstLogin: daysSinceFirstLogin,
       currentDailyTypingMinutes: currentDailyMinutes
     };

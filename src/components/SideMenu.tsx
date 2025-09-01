@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Switch } from '@/components/ui/switch';
 import { CustomDurationSlider } from './CustomDurationSlider';
+import { MusicPlayer } from './MusicPlayer';
 
 interface SideMenuProps {
   sideMenuOpen: boolean;
@@ -417,58 +418,12 @@ export const SideMenu: React.FC<SideMenuProps> = ({
           </div>
         </div>
 
-        {hasMusic && (
-          <div style={{ marginBottom: '1.5rem' }}>
-            <h4 style={{ marginBottom: '0.5rem', fontSize: '0.8rem', fontWeight: '600', opacity: 0.8 }}>Background Music:</h4>
-            <div style={{ 
-              '--switch-checked-color': getButtonColor(),
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'space-between', 
-              background: 'rgba(255, 255, 255, 0.08)', 
-              padding: '12px 16px', 
-              borderRadius: '15px',
-              fontSize: '0.9rem',
-              marginBottom: '12px',
-              backdropFilter: 'blur(15px)',
-              border: '1px solid rgba(255, 255, 255, 0.15)'
-            } as React.CSSProperties}>
-              <span>{backgroundMusicEnabled ? 'Enabled' : 'Disabled'}</span>
-              <Switch 
-                checked={backgroundMusicEnabled} 
-                onCheckedChange={setBackgroundMusicEnabled}
-                className="data-[state=checked]:bg-[--switch-checked-color]"
-              />
-            </div>
-            {backgroundMusicEnabled && (
-              <div style={{ 
-                background: 'rgba(255, 255, 255, 0.08)', 
-                padding: '12px 16px', 
-                borderRadius: '15px',
-                fontSize: '0.9rem',
-                backdropFilter: 'blur(15px)',
-                border: '1px solid rgba(255, 255, 255, 0.15)'
-              }}>
-                <label style={{ fontSize: '0.7rem', marginBottom: '8px', display: 'block', opacity: 0.7 }}>Volume: {musicVolume}%</label>
-                <input 
-                  type="range" 
-                  min="0" 
-                  max="100" 
-                  value={musicVolume} 
-                  onChange={(e) => setMusicVolume(Number(e.target.value))}
-                  style={{
-                    width: '100%',
-                    height: '6px',
-                    borderRadius: '3px',
-                    background: 'rgba(255, 255, 255, 0.2)',
-                    outline: 'none',
-                    cursor: 'pointer'
-                  }}
-                />
-              </div>
-            )}
-          </div>
-        )}
+        <MusicPlayer 
+          enabled={backgroundMusicEnabled} 
+          volume={musicVolume} 
+          setVolume={setMusicVolume}
+          getButtonColor={getButtonColor}
+        />
         
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           <button onClick={handleHistoryClick} style={{...dropdownTriggerStyle, justifyContent: 'center' }}>View Test History</button>
