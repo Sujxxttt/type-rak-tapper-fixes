@@ -34,23 +34,24 @@ export const TypingTest: React.FC<TypingTestProps> = ({
       const textFlowElement = document.getElementById('text-flow');
       
       if (currentChar && textFlowElement) {
-        // Calculate position for smooth horizontal scrolling
-        const charLeft = currentChar.offsetLeft;
+        // Calculate position for smooth horizontal scrolling relative to the scroll container
         const containerWidth = textFlowElement.clientWidth;
-        // Start scrolling when cursor is past the halfway point
-        const scrollLeft = Math.max(0, charLeft - containerWidth / 2);
+        const charRect = currentChar.getBoundingClientRect();
+        const containerRect = textFlowElement.getBoundingClientRect();
+        const charLeftInContainer = charRect.left - containerRect.left;
+        const targetScrollLeft = Math.max(0, textFlowElement.scrollLeft + (charLeftInContainer - containerWidth / 2));
         
         // Use requestAnimationFrame for ultra-smooth scrolling
         const smoothScroll = () => {
           const currentScrollLeft = textFlowElement.scrollLeft;
-          const distance = scrollLeft - currentScrollLeft;
-          const step = distance * 0.15; // Smooth easing
+          const distance = targetScrollLeft - currentScrollLeft;
+          const step = distance * 0.2; // Smooth easing
           
-          if (Math.abs(step) > 0.5) {
+          if (Math.abs(distance) > 0.5) {
             textFlowElement.scrollLeft = currentScrollLeft + step;
             requestAnimationFrame(smoothScroll);
           } else {
-            textFlowElement.scrollLeft = scrollLeft;
+            textFlowElement.scrollLeft = targetScrollLeft;
           }
         };
         

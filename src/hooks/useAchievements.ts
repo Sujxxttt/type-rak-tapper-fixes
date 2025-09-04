@@ -435,19 +435,44 @@ export const useAchievements = (username: string) => {
     }
   ];
 
-  // Load achievements from localStorage
+  // Load achievements and persisted progress from localStorage
   useEffect(() => {
     const savedAchievements = localStorage.getItem(`typeRakAchievements-${username}`);
-    if (savedAchievements) {
-      const parsed = JSON.parse(savedAchievements);
-      const updatedAchievements = allAchievements.map(achievement => {
-        const saved = parsed.find((a: Achievement) => a.id === achievement.id);
-        return saved ? { ...achievement, unlocked: saved.unlocked, unlockedAt: saved.unlockedAt } : achievement;
-      });
-      setAchievements(updatedAchievements);
-    } else {
-      setAchievements(allAchievements);
-    }
+    const savedProgressRaw = localStorage.getItem(`typeRakAchievementProgress-${username}`);
+    const savedProgress: Record<string, number> = savedProgressRaw ? JSON.parse(savedProgressRaw) : {};
+
+    // Build persisted stats snapshot so progress for incomplete achievements doesn't reset to 0 on reload
+    const persistedStats: AchievementStats = {
+      wpm: parseInt(localStorage.getItem(`typeRakMaxWpm-${username}`) || '0'),
+      errorRate: 0,
+      duration: 0,
+      testsCompleted: parseInt(localStorage.getItem(`typeRakTotalTests-${username}`) || '0'),
+      perfectTests: 0,
+      unlockedAchievements: 0,
+      dailyTypingTime: 0,
+      dailyStreak: 0,
+      cleanSessions: 0,
+      daysSinceLastVisit: 0,
+      cheatUsageCount: parseInt(localStorage.getItem(`typeRakCheatCount-${username}`) || '0'),
+      totalVisitDays: parseInt(localStorage.getItem(`typeRakVisitDays-${username}`) || '0'),
+      daysSinceFirstLogin: 0,
+      currentDailyTypingMinutes: parseFloat(localStorage.getItem(`typeRakDailyTime-${username}`) || '0')
+    };
+
+    const base = savedAchievements ? JSON.parse(savedAchievements) : null;
+    const updatedAchievements = (base ? allAchievements.map(achievement => {
+      const saved = base.find((a: Achievement) => a.id === achievement.id);
+      return saved ? { ...achievement, unlocked: saved.unlocked, unlockedAt: saved.unlockedAt } : achievement;
+    }) : allAchievements).map((achievement) => {
+      if (achievement.maxProgress && achievement.progressFunction) {
+        const persisted = savedProgress[achievement.id];
+        const progress = typeof persisted === 'number' ? persisted : achievement.progressFunction(persistedStats);
+        return { ...achievement, progress };
+      }
+      return achievement;
+    });
+
+    setAchievements(updatedAchievements);
   }, [username]);
 
   const checkAchievements = (stats: AchievementStats) => {
@@ -474,6 +499,15 @@ export const useAchievements = (username: string) => {
 
     setAchievements(updatedAchievements);
     localStorage.setItem(`typeRakAchievements-${username}`, JSON.stringify(updatedAchievements));
+
+    // Persist per-achievement progress so it survives reloads (even if not unlocked yet)
+    const progressMap: Record<string, number> = {};
+    updatedAchievements.forEach((a) => {
+      if (typeof a.progress === 'number') {
+        progressMap[a.id] = a.progress;
+      }
+    });
+    localStorage.setItem(`typeRakAchievementProgress-${username}`, JSON.stringify(progressMap));
     
     // Store additional persistent stats
     localStorage.setItem(`typeRakMaxWpm-${username}`, String(Math.max(
