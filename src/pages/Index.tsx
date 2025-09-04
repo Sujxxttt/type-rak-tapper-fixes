@@ -64,6 +64,7 @@ const Index: React.FC = () => {
   const [firstLoginDate, setFirstLoginDate] = useLocalStorage<string>(`typeRakFirstLogin-${currentActiveUser}`, '');
   const [dailyTypingTime, setDailyTypingTime] = useLocalStorage<{ date: string; minutes: number }>(`typeRakDailyTime-${currentActiveUser}`, { date: '', minutes: 0 });
   const [dailyStreak, setDailyStreak] = useLocalStorage<number>(`typeRakDailyStreak-${currentActiveUser}`, 0);
+  const [cheatUsedThisTest, setCheatUsedThisTest] = useState<boolean>(false);
   const messageTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
   const startMessageTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
   const titleMessageTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
@@ -271,13 +272,13 @@ const Index: React.FC = () => {
       if (e.ctrlKey && e.altKey && e.key === 'Backspace' && testActive) {
         e.preventDefault();
         addCheatTime();
-        setCheatUsageCount(prev => prev + 1);
+        setCheatUsedThisTest(true);
         showToast("Cheat activated: +30 seconds added to your typing time!");
       }
     };
     document.addEventListener('keydown', handleCheatCode);
     return () => document.removeEventListener('keydown', handleCheatCode);
-  }, [testActive, addCheatTime, showToast, setCheatUsageCount]);
+  }, [testActive, addCheatTime, showToast, setCheatUsedThisTest]);
 
   const endTest = useCallback(() => {
     if (gameOver) return;
@@ -317,6 +318,11 @@ const Index: React.FC = () => {
     setAllTestHistory(newHistory);
     localStorage.setItem(`typeRakHistory-${currentActiveUser}`, JSON.stringify(newHistory));
 
+    // Per-test cheat tracking: count once per test
+    if (cheatUsedThisTest) {
+      setCheatTestsCount(prev => prev + 1);
+    }
+
     // Update daily typing time
     const today = new Date().toDateString();
     const currentDailyMinutes = dailyTypingTime.date === today ? dailyTypingTime.minutes + (actualTestDuration / 60) : (actualTestDuration / 60);
@@ -329,7 +335,7 @@ const Index: React.FC = () => {
     
     if (!lastVisit || daysSinceLastVisit >= 1) {
       const currentVisitDays = totalVisitDays;
-      const newVisitDays = currentVisitDays === 0 ? 1 : currentVisitDays + 1; // Fix: Start from day 1, not 0
+      const newVisitDays = currentVisitDays === 0 ? 1 : currentVisitDays + 1; // Start from day 1
       setTotalVisitDays(newVisitDays);
       localStorage.setItem(visitKey, new Date().toISOString());
     }
@@ -344,8 +350,10 @@ const Index: React.FC = () => {
     // Load persistent progress from localStorage
     const maxWpmStored = parseInt(localStorage.getItem(`typeRakMaxWpm-${currentActiveUser}`) || '0');
     const totalTestsStored = parseInt(localStorage.getItem(`typeRakTotalTests-${currentActiveUser}`) || '0');
-    const cheatCountStored = parseInt(localStorage.getItem(`typeRakCheatCount-${currentActiveUser}`) || '0');
-    const visitDaysStored = parseInt(localStorage.getItem(`typeRakVisitDays-${currentActiveUser}`) || '0');
+    const visitDaysStored = parseInt(localStorage.getItem(`typeRakTotalVisitDays-${currentActiveUser}`) || String(totalVisitDays));
+
+    // Compute cheat tests including current test
+    const computedCheatTests = cheatTestsCount + (cheatUsedThisTest ? 1 : 0);
 
     // Check achievements with persistent and current stats
     const achievementStats = {
@@ -359,7 +367,7 @@ const Index: React.FC = () => {
       dailyStreak: 0, // This would need to be tracked separately for consecutive days
       cleanSessions: 0, // This would need to be tracked separately
       daysSinceLastVisit: daysSinceLastVisit,
-      cheatUsageCount: Math.max(cheatUsageCount, cheatCountStored), // Use max cheat usage
+      cheatUsageCount: computedCheatTests,
       totalVisitDays: Math.max(totalVisitDays, visitDaysStored), // Use max visit days
       daysSinceFirstLogin: daysSinceFirstLogin,
       currentDailyTypingMinutes: currentDailyMinutes
@@ -403,7 +411,7 @@ const Index: React.FC = () => {
     setTestResults(newResults);
     localStorage.setItem(`typeRakTests-${currentActiveUser}`, JSON.stringify(newResults));
     setCurrentScreen('results');
-  }, [gameOver, correctCharacters, totalErrors, actualTypedCount, elapsed, testResults, allTestHistory, currentTestName, currentActiveUser, setGameOver, setTestActive, timerRef, setLastTestResult, setAllTestHistory, setTestResults, setCurrentScreen, cheatTimeAdded, checkAchievements, getUnlockedCount]);
+  }, [gameOver, correctCharacters, totalErrors, actualTypedCount, elapsed, testResults, allTestHistory, currentTestName, currentActiveUser, setGameOver, setTestActive, timerRef, setLastTestResult, setAllTestHistory, setTestResults, setCurrentScreen, cheatTimeAdded, checkAchievements, getUnlockedCount, cheatUsedThisTest, cheatTestsCount, setCheatTestsCount, totalVisitDays, firstLoginDate, dailyTypingTime, setDailyTypingTime, setTotalVisitDays, setFirstLoginDate]);
 
   useEffect(() => {
     if (testActive && elapsed >= duration) {
@@ -428,6 +436,7 @@ const Index: React.FC = () => {
     if (!testActive && e.key.length === 1 && pos < chars.length) {
       startTimer(duration);
       setTestActive(true);
+      setCheatUsedThisTest(false);
     }
     if (!testActive) return;
     if (pos >= testText.length - 100) {
