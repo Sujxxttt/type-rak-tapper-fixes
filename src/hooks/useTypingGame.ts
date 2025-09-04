@@ -18,6 +18,9 @@ export const useTypingGame = () => {
   const usedWordsRef = useRef<string[]>([]);
   const generatedTextRef = useRef<string>('');
   const wordListUsedRef = useRef<boolean>(false);
+  // Timing refs for precise elapsed tracking
+  const startTimeRef = useRef<number>(0);
+  const cheatTimeAddedRef = useRef<number>(0);
 
   const wordList = [
     "the", "quick", "brown", "fox", "jumps", "over", "lazy", "dog", "and", "runs",
@@ -105,14 +108,15 @@ export const useTypingGame = () => {
     if (timerRef.current) {
       clearInterval(timerRef.current);
     }
-    
-    const startTime = Date.now() - (cheatTimeAdded * 1000); // Account for cheat time
+
+    // Start fresh timer; we add any cheat time as an offset via ref
+    startTimeRef.current = Date.now();
     timerRef.current = setInterval(() => {
       const now = Date.now();
-      const newElapsed = Math.floor((now - startTime) / 1000);
-      setElapsed(newElapsed);
+      const baseElapsed = Math.floor((now - startTimeRef.current) / 1000);
+      setElapsed(baseElapsed + cheatTimeAddedRef.current);
     }, 100);
-  }, [cheatTimeAdded]);
+  }, []);
 
   const resetTest = () => {
     console.log('Resetting test');
@@ -125,6 +129,8 @@ export const useTypingGame = () => {
     setActualTypedCount(0);
     setWasLastError(false);
     setCheatTimeAdded(0);
+    cheatTimeAddedRef.current = 0;
+    startTimeRef.current = 0;
     usedWordsRef.current = [];
     generatedTextRef.current = '';
     wordListUsedRef.current = false;
@@ -152,21 +158,13 @@ export const useTypingGame = () => {
 
   const addCheatTime = () => {
     setCheatTimeAdded(prev => {
-      const newCheatTime = prev + 30;
-      // Restart timer with updated cheat time
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        const startTime = Date.now() - (newCheatTime * 1000);
-        timerRef.current = setInterval(() => {
-          const now = Date.now();
-          const newElapsed = Math.floor((now - startTime) / 1000);
-          setElapsed(newElapsed);
-        }, 100);
-      }
-      return newCheatTime;
+      const next = prev + 30;
+      cheatTimeAddedRef.current = next;
+      // Immediate feedback so the user sees +30s instantly
+      setElapsed((e) => e + 30);
+      return next;
     });
   };
-
   return {
     gameOver,
     setGameOver,

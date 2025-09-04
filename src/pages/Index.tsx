@@ -59,10 +59,11 @@ const Index: React.FC = () => {
   const [showEasterEggPrompt, setShowEasterEggPrompt] = useState(false);
   const [easterEggDismissed, setEasterEggDismissed] = useState(false);
   const [scrollCountForEasterEgg, setScrollCountForEasterEgg] = useState(0);
-  const [cheatUsageCount, setCheatUsageCount] = useLocalStorage<number>(`typeRakCheatCount-${currentActiveUser}`, 0);
-  const [totalVisitDays, setTotalVisitDays] = useLocalStorage<number>(`typeRakVisitDays-${currentActiveUser}`, 0);
+  const [cheatTestsCount, setCheatTestsCount] = useLocalStorage<number>(`typeRakCheatTests-${currentActiveUser}`, 0);
+  const [totalVisitDays, setTotalVisitDays] = useLocalStorage<number>(`typeRakTotalVisitDays-${currentActiveUser}`, 0);
   const [firstLoginDate, setFirstLoginDate] = useLocalStorage<string>(`typeRakFirstLogin-${currentActiveUser}`, '');
   const [dailyTypingTime, setDailyTypingTime] = useLocalStorage<{ date: string; minutes: number }>(`typeRakDailyTime-${currentActiveUser}`, { date: '', minutes: 0 });
+  const [dailyStreak, setDailyStreak] = useLocalStorage<number>(`typeRakDailyStreak-${currentActiveUser}`, 0);
   const messageTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
   const startMessageTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
   const titleMessageTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
