@@ -450,12 +450,25 @@ export const useAchievements = (username: string) => {
       perfectTests: 0,
       unlockedAchievements: 0,
       dailyTypingTime: 0,
-      dailyStreak: 0,
+      dailyStreak: parseInt(localStorage.getItem(`typeRakDailyStreak-${username}`) || '0'),
       cleanSessions: 0,
-      daysSinceLastVisit: 0,
+      daysSinceLastVisit: (() => {
+        const last = localStorage.getItem(`typeRakLastVisit-${username}`);
+        return last ? Math.floor((Date.now() - new Date(last).getTime()) / (1000 * 60 * 60 * 24)) : 0;
+      })(),
       cheatUsageCount: parseInt(localStorage.getItem(`typeRakCheatCount-${username}`) || '0'),
-      totalVisitDays: parseInt(localStorage.getItem(`typeRakVisitDays-${username}`) || '0'),
-      daysSinceFirstLogin: 0,
+      totalVisitDays: (() => {
+        const v1 = localStorage.getItem(`typeRakTotalVisitDays-${username}`);
+        const v2 = localStorage.getItem(`typeRakVisitDays-${username}`);
+        const base = parseInt(v1 || v2 || '0');
+        const firstLogin = localStorage.getItem(`typeRakFirstLogin-${username}`);
+        const anyVisit = localStorage.getItem(`typeRakLastVisit-${username}`);
+        return base === 0 && (firstLogin || anyVisit) ? 1 : base; // never show day 0 if any visit exists
+      })(),
+      daysSinceFirstLogin: (() => {
+        const first = localStorage.getItem(`typeRakFirstLogin-${username}`);
+        return first ? Math.floor((Date.now() - new Date(first).getTime()) / (1000 * 60 * 60 * 24)) : 0;
+      })(),
       currentDailyTypingMinutes: parseFloat(localStorage.getItem(`typeRakDailyTime-${username}`) || '0')
     };
 

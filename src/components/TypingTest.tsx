@@ -29,24 +29,39 @@ export const TypingTest: React.FC<TypingTestProps> = ({
   }, [onKeyDown]);
 
   useEffect(() => {
+    if (pos === 0) {
+      const tf = document.getElementById('text-flow');
+      if (tf) tf.scrollLeft = 0;
+    }
+
     if (chars.length > 0 && pos < chars.length) {
       const currentChar = chars[pos];
       const textFlowElement = document.getElementById('text-flow');
-      
+      const caret = document.getElementById('caret-marker');
+
       if (currentChar && textFlowElement) {
-        // Calculate position for smooth horizontal scrolling relative to the scroll container
         const containerWidth = textFlowElement.clientWidth;
         const charRect = currentChar.getBoundingClientRect();
         const containerRect = textFlowElement.getBoundingClientRect();
         const charLeftInContainer = charRect.left - containerRect.left;
-        const targetScrollLeft = Math.max(0, textFlowElement.scrollLeft + (charLeftInContainer - containerWidth * 0.4));
-        
-        // Use requestAnimationFrame for smooth but faster tracking
+
+        // Position caret under current character
+        if (caret) {
+          const caretX = Math.max(0, charLeftInContainer);
+          (caret as HTMLDivElement).style.transform = `translateX(${caretX}px)`;
+        }
+
+        // Target so the active char stays near center
+        const targetScrollLeft = Math.max(0, textFlowElement.scrollLeft + (charLeftInContainer - containerWidth * 0.5));
+
+        // Smooth, speed-adaptive scrolling
         const smoothScroll = () => {
           const currentScrollLeft = textFlowElement.scrollLeft;
           const distance = targetScrollLeft - currentScrollLeft;
-          const step = distance * 0.45; // Faster easing to match typing speed
-          
+          const direction = Math.sign(distance);
+          // Step scales with distance, clamped to keep it smooth but responsive
+          const step = direction * Math.max(6, Math.min(Math.abs(distance) * 0.85, 48));
+
           if (Math.abs(distance) > 0.5) {
             textFlowElement.scrollLeft = currentScrollLeft + step;
             requestAnimationFrame(smoothScroll);
@@ -54,7 +69,7 @@ export const TypingTest: React.FC<TypingTestProps> = ({
             textFlowElement.scrollLeft = targetScrollLeft;
           }
         };
-        
+
         requestAnimationFrame(smoothScroll);
       }
     }
@@ -77,7 +92,7 @@ export const TypingTest: React.FC<TypingTestProps> = ({
     <div style={{
       width: '100%',
       maxWidth: '1040px',
-      height: '120px',
+      height: '148px',
       margin: '3rem auto 2rem auto', // Changed from 4rem to 3rem to move up by 1cm
       padding: '1.5rem',
       background: theme === 'cotton-candy-glow' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.1)',
@@ -112,6 +127,21 @@ export const TypingTest: React.FC<TypingTestProps> = ({
         }}
         tabIndex={0}
       />
+      <div
+        id="caret-marker"
+        style={{
+          position: 'absolute',
+          bottom: '8px',
+          left: 0,
+          transform: 'translateX(0px)',
+          color: 'rgba(255,255,255,0.45)',
+          fontWeight: 800,
+          fontSize: '1.3em',
+          letterSpacing: 0,
+          pointerEvents: 'none',
+          userSelect: 'none'
+        }}
+      >-</div>
       
       <style>{`
         #text-flow::-webkit-scrollbar {
