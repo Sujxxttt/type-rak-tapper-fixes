@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { loadAllTracks, saveTrack, deleteTrack } from '@/lib/audioStore';
 
 export interface Track {
   id: string;
@@ -20,12 +21,13 @@ export const useMusicPlayer = (enabled: boolean, volume: number) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Initialize tracks from background-score folder
+  // Initialize tracks from background-score folder and persistent uploads (IndexedDB)
   useEffect(() => {
-    const loadBackgroundTracks = async () => {
+    const loadTracks = async () => {
       const extensions = ['mp3', 'wav', 'ogg', 'm4a'];
       const foundTracks: Track[] = [];
-      
+
+      // Built-in background track if present
       for (const ext of extensions) {
         try {
           const response = await fetch(`/src/background-score/background.${ext}`);
@@ -36,15 +38,26 @@ export const useMusicPlayer = (enabled: boolean, volume: number) => {
               url: `/src/background-score/background.${ext}`
             });
           }
-        } catch (error) {
-          // File doesn't exist, continue
+        } catch (_) {
+          // ignore
         }
       }
-      
-      setTracks(foundTracks);
+
+      // Load user uploads from IndexedDB
+      try {
+        const stored = await loadAllTracks();
+        const uploaded: Track[] = stored.map((t) => ({
+          id: `idb-${t.id}`,
+          name: t.name,
+          url: URL.createObjectURL(t.blob),
+        }));
+        setTracks([...foundTracks, ...uploaded]);
+      } catch (e) {
+        setTracks(foundTracks);
+      }
     };
 
-    loadBackgroundTracks();
+    loadTracks();
   }, []);
 
   // Initialize shuffle order when tracks change
@@ -211,13 +224,24 @@ export const useMusicPlayer = (enabled: boolean, volume: number) => {
   };
 
   const uploadMusic = (files: FileList) => {
-    Array.from(files).forEach(file => {
-      if (file.type.startsWith('audio/')) {
+    Array.from(files).forEach(async (file) => {
+      if (!file.type.startsWith('audio/')) return;
+      try {
+        const stored = await saveTrack(file);
+        const url = URL.createObjectURL(stored.blob);
+        const newTrack: Track = {
+          id: `idb-${stored.id}`,
+          name: stored.name,
+          url,
+        };
+        setTracks(prev => [...prev, newTrack]);
+      } catch (e) {
+        // Fallback: in-memory only
         const url = URL.createObjectURL(file);
         const newTrack: Track = {
           id: `uploaded-${Date.now()}-${Math.random()}`,
-          name: file.name.replace(/\.[^/.]+$/, ""),
-          url
+          name: file.name.replace(/\.[^/.]+$/, ''),
+          url,
         };
         setTracks(prev => [...prev, newTrack]);
       }
@@ -226,8 +250,18 @@ export const useMusicPlayer = (enabled: boolean, volume: number) => {
 
   const removeTrack = (trackId: string) => {
     setTracks(prev => {
+      const removed = prev.find(track => track.id === trackId);
       const filtered = prev.filter(track => track.id !== trackId);
       const removedIndex = prev.findIndex(track => track.id === trackId);
+
+      // Cleanup object URL
+      if (removed && removed.id.startsWith('idb-')) {
+        const idNum = Number(removed.id.replace('idb-', ''));
+        deleteTrack(idNum).catch(() => {});
+      }
+      if (removed) {
+        try { URL.revokeObjectURL(removed.url); } catch {}
+      }
       
       if (removedIndex === currentTrackIndex && filtered.length > 0) {
         setCurrentTrackIndex(0);

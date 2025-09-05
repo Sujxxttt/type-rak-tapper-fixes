@@ -97,7 +97,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
     };
   }, [sideMenuOpen, setSideMenuOpen]);
 
-  if (!sideMenuOpen) return null;
+  
 
   const getFontFamilyString = (font: string) => {
     switch (font) {
@@ -189,19 +189,21 @@ export const SideMenu: React.FC<SideMenuProps> = ({
 
   return (
     <>
-      <div 
-        onClick={() => setSideMenuOpen(false)}
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(0, 0, 0, 0.4)',
-          zIndex: 998,
-          animation: 'fadeIn 0.2s ease-out'
-        }}
-      />
+      {sideMenuOpen && (
+        <div 
+          onClick={() => setSideMenuOpen(false)}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.4)',
+            zIndex: 998,
+            animation: 'fadeIn 0.2s ease-out'
+          }}
+        />
+      )}
       
       <div
         ref={sideMenuRef}
@@ -219,7 +221,9 @@ export const SideMenu: React.FC<SideMenuProps> = ({
           padding: '20px',
           overflowY: 'auto',
           color: 'white',
-          animation: sideMenuOpen ? 'slideInRight 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'slideOutRight 0.3s cubic-bezier(0.55, 0.085, 0.68, 0.53) forwards',
+          transform: sideMenuOpen ? 'translateX(0)' : 'translateX(100%)',
+          transition: 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+          pointerEvents: sideMenuOpen ? 'auto' : 'none',
           boxShadow: '0 0 50px rgba(0, 0, 0, 0.3)'
         }}
       >

@@ -39,13 +39,13 @@ export const TypingTest: React.FC<TypingTestProps> = ({
         const charRect = currentChar.getBoundingClientRect();
         const containerRect = textFlowElement.getBoundingClientRect();
         const charLeftInContainer = charRect.left - containerRect.left;
-        const targetScrollLeft = Math.max(0, textFlowElement.scrollLeft + (charLeftInContainer - containerWidth / 2));
+        const targetScrollLeft = Math.max(0, textFlowElement.scrollLeft + (charLeftInContainer - containerWidth * 0.4));
         
-        // Use requestAnimationFrame for ultra-smooth scrolling
+        // Use requestAnimationFrame for smooth but faster tracking
         const smoothScroll = () => {
           const currentScrollLeft = textFlowElement.scrollLeft;
           const distance = targetScrollLeft - currentScrollLeft;
-          const step = distance * 0.2; // Smooth easing
+          const step = distance * 0.45; // Faster easing to match typing speed
           
           if (Math.abs(distance) > 0.5) {
             textFlowElement.scrollLeft = currentScrollLeft + step;
