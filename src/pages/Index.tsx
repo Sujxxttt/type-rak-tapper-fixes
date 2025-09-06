@@ -10,6 +10,12 @@ import { Introduction } from '../components/Introduction';
 import { TypedTextPreview } from '../components/TypedTextPreview';
 import { AchievementNotification } from '../components/AchievementNotification';
 import { AchievementsPage } from '../components/AchievementsPage';
+import { ModeSelection } from '../components/ModeSelection';
+import { ArcadeIntro } from '../components/ArcadeIntro';
+import { ArcadeMenu } from '../components/ArcadeMenu';
+import { PrivacyPolicy } from '../pages/PrivacyPolicy';
+import { Credits } from '../pages/Credits';
+import { AboutMe } from '../pages/AboutMe';
 import { useTypingGame } from '../hooks/useTypingGame';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { useSoundEffects } from '../hooks/useSoundEffects';
@@ -21,6 +27,9 @@ import { useBackgroundMusic } from '../hooks/useBackgroundMusic';
 const Index: React.FC = () => {
   // Introduction state
   const [showIntroduction, setShowIntroduction] = useState(true);
+  const [showModeSelection, setShowModeSelection] = useState(false);
+  const [showArcadeIntro, setShowArcadeIntro] = useState(false);
+  const [currentMode, setCurrentMode] = useState<'classic' | 'arcade'>('classic');
   const [titleClickCount, setTitleClickCount] = useState(0);
   const [titleClickMessage, setTitleClickMessage] = useState('');
 
@@ -158,6 +167,26 @@ const Index: React.FC = () => {
 
   const handleIntroComplete = () => {
     setShowIntroduction(false);
+    setShowModeSelection(true);
+  };
+
+  const handleModeSelect = (mode: 'classic' | 'arcade') => {
+    setCurrentMode(mode);
+    setShowModeSelection(false);
+    if (mode === 'arcade') {
+      setShowArcadeIntro(true);
+    }
+  };
+
+  const handleArcadeIntroComplete = () => {
+    setShowArcadeIntro(false);
+    setCurrentScreen('arcade-menu');
+  };
+
+  const handleArcadeModeSelect = (mode: string) => {
+    // Handle arcade mode selection
+    console.log('Selected arcade mode:', mode);
+    // For now, just show a placeholder
   };
 
   const handleTitleClick = () => {
@@ -226,18 +255,26 @@ const Index: React.FC = () => {
   };
 
   useEffect(() => {
-    if (showIntroduction) return;
+    if (showIntroduction || showModeSelection || showArcadeIntro) return;
     if (usersList.length > 0) {
       if (currentActiveUser && usersList.includes(currentActiveUser)) {
-        setCurrentScreen('dashboard');
+        if (currentMode === 'classic') {
+          setCurrentScreen('dashboard');
+        } else if (currentMode === 'arcade') {
+          setCurrentScreen('arcade-menu');
+        }
         loadUserTests(currentActiveUser);
       } else {
         setCurrentActiveUser(usersList[0]);
-        setCurrentScreen('dashboard');
+        if (currentMode === 'classic') {
+          setCurrentScreen('dashboard');
+        } else if (currentMode === 'arcade') {
+          setCurrentScreen('arcade-menu');
+        }
         loadUserTests(usersList[0]);
       }
     }
-  }, [usersList, currentActiveUser, showIntroduction]);
+  }, [usersList, currentActiveUser, showIntroduction, showModeSelection, showArcadeIntro, currentMode]);
 
   const loadUserTests = (username: string) => {
     const storedTests = localStorage.getItem(`typeRakTests-${username}`);
@@ -1513,7 +1550,8 @@ const Index: React.FC = () => {
           applyTheme={applyTheme} 
           handleHistoryClick={handleHistoryClick} 
           handleContactMe={handleContactMe} 
-          getButtonColor={getButtonColor} 
+          onNavigate={setCurrentScreen}
+          getButtonColor={getButtonColor}
           fontSize={fontSize} 
           setFontSize={setFontSize} 
           fontStyle={fontStyle} 

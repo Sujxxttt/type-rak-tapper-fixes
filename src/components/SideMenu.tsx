@@ -29,6 +29,7 @@ interface SideMenuProps {
   applyTheme: (theme: string) => void;
   handleHistoryClick: () => void;
   handleContactMe: () => void;
+  onNavigate: (screen: string) => void;
   getButtonColor: () => string;
   fontSize: number;
   setFontSize: (size: number) => void;
@@ -57,6 +58,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
   applyTheme,
   handleHistoryClick,
   handleContactMe,
+  onNavigate,
   getButtonColor,
   fontSize,
   setFontSize,
@@ -433,6 +435,36 @@ export const SideMenu: React.FC<SideMenuProps> = ({
           <button onClick={handleHistoryClick} style={{...dropdownTriggerStyle, justifyContent: 'center' }}>View Test History</button>
           <button onClick={handleContactMe} style={{...dropdownTriggerStyle, justifyContent: 'center' }}>Contact Me</button>
           <button onClick={handleCheckThisOut} style={{...dropdownTriggerStyle, justifyContent: 'center' }}>Check this out</button>
+          
+          <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
+            <button 
+              onClick={() => {
+                onNavigate('privacy');
+                setSideMenuOpen(false);
+              }}
+              style={{...dropdownTriggerStyle, justifyContent: 'center', marginBottom: '0.5rem' }}
+            >
+              Privacy Policy
+            </button>
+            <button 
+              onClick={() => {
+                onNavigate('credits');
+                setSideMenuOpen(false);
+              }}
+              style={{...dropdownTriggerStyle, justifyContent: 'center', marginBottom: '0.5rem' }}
+            >
+              Credits
+            </button>
+            <button 
+              onClick={() => {
+                onNavigate('about');
+                setSideMenuOpen(false);
+              }}
+              style={{...dropdownTriggerStyle, justifyContent: 'center' }}
+            >
+              About Me
+            </button>
+          </div>
         </div>
       </div>
 

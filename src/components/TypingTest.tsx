@@ -51,26 +51,14 @@ export const TypingTest: React.FC<TypingTestProps> = ({
           (caret as HTMLDivElement).style.transform = `translateX(${caretX}px)`;
         }
 
-        // Target so the active char stays near center
-        const targetScrollLeft = Math.max(0, textFlowElement.scrollLeft + (charLeftInContainer - containerWidth * 0.5));
-
-        // Smooth, speed-adaptive scrolling
-        const smoothScroll = () => {
-          const currentScrollLeft = textFlowElement.scrollLeft;
-          const distance = targetScrollLeft - currentScrollLeft;
-          const direction = Math.sign(distance);
-          // Step scales with distance, clamped to keep it smooth but responsive
-          const step = direction * Math.max(6, Math.min(Math.abs(distance) * 0.85, 48));
-
-          if (Math.abs(distance) > 0.5) {
-            textFlowElement.scrollLeft = currentScrollLeft + step;
-            requestAnimationFrame(smoothScroll);
-          } else {
-            textFlowElement.scrollLeft = targetScrollLeft;
-          }
-        };
-
-        requestAnimationFrame(smoothScroll);
+        // Simple, non-smooth scrolling - just move to keep char visible
+        if (charLeftInContainer < 50) {
+          // Character is too far left, scroll left
+          textFlowElement.scrollLeft = Math.max(0, textFlowElement.scrollLeft - 100);
+        } else if (charLeftInContainer > containerWidth - 50) {
+          // Character is too far right, scroll right
+          textFlowElement.scrollLeft = textFlowElement.scrollLeft + 100;
+        }
       }
     }
   }, [pos, chars]);
