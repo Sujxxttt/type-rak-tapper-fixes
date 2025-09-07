@@ -251,6 +251,49 @@ export const SideMenu: React.FC<SideMenuProps> = ({
           <X size={20} />
         </button>
 
+        {/* Home Button */}
+        <div 
+          onClick={() => {
+            setSideMenuOpen(false);
+            window.location.reload();
+          }}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            padding: '12px 16px',
+            background: 'rgba(255, 255, 255, 0.1)',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            borderRadius: '12px',
+            cursor: 'pointer',
+            marginBottom: '20px',
+            transition: 'all 0.3s ease'
+          }}
+          className="hover:bg-white/15"
+        >
+          <div style={{
+            width: '40px',
+            height: '40px',
+            background: 'linear-gradient(45deg, #b109d6, #0c6dc2)',
+            borderRadius: '10px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '20px'
+          }}>
+            🏠
+          </div>
+          <div>
+            <div style={{ fontSize: '16px', fontWeight: '600', marginBottom: '2px' }}>
+              Home
+            </div>
+            <div style={{ fontSize: '12px', opacity: 0.7 }}>
+              Mode Selection
+            </div>
+          </div>
+        </div>
+
         <h3 style={{ marginBottom: '2rem', paddingTop: '1rem', fontSize: '2rem', fontWeight: '700' }}>Settings</h3>
 
         <div style={{ marginBottom: '1.5rem' }}>

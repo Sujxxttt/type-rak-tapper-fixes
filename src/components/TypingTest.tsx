@@ -29,36 +29,26 @@ export const TypingTest: React.FC<TypingTestProps> = ({
   }, [onKeyDown]);
 
   useEffect(() => {
-    if (pos === 0) {
-      const tf = document.getElementById('text-flow');
-      if (tf) tf.scrollLeft = 0;
-    }
-
     if (chars.length > 0 && pos < chars.length) {
       const currentChar = chars[pos];
       const textFlowElement = document.getElementById('text-flow');
       const caret = document.getElementById('caret-marker');
 
-      if (currentChar && textFlowElement) {
+      if (currentChar && textFlowElement && caret) {
         const containerWidth = textFlowElement.clientWidth;
+        const containerCenter = containerWidth / 2;
+        
+        // Keep caret fixed in the center
+        (caret as HTMLDivElement).style.transform = `translateX(${containerCenter - 10}px)`;
+        
+        // Calculate how much to scroll to keep current character in center
         const charRect = currentChar.getBoundingClientRect();
         const containerRect = textFlowElement.getBoundingClientRect();
-        const charLeftInContainer = charRect.left - containerRect.left;
-
-        // Position caret under current character
-        if (caret) {
-          const caretX = Math.max(0, charLeftInContainer);
-          (caret as HTMLDivElement).style.transform = `translateX(${caretX}px)`;
-        }
-
-        // Simple, non-smooth scrolling - just move to keep char visible
-        if (charLeftInContainer < 50) {
-          // Character is too far left, scroll left
-          textFlowElement.scrollLeft = Math.max(0, textFlowElement.scrollLeft - 100);
-        } else if (charLeftInContainer > containerWidth - 50) {
-          // Character is too far right, scroll right
-          textFlowElement.scrollLeft = textFlowElement.scrollLeft + 100;
-        }
+        const charCenterRelativeToContainer = charRect.left - containerRect.left + (charRect.width / 2);
+        
+        // Scroll to keep the current character centered
+        const scrollOffset = charCenterRelativeToContainer - containerCenter;
+        textFlowElement.scrollLeft += scrollOffset;
       }
     }
   }, [pos, chars]);
@@ -122,12 +112,13 @@ export const TypingTest: React.FC<TypingTestProps> = ({
           bottom: '8px',
           left: 0,
           transform: 'translateX(0px)',
-          color: 'rgba(255,255,255,0.45)',
-          fontWeight: 800,
-          fontSize: '1.3em',
+          color: 'rgba(255,255,255,0.6)',
+          fontWeight: 900,
+          fontSize: '1.8em',
           letterSpacing: 0,
           pointerEvents: 'none',
-          userSelect: 'none'
+          userSelect: 'none',
+          textShadow: '0 0 8px rgba(255,255,255,0.3)'
         }}
       >-</div>
       
