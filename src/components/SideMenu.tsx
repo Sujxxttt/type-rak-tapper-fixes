@@ -30,6 +30,7 @@ interface SideMenuProps {
   handleHistoryClick: () => void;
   handleContactMe: () => void;
   onNavigate: (screen: string) => void;
+  onNavigateHome: () => void;
   getButtonColor: () => string;
   fontSize: number;
   setFontSize: (size: number) => void;
@@ -59,6 +60,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
   handleHistoryClick,
   handleContactMe,
   onNavigate,
+  onNavigateHome,
   getButtonColor,
   fontSize,
   setFontSize,
@@ -255,7 +257,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
         <div 
           onClick={() => {
             setSideMenuOpen(false);
-            window.location.reload();
+            onNavigateHome();
           }}
           style={{
             display: 'flex',

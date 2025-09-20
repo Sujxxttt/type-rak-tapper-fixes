@@ -167,7 +167,12 @@ const Index: React.FC = () => {
 
   const handleIntroComplete = () => {
     setShowIntroduction(false);
-    setShowModeSelection(true);
+    // Check if there are users, if not go to greeting, otherwise show mode selection
+    if (usersList.length === 0) {
+      setCurrentScreen('greeting');
+    } else {
+      setShowModeSelection(true);
+    }
   };
 
   const handleModeSelect = (mode: 'classic' | 'arcade') => {
@@ -175,6 +180,9 @@ const Index: React.FC = () => {
     setShowModeSelection(false);
     if (mode === 'arcade') {
       setShowArcadeIntro(true);
+    } else {
+      // Classic mode - go to dashboard
+      setCurrentScreen('dashboard');
     }
   };
 
@@ -523,7 +531,7 @@ const Index: React.FC = () => {
     setCurrentActiveUser(username);
     setTestResults([]);
     setAllTestHistory([]);
-    setCurrentScreen('dashboard');
+    setShowModeSelection(true); // Show mode selection instead of dashboard
     showToast(`User "${username}" created successfully!`);
     return true;
   };
@@ -702,6 +710,20 @@ const Index: React.FC = () => {
     return <Introduction onComplete={handleIntroComplete} onReplay={handleIntroReplay} clickCount={titleClickCount} onTitleClick={handleTitleClick} currentTheme={theme} isFromTitleClick={titleClickCount >= 3} />;
   }
 
+  // Show mode selection after intro
+  if (showModeSelection) {
+    return <ModeSelection 
+      onSelectClassic={() => handleModeSelect('classic')} 
+      onSelectArcade={() => handleModeSelect('arcade')} 
+      theme={theme} 
+    />;
+  }
+
+  // Show arcade intro
+  if (showArcadeIntro) {
+    return <ArcadeIntro onComplete={handleArcadeIntroComplete} theme={theme} />;
+  }
+
   // Show easter egg page
   if (showEasterEgg) {
     return <EasterEggPage theme={theme} onGoBack={() => setShowEasterEgg(false)} />;
@@ -710,6 +732,11 @@ const Index: React.FC = () => {
   // Show achievements page
   if (currentScreen === 'achievements') {
     return <AchievementsPage achievements={achievements} onBack={() => setCurrentScreen('dashboard')} theme={theme} getButtonColor={getButtonColor} />;
+  }
+
+  // Show arcade menu
+  if (currentScreen === 'arcade-menu') {
+    return <ArcadeMenu onSelectMode={handleArcadeModeSelect} theme={theme} />;
   }
 
   return (
@@ -937,7 +964,7 @@ const Index: React.FC = () => {
               cursor: 'pointer',
               fontSize: '1rem'
             }}>
-              Create User & Start
+              Create User & Continue
             </button>
           </div>}
         </div>}
@@ -1551,6 +1578,7 @@ const Index: React.FC = () => {
           handleHistoryClick={handleHistoryClick} 
           handleContactMe={handleContactMe} 
           onNavigate={setCurrentScreen}
+          onNavigateHome={() => setShowModeSelection(true)}
           getButtonColor={getButtonColor}
           fontSize={fontSize} 
           setFontSize={setFontSize} 
