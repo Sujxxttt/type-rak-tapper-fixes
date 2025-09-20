@@ -25,7 +25,7 @@ export const Introduction: React.FC<IntroductionProps> = ({
   const [titlePosition, setTitlePosition] = useState('center');
   const [isReplay, setIsReplay] = useState(false);
 
-  // Animation sequence: cosmic-nebula → midnight-black → cotton-candy-glow → current theme
+  // Animation sequence: cosmic-nebula → midnight-black → cotton-candy-glow → midnight-black
   const themes = [
     {
       id: 'cosmic-nebula',
@@ -34,13 +34,18 @@ export const Introduction: React.FC<IntroductionProps> = ({
     },
     {
       id: 'midnight-black',
-      background: '#000000', // True AMOLED black to prevent white flash
+      background: '#000000',
       titleGradient: 'linear-gradient(90deg, #c559f7 0%, #7f59f7 100%)'
     },
     {
       id: 'cotton-candy-glow',
-      background: 'linear-gradient(135deg, #12cff3, #5ab2f7)', // Using animation background
+      background: 'linear-gradient(135deg, #12cff3, #5ab2f7)',
       titleGradient: 'linear-gradient(90deg, #fc03df 0%, #ff3be8 100%)'
+    },
+    {
+      id: 'midnight-black-final',
+      background: '#000000',
+      titleGradient: 'linear-gradient(90deg, #c559f7 0%, #7f59f7 100%)'
     }
   ];
 
@@ -60,7 +65,7 @@ export const Introduction: React.FC<IntroductionProps> = ({
     // Theme switching phase - cycle through themes
     themeInterval = setInterval(() => {
       setCurrentThemeIndex(prev => {
-        if (prev < 2) return prev + 1; // Go through first 3 themes
+        if (prev < 3) return prev + 1; // Go through all 4 themes
         return 0; // Reset to start
       });
     }, 1620);

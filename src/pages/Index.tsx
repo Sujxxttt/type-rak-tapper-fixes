@@ -10,7 +10,9 @@ import { Introduction } from '../components/Introduction';
 import { TypedTextPreview } from '../components/TypedTextPreview';
 import { AchievementNotification } from '../components/AchievementNotification';
 import { AchievementsPage } from '../components/AchievementsPage';
+import { ClassicIntro } from '../components/ClassicIntro';
 import { ModeSelection } from '../components/ModeSelection';
+import { TopControls } from '../components/TopControls';
 import { ArcadeIntro } from '../components/ArcadeIntro';
 import { ArcadeMenu } from '../components/ArcadeMenu';
 import { PrivacyPolicy } from '../pages/PrivacyPolicy';
@@ -29,7 +31,9 @@ const Index: React.FC = () => {
   const [showIntroduction, setShowIntroduction] = useState(true);
   const [showModeSelection, setShowModeSelection] = useState(false);
   const [showArcadeIntro, setShowArcadeIntro] = useState(false);
+  const [showClassicIntro, setShowClassicIntro] = useState(false);
   const [currentMode, setCurrentMode] = useState<'classic' | 'arcade'>('classic');
+  const [showUserMenu, setShowUserMenu] = useState(false);
   const [titleClickCount, setTitleClickCount] = useState(0);
   const [titleClickMessage, setTitleClickMessage] = useState('');
 
@@ -189,6 +193,11 @@ const Index: React.FC = () => {
   const handleArcadeIntroComplete = () => {
     setShowArcadeIntro(false);
     setCurrentScreen('arcade-menu');
+  };
+
+  const handleClassicIntroComplete = () => {
+    setShowClassicIntro(false);
+    setCurrentScreen('dashboard');
   };
 
   const handleArcadeModeSelect = (mode: string) => {
@@ -715,13 +724,22 @@ const Index: React.FC = () => {
     return <ModeSelection 
       onSelectClassic={() => handleModeSelect('classic')} 
       onSelectArcade={() => handleModeSelect('arcade')} 
-      theme={theme} 
+      theme={theme}
+      usersList={usersList}
+      currentActiveUser={currentActiveUser}
+      onSideMenuClick={() => setSideMenuOpen(true)}
+      onUserMenuClick={() => setShowUserMenu(true)}
     />;
   }
 
   // Show arcade intro
   if (showArcadeIntro) {
     return <ArcadeIntro onComplete={handleArcadeIntroComplete} theme={theme} />;
+  }
+
+  // Show classic intro
+  if (showClassicIntro) {
+    return <ClassicIntro onComplete={handleClassicIntroComplete} theme={theme} />;
   }
 
   // Show easter egg page
@@ -831,51 +849,15 @@ const Index: React.FC = () => {
               {titleClickMessage}
             </div>}
           </div>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center'
-          }}>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              marginRight: '20px',
-              background: 'rgba(255, 255, 255, 0.1)',
-              borderRadius: '12px',
-              padding: '5px 15px',
-              backdropFilter: 'blur(10px)',
-              border: '1px solid rgba(255, 255, 255, 0.3)',
-              transition: 'border-radius 0.3s ease'
-            }}>
-              <span style={{
-                marginRight: '10px',
-                fontSize: '1.15rem'
-              }}>User: {currentActiveUser}</span>
-              <button onClick={() => setCurrentScreen('create-user')} style={{
-                background: 'transparent',
-                color: 'white',
-                border: 'none',
-                padding: '5px 10px',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                marginLeft: '10px',
-                fontSize: '1.26rem'
-              }}>
-                +
-              </button>
-            </div>
-            <button onClick={() => setSideMenuOpen(true)} style={{
-              background: 'none',
-              border: 'none',
-              color: 'white',
-              fontSize: '1.5rem',
-              cursor: 'pointer',
-              padding: '5px',
-              borderRadius: '12px',
-              transition: 'border-radius 0.3s ease'
-            }}>
-              ☰
-            </button>
-          </div>
+          <TopControls
+            currentActiveUser={currentActiveUser}
+            onUserMenuClick={() => setShowUserMenu(true)}
+            onSideMenuClick={() => setSideMenuOpen(true)}
+            onHomeClick={() => setShowModeSelection(true)}
+            getButtonColor={getButtonColor}
+            fontSize={fontSize}
+            showHomeButton={currentScreen === 'dashboard' || currentScreen === 'arcade-menu'}
+          />
         </header>
 
         {/* Test Name Menu */}

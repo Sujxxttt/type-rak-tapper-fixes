@@ -5,12 +5,20 @@ interface ModeSelectionProps {
   onSelectClassic: () => void;
   onSelectArcade: () => void;
   theme: string;
+  usersList?: string[];
+  currentActiveUser?: string;
+  onSideMenuClick?: () => void;
+  onUserMenuClick?: () => void;
 }
 
-export const ModeSelection: React.FC<ModeSelectionProps> = ({
-  onSelectClassic,
-  onSelectArcade,
-  theme
+export const ModeSelection: React.FC<ModeSelectionProps> = ({ 
+  onSelectClassic, 
+  onSelectArcade, 
+  theme,
+  usersList = [],
+  currentActiveUser = '',
+  onSideMenuClick,
+  onUserMenuClick
 }) => {
   const [showModes, setShowModes] = useState(false);
 
@@ -68,6 +76,102 @@ export const ModeSelection: React.FC<ModeSelectionProps> = ({
         transition: 'opacity 0.8s ease-in-out'
       }}
     >
+      {/* Top controls */}
+      <div
+        style={{
+          position: 'fixed',
+          top: '20px',
+          right: '20px',
+          display: 'flex',
+          gap: '0.75rem',
+          zIndex: 10001
+        }}
+      >
+        {/* User button */}
+        {onUserMenuClick && (
+          <div
+            onClick={onUserMenuClick}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              padding: '0.75rem 1rem',
+              backgroundColor: 'rgba(255, 255, 255, 0.1)',
+              backdropFilter: 'blur(10px)',
+              borderRadius: '12px',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease',
+              fontSize: '0.875rem',
+              fontWeight: '500',
+              color: 'white'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.15)';
+              e.currentTarget.style.transform = 'translateY(-2px)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+              e.currentTarget.style.transform = 'translateY(0)';
+            }}
+          >
+            👤 {currentActiveUser || 'User'}
+          </div>
+        )}
+
+        {/* Sidebar button */}
+        {onSideMenuClick && (
+          <div
+            onClick={onSideMenuClick}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '48px',
+              height: '48px',
+              backgroundColor: 'rgba(255, 255, 255, 0.1)',
+              backdropFilter: 'blur(10px)',
+              borderRadius: '12px',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.15)';
+              e.currentTarget.style.transform = 'translateY(-2px)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+              e.currentTarget.style.transform = 'translateY(0)';
+            }}
+          >
+            <span style={{ color: 'white', fontSize: '1.25rem' }}>☰</span>
+          </div>
+        )}
+      </div>
+
+      {/* Title */}
+      <h1
+        style={{
+          position: 'fixed',
+          top: '60px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          fontSize: '3rem',
+          fontWeight: 700,
+          margin: 0,
+          background: `linear-gradient(45deg, ${colors.primary}, ${colors.secondary})`,
+          WebkitBackgroundClip: 'text',
+          backgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          textAlign: 'center',
+          opacity: showModes ? 1 : 0,
+          transition: 'all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+          transitionDelay: '0.1s'
+        }}
+      >
+        Choose Your Mode
+      </h1>
       <div className="flex gap-12">
         {/* Classic Mode */}
         <div
