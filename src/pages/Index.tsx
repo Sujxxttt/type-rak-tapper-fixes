@@ -185,8 +185,8 @@ const Index: React.FC = () => {
     if (mode === 'arcade') {
       setShowArcadeIntro(true);
     } else {
-      // Classic mode - go to dashboard
-      setCurrentScreen('dashboard');
+      // Classic mode - show intro first
+      setShowClassicIntro(true);
     }
   };
 
@@ -204,6 +204,11 @@ const Index: React.FC = () => {
     // Handle arcade mode selection
     console.log('Selected arcade mode:', mode);
     // For now, just show a placeholder
+  };
+
+  const handleArcadeBack = () => {
+    setCurrentScreen('mode-selection');
+    setShowModeSelection(true);
   };
 
   const handleTitleClick = () => {
@@ -754,7 +759,7 @@ const Index: React.FC = () => {
 
   // Show arcade menu
   if (currentScreen === 'arcade-menu') {
-    return <ArcadeMenu onSelectMode={handleArcadeModeSelect} theme={theme} />;
+    return <ArcadeMenu onSelectMode={handleArcadeModeSelect} onBack={handleArcadeBack} theme={theme} />;
   }
 
   return (

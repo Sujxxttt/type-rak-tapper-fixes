@@ -1,12 +1,13 @@
 import React from 'react';
-import { BookOpen, Music, Zap, Shuffle, Target } from 'lucide-react';
+import { BookOpen, Music, Zap, Shuffle, Target, ArrowLeft } from 'lucide-react';
 
 interface ArcadeMenuProps {
   onSelectMode: (mode: string) => void;
+  onBack?: () => void;
   theme: string;
 }
 
-export const ArcadeMenu: React.FC<ArcadeMenuProps> = ({ onSelectMode, theme }) => {
+export const ArcadeMenu: React.FC<ArcadeMenuProps> = ({ onSelectMode, onBack, theme }) => {
   const getThemeColors = () => {
     switch (theme) {
       case 'cosmic-nebula':
@@ -74,6 +75,39 @@ export const ArcadeMenu: React.FC<ArcadeMenuProps> = ({ onSelectMode, theme }) =
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-8">
+      {/* Back button */}
+      {onBack && (
+        <div
+          onClick={onBack}
+          style={{
+            position: 'fixed',
+            top: '20px',
+            left: '20px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '48px',
+            height: '48px',
+            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+            backdropFilter: 'blur(10px)',
+            borderRadius: '12px',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+            zIndex: 10001
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.15)';
+            e.currentTarget.style.transform = 'translateY(-2px)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+            e.currentTarget.style.transform = 'translateY(0)';
+          }}
+        >
+          <ArrowLeft size={20} color="white" />
+        </div>
+      )}
       <h1
         className="text-4xl font-bold mb-12 text-center"
         style={{

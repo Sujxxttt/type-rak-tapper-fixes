@@ -95,7 +95,7 @@ export const ModeSelection: React.FC<ModeSelectionProps> = ({
               display: 'flex',
               alignItems: 'center',
               gap: '0.5rem',
-              padding: '0.75rem 1rem',
+              padding: '0.5rem 1rem',
               backgroundColor: 'rgba(255, 255, 255, 0.1)',
               backdropFilter: 'blur(10px)',
               borderRadius: '12px',
@@ -115,7 +115,16 @@ export const ModeSelection: React.FC<ModeSelectionProps> = ({
               e.currentTarget.style.transform = 'translateY(0)';
             }}
           >
-            👤 {currentActiveUser || 'User'}
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+            Users: {currentActiveUser || 'User'}
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="16"/>
+              <line x1="8" y1="12" x2="16" y2="12"/>
+            </svg>
           </div>
         )}
 
@@ -170,7 +179,7 @@ export const ModeSelection: React.FC<ModeSelectionProps> = ({
           transitionDelay: '0.1s'
         }}
       >
-        Choose Your Mode
+        TypeWave - Choose Your Mode
       </h1>
       <div className="flex gap-12">
         {/* Classic Mode */}
