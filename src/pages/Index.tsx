@@ -18,6 +18,8 @@ import { ArcadeMenu } from '../components/ArcadeMenu';
 import { PrivacyPolicy } from '../pages/PrivacyPolicy';
 import { Credits } from '../pages/Credits';
 import { AboutMe } from '../pages/AboutMe';
+import { UserCreationModal } from '../components/UserCreationModal';
+import { PasswordPrompt } from '../components/PasswordPrompt';
 import { useTypingGame } from '../hooks/useTypingGame';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { useSoundEffects } from '../hooks/useSoundEffects';
@@ -64,6 +66,12 @@ const Index: React.FC = () => {
   const [showStartMessage, setShowStartMessage] = useState<boolean>(false);
   const [typedText, setTypedText] = useState<string>('');
   const [showTypedPreview, setShowTypedPreview] = useState<boolean>(false);
+
+  // Password system state
+  const [showUserCreationModal, setShowUserCreationModal] = useState(false);
+  const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
+  const [selectedUserForLogin, setSelectedUserForLogin] = useState('');
+  const [userPasswords, setUserPasswords] = useLocalStorage<{[key: string]: string}>('typeRakUserPasswords', {});
 
   // New state for scroll easter egg
   const [scrollCount, setScrollCount] = useState(0);
@@ -531,7 +539,7 @@ const Index: React.FC = () => {
     }
   };
 
-  const createUser = (username: string) => {
+  const createUser = (username: string, password?: string) => {
     if (!username.trim()) {
       showToast("Please enter a username.", true);
       return false;
@@ -540,9 +548,19 @@ const Index: React.FC = () => {
       showToast("User already exists. Try a different name.", true);
       return false;
     }
+    
     const newUsers = [...usersList, username];
     setUsersList(newUsers);
     setCurrentActiveUser(username);
+    
+    // Store password if provided
+    if (password) {
+      setUserPasswords(prev => ({
+        ...prev,
+        [username]: password
+      }));
+    }
+    
     setTestResults([]);
     setAllTestHistory([]);
     setShowModeSelection(true); // Show mode selection instead of dashboard
@@ -551,9 +569,37 @@ const Index: React.FC = () => {
   };
 
   const switchUser = (username: string) => {
+    // Check if user has password
+    if (userPasswords[username]) {
+      setSelectedUserForLogin(username);
+      setShowPasswordPrompt(true);
+    } else {
+      performUserSwitch(username);
+    }
+  };
+
+  const performUserSwitch = (username: string) => {
     setCurrentActiveUser(username);
     loadUserTests(username);
     setDeleteConfirmState(false);
+    setShowModeSelection(true);
+  };
+
+  const handlePasswordSubmit = (password: string) => {
+    if (userPasswords[selectedUserForLogin] === password) {
+      performUserSwitch(selectedUserForLogin);
+      setShowPasswordPrompt(false);
+      setSelectedUserForLogin('');
+    } else {
+      showToast("Incorrect password!", true);
+    }
+  };
+
+  const getUsersWithPasswords = () => {
+    return usersList.map(username => ({
+      username,
+      hasPassword: !!userPasswords[username]
+    }));
   };
 
   const startNewTest = (testName: string) => {
@@ -733,7 +779,7 @@ const Index: React.FC = () => {
       usersList={usersList}
       currentActiveUser={currentActiveUser}
       onSideMenuClick={() => setSideMenuOpen(true)}
-      onUserMenuClick={() => setShowUserMenu(true)}
+      onUserMenuClick={() => setShowUserCreationModal(true)}
     />;
   }
 
@@ -856,12 +902,16 @@ const Index: React.FC = () => {
           </div>
           <TopControls
             currentActiveUser={currentActiveUser}
-            onUserMenuClick={() => setShowUserMenu(true)}
+            onUserMenuClick={() => setShowUserCreationModal(true)}
             onSideMenuClick={() => setSideMenuOpen(true)}
             onHomeClick={() => setShowModeSelection(true)}
             getButtonColor={getButtonColor}
             fontSize={fontSize}
             showHomeButton={currentScreen === 'dashboard' || currentScreen === 'arcade-menu'}
+            usersList={usersList}
+            onCreateUser={() => setShowUserCreationModal(true)}
+            onSelectUser={switchUser}
+            usersWithPasswords={getUsersWithPasswords()}
           />
         </header>
 
@@ -1682,6 +1732,24 @@ const Index: React.FC = () => {
             Gmail
           </a>
         </footer>
+        
+        {/* User Creation Modal */}
+        <UserCreationModal
+          isOpen={showUserCreationModal}
+          onClose={() => setShowUserCreationModal(false)}
+          onCreateUser={createUser}
+        />
+
+        {/* Password Prompt Modal */}
+        <PasswordPrompt
+          isOpen={showPasswordPrompt}
+          onClose={() => {
+            setShowPasswordPrompt(false);
+            setSelectedUserForLogin('');
+          }}
+          onSubmit={handlePasswordSubmit}
+          username={selectedUserForLogin}
+        />
       </div>
 
       <style>{`

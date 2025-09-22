@@ -62,7 +62,7 @@ export const ArcadeIntro: React.FC<ArcadeIntroProps> = ({ onComplete, theme }) =
     >
       <h1
         style={{
-          fontSize: '6rem',
+          fontSize: '5.4rem', // 10% smaller
           fontWeight: 800,
           background: `linear-gradient(45deg, ${colors.primary}, ${colors.secondary})`,
           WebkitBackgroundClip: 'text',

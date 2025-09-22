@@ -82,7 +82,7 @@ export const Introduction: React.FC<IntroductionProps> = ({
       setCurrentThemeIndex(themeIndex >= 0 ? themeIndex : 0);
     }, 4860);
 
-    // Complete animation
+    // Complete animation - 2.5 seconds after position movement starts
     completeTimeout = setTimeout(() => {
       if (isFromTitleClick) {
         window.dispatchEvent(new CustomEvent('showEasterEgg'));
@@ -91,7 +91,7 @@ export const Introduction: React.FC<IntroductionProps> = ({
       } else {
         onComplete();
       }
-    }, 6885);
+    }, 7360); // 4860 + 2500 = 7360ms total
 
     return () => {
       clearInterval(themeInterval);
@@ -145,7 +145,7 @@ export const Introduction: React.FC<IntroductionProps> = ({
           margin: 0,
           transition: animationPhase === 'themes' ? 
             'background-image 1.62s ease-in-out' : 
-            'all 2.025s cubic-bezier(0.25, 0.46, 0.45, 0.94), background-image 2.025s ease-in-out',
+            'all 2.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), background-image 2.5s ease-in-out',
           textAlign: 'center',
           animation: animationPhase === 'themes' ? 'heartbeat 2.43s ease-in-out infinite' : 'none',
           cursor: titlePosition === 'top-left' ? 'pointer' : 'default'

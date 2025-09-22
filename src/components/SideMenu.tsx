@@ -253,13 +253,9 @@ export const SideMenu: React.FC<SideMenuProps> = ({
           <X size={20} />
         </button>
 
-        {/* Home Button */}
-        <div 
-          onClick={() => {
-            setSideMenuOpen(false);
-            onNavigateHome();
-          }}
-          style={{
+        {/* Users Section */}
+        <div style={{ marginBottom: '20px' }}>
+          <div style={{
             display: 'flex',
             alignItems: 'center',
             gap: '12px',
@@ -268,30 +264,27 @@ export const SideMenu: React.FC<SideMenuProps> = ({
             backdropFilter: 'blur(10px)',
             border: '1px solid rgba(255, 255, 255, 0.2)',
             borderRadius: '12px',
-            cursor: 'pointer',
-            marginBottom: '20px',
-            transition: 'all 0.3s ease'
-          }}
-          className="hover:bg-white/15"
-        >
-          <div style={{
-            width: '40px',
-            height: '40px',
-            background: 'linear-gradient(45deg, #b109d6, #0c6dc2)',
-            borderRadius: '10px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '20px'
+            marginBottom: '12px'
           }}>
-            🏠
-          </div>
-          <div>
-            <div style={{ fontSize: '16px', fontWeight: '600', marginBottom: '2px' }}>
-              Home
+            <div style={{
+              width: '40px',
+              height: '40px',
+              background: 'linear-gradient(45deg, #b109d6, #0c6dc2)',
+              borderRadius: '10px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '20px'
+            }}>
+              👥
             </div>
-            <div style={{ fontSize: '12px', opacity: 0.7 }}>
-              Mode Selection
+            <div>
+              <div style={{ fontSize: '16px', fontWeight: '600', marginBottom: '2px' }}>
+                Users
+              </div>
+              <div style={{ fontSize: '12px', opacity: 0.7 }}>
+                Manage user profiles
+              </div>
             </div>
           </div>
         </div>

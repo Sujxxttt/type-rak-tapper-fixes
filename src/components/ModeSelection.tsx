@@ -179,7 +179,7 @@ export const ModeSelection: React.FC<ModeSelectionProps> = ({
           transitionDelay: '0.1s'
         }}
       >
-        TypeWave - Choose Your Mode
+        TypeWave
       </h1>
       <div className="flex gap-12">
         {/* Classic Mode */}
