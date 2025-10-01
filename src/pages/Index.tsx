@@ -23,7 +23,7 @@ import { PasswordPrompt } from '../components/PasswordPrompt';
 import { useTypingGame } from '../hooks/useTypingGame';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { useSoundEffects } from '../hooks/useSoundEffects';
-import { useAchievements } from '../hooks/useAchievements';
+import { useAchievementsDB } from '../hooks/useAchievementsDB';
 import { EasterEggPage } from '../components/EasterEggPage';
 import { EasterEggPrompt } from '../components/EasterEggPrompt';
 import { useBackgroundMusic } from '../hooks/useBackgroundMusic';
@@ -97,8 +97,9 @@ const Index: React.FC = () => {
     recentAchievement, 
     checkAchievements, 
     closeAchievementNotification,
-    getUnlockedCount 
-  } = useAchievements(currentActiveUser);
+    getUnlockedCount,
+    isLoading: achievementsLoading
+  } = useAchievementsDB(currentActiveUser);
 
   // Listen for achievement navigation
   useEffect(() => {

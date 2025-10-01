@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Trophy, Award, Target, Zap, Calendar, Smile } from 'lucide-react';
-import { Achievement } from '../hooks/useAchievements';
+import { Achievement } from '../hooks/useAchievementsDB';
 
 interface AchievementsPageProps {
   achievements: Achievement[];

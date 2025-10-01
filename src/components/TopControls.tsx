@@ -110,7 +110,7 @@ export const TopControls: React.FC<TopControlsProps> = ({
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
             <circle cx="12" cy="7" r="4"/>
           </svg>
-          <span style={{ fontSize: '0.75rem' }}>Users: {currentActiveUser || 'User'}</span>
+          <span style={{ fontSize: '0.65rem', whiteSpace: 'nowrap' }}>Users: {currentActiveUser || 'User'}</span>
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="12" cy="12" r="10"/>
             <line x1="12" y1="8" x2="12" y2="16"/>
