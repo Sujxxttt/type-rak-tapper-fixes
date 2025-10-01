@@ -159,6 +159,28 @@ export const ModeSelection: React.FC<ModeSelectionProps> = ({
         )}
       </div>
 
+      {/* Title */}
+      <h1
+        style={{
+          position: 'fixed',
+          top: '60px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          fontSize: '3rem',
+          fontWeight: 700,
+          margin: 0,
+          background: `linear-gradient(45deg, ${colors.primary}, ${colors.secondary})`,
+          WebkitBackgroundClip: 'text',
+          backgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          textAlign: 'center',
+          opacity: showModes ? 1 : 0,
+          transition: 'all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+          transitionDelay: '0.1s'
+        }}
+      >
+        TypeWave
+      </h1>
       <div className="flex gap-12">
         {/* Classic Mode */}
         <div
