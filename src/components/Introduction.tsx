@@ -124,9 +124,12 @@ export const Introduction: React.FC<IntroductionProps> = ({
         background: currentThemeData.background,
         transition: animationPhase === 'themes' ? 'background 1.62s ease-in-out' : 'background 2.025s ease-in-out',
         display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 10000,
+        alignItems: titlePosition === 'center' ? 'center' : 'flex-start',
+        justifyContent: titlePosition === 'center' ? 'center' : 'flex-start',
+        zIndex: animationPhase === 'moving' && titlePosition === 'top-left' ? 10000 : 9999,
+        paddingTop: titlePosition === 'top-left' ? '60px' : '0',
+        paddingLeft: titlePosition === 'top-left' ? '50%' : '0',
+        transform: titlePosition === 'top-left' ? 'translateX(-50%)' : 'none',
         pointerEvents: titlePosition === 'top-left' ? 'none' : 'auto'
       }}
     >
@@ -138,16 +141,12 @@ export const Introduction: React.FC<IntroductionProps> = ({
           backgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
           color: 'transparent',
-          fontSize: '5rem',
+          fontSize: titlePosition === 'center' ? '5rem' : '3rem',
           fontWeight: 700,
           margin: 0,
-          position: titlePosition === 'top-left' ? 'fixed' : 'relative',
-          top: titlePosition === 'top-left' ? '60px' : 'auto',
-          left: titlePosition === 'top-left' ? '50%' : 'auto',
-          transform: titlePosition === 'top-left' ? 'translateX(-50%) scale(0.6)' : 'scale(1)',
           transition: animationPhase === 'themes' ? 
             'background-image 1.62s ease-in-out' : 
-            'all 2.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+            'all 2.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), background-image 2.5s ease-in-out',
           textAlign: 'center',
           animation: animationPhase === 'themes' ? 'heartbeat 2.43s ease-in-out infinite' : 'none',
           cursor: titlePosition === 'top-left' ? 'pointer' : 'default',
