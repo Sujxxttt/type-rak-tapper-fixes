@@ -83,11 +83,10 @@ export const Introduction: React.FC<IntroductionProps> = ({
     }, 4860);
 
     // Complete animation - 2.5 seconds after position movement starts
+    // Keep title visible and call onComplete to show mode selection
     completeTimeout = setTimeout(() => {
       if (isFromTitleClick) {
         window.dispatchEvent(new CustomEvent('showEasterEgg'));
-      } else if (onReplay && isReplay) {
-        onReplay();
       } else {
         onComplete();
       }
@@ -127,9 +126,11 @@ export const Introduction: React.FC<IntroductionProps> = ({
         display: 'flex',
         alignItems: titlePosition === 'center' ? 'center' : 'flex-start',
         justifyContent: titlePosition === 'center' ? 'center' : 'flex-start',
-        zIndex: 9999,
-        paddingTop: titlePosition === 'top-left' ? '20px' : '0',
-        paddingLeft: titlePosition === 'top-left' ? '20px' : '0'
+        zIndex: animationPhase === 'moving' && titlePosition === 'top-left' ? 10000 : 9999,
+        paddingTop: titlePosition === 'top-left' ? '60px' : '0',
+        paddingLeft: titlePosition === 'top-left' ? '50%' : '0',
+        transform: titlePosition === 'top-left' ? 'translateX(-50%)' : 'none',
+        pointerEvents: titlePosition === 'top-left' ? 'none' : 'auto'
       }}
     >
       <h1 
@@ -140,7 +141,7 @@ export const Introduction: React.FC<IntroductionProps> = ({
           backgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
           color: 'transparent',
-          fontSize: titlePosition === 'center' ? '5rem' : '2.5rem',
+          fontSize: titlePosition === 'center' ? '5rem' : '3rem',
           fontWeight: 700,
           margin: 0,
           transition: animationPhase === 'themes' ? 
@@ -148,7 +149,8 @@ export const Introduction: React.FC<IntroductionProps> = ({
             'all 2.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), background-image 2.5s ease-in-out',
           textAlign: 'center',
           animation: animationPhase === 'themes' ? 'heartbeat 2.43s ease-in-out infinite' : 'none',
-          cursor: titlePosition === 'top-left' ? 'pointer' : 'default'
+          cursor: titlePosition === 'top-left' ? 'pointer' : 'default',
+          pointerEvents: titlePosition === 'top-left' ? 'auto' : 'none'
         }}
       >
         TypeWave
