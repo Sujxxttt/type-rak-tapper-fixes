@@ -74,7 +74,7 @@ export const Introduction: React.FC<IntroductionProps> = ({
     phaseTimeout = setTimeout(() => {
       clearInterval(themeInterval);
       setAnimationPhase('moving');
-      setTitlePosition('top-left');
+      setTitlePosition('top-center');
       
       // Set to current theme
       const currentThemeData = getCurrentThemeData();
@@ -82,7 +82,7 @@ export const Introduction: React.FC<IntroductionProps> = ({
       setCurrentThemeIndex(themeIndex >= 0 ? themeIndex : 0);
     }, 4860);
 
-    // Complete animation - 2.5 seconds after position movement starts
+    // Complete animation - 1.5 seconds after position movement starts
     completeTimeout = setTimeout(() => {
       if (isFromTitleClick) {
         window.dispatchEvent(new CustomEvent('showEasterEgg'));
@@ -91,7 +91,7 @@ export const Introduction: React.FC<IntroductionProps> = ({
       } else {
         onComplete();
       }
-    }, 7360); // 4860 + 2500 = 7360ms total
+    }, 6360); // 4860 + 1500 = 6360ms total
 
     return () => {
       clearInterval(themeInterval);
@@ -123,12 +123,12 @@ export const Introduction: React.FC<IntroductionProps> = ({
         right: 0,
         bottom: 0,
         background: currentThemeData.background,
-        transition: animationPhase === 'themes' ? 'background 1.62s ease-in-out' : 'background 2.025s ease-in-out',
+        transition: animationPhase === 'themes' ? 'background 1.62s ease-in-out' : 'background 1.5s ease-in-out',
         display: 'flex',
         alignItems: titlePosition === 'center' ? 'center' : 'flex-start',
-        justifyContent: titlePosition === 'center' ? 'center' : 'flex-start',
+        justifyContent: titlePosition === 'center' ? 'center' : titlePosition === 'top-center' ? 'center' : 'flex-start',
         zIndex: 9999,
-        paddingTop: titlePosition === 'top-left' ? '20px' : '0',
+        paddingTop: titlePosition === 'top-center' ? '40px' : titlePosition === 'top-left' ? '20px' : '0',
         paddingLeft: titlePosition === 'top-left' ? '20px' : '0'
       }}
     >
@@ -140,15 +140,15 @@ export const Introduction: React.FC<IntroductionProps> = ({
           backgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
           color: 'transparent',
-          fontSize: titlePosition === 'center' ? '5rem' : '2.5rem',
+          fontSize: titlePosition === 'center' ? '5rem' : titlePosition === 'top-center' ? '3rem' : '2.5rem',
           fontWeight: 700,
           margin: 0,
           transition: animationPhase === 'themes' ? 
             'background-image 1.62s ease-in-out' : 
-            'all 2.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), background-image 2.5s ease-in-out',
+            'all 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), background-image 1.5s ease-in-out',
           textAlign: 'center',
           animation: animationPhase === 'themes' ? 'heartbeat 2.43s ease-in-out infinite' : 'none',
-          cursor: titlePosition === 'top-left' ? 'pointer' : 'default'
+          cursor: (titlePosition === 'top-left' || titlePosition === 'top-center') ? 'pointer' : 'default'
         }}
       >
         TypeWave

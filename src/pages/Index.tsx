@@ -966,44 +966,34 @@ const Index: React.FC = () => {
           }}>
             {usersList.length === 0 ? "No users found. Create one below to get started." : "Please select or create a user to begin."}
           </p>
-          {usersList.length === 0 && <div style={{
-            background: 'rgba(255, 255, 255, 0.15)',
-            borderRadius: '16px',
-            backdropFilter: 'blur(10px)',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            padding: '20px',
-            maxWidth: '400px'
-          }}>
-            <label style={{
-              display: 'block',
-              marginBottom: '10px'
-            }}>Enter username:</label>
-            <input type="text" id="greeting-new-user-input" placeholder="New username" style={{
-              width: '100%',
-              padding: '10px',
-              marginBottom: '15px',
-              borderRadius: '4px',
-              border: '1px solid rgba(255, 255, 255, 0.3)',
-              background: 'rgba(255,255,255,0.1)',
-              color: 'white',
-              backdropFilter: 'blur(10px)'
-            }} />
-            <button onClick={() => {
-              const input = document.getElementById('greeting-new-user-input') as HTMLInputElement;
-              if (input) createUser(input.value);
-            }} style={{
-              width: '100%',
-              background: getButtonColor(),
-              color: 'white',
-              border: 'none',
-              padding: '12px',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '1rem'
-            }}>
-              Create User & Continue
+          {usersList.length === 0 && (
+            <button
+              onClick={() => setShowUserCreationModal(true)}
+              style={{
+                padding: '16px 32px',
+                background: 'rgba(255, 255, 255, 0.1)',
+                backdropFilter: 'blur(25px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                borderRadius: '16px',
+                color: 'white',
+                fontSize: '1.1rem',
+                fontWeight: '500',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
+                e.currentTarget.style.transform = 'translateY(-2px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                e.currentTarget.style.transform = 'translateY(0)';
+              }}
+            >
+              Create New User
             </button>
-          </div>}
+          )}
         </div>}
 
         {currentScreen === 'create-user' && <div style={{

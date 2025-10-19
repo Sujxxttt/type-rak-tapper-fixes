@@ -239,14 +239,21 @@ export const UserCreationModal: React.FC<UserCreationModalProps> = ({
             style={{
               flex: 1,
               padding: '12px 16px',
-              background: 'linear-gradient(45deg, #b109d6, #0c6dc2)',
-              border: 'none',
+              background: 'rgba(255, 255, 255, 0.1)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
               borderRadius: '12px',
               color: 'white',
               fontSize: '1rem',
               fontWeight: '500',
               cursor: 'pointer',
-              transition: 'all 0.3s ease'
+              transition: 'all 0.3s ease',
+              backdropFilter: 'blur(10px)'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
             }}
           >
             Create with Password
@@ -265,6 +272,12 @@ export const UserCreationModal: React.FC<UserCreationModalProps> = ({
               cursor: 'pointer',
               transition: 'all 0.3s ease',
               backdropFilter: 'blur(10px)'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
             }}
           >
             Skip Password
